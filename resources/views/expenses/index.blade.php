@@ -20,22 +20,34 @@ margin-bottom:20px;
 </a>
 
 
+<form action="{{ route('expenses.index') }}" method="GET" style="margin-bottom:20px;">
 
-<form action="/expenses" method="GET">
+        <input
+            type="text"
+            name="search"
+            value="{{ $search }}"
+            placeholder="Search expenses..."
+            style="
+                padding:10px;
+                width:300px;
+                border:1px solid #ccc;
+                border-radius:5px;
+            ">
 
-<input
-type="text"
-name="search"
-value="{{ $search }}"
-placeholder="Search Vehicle">
+        <button
+            type="submit"
+            style="
+                padding:10px 20px;
+                background:#198754;
+                color:white;
+                border:none;
+                border-radius:5px;
+                cursor:pointer;
+            ">
+            Search
+        </button>
 
-<button type="submit">
-
-Search
-
-</button>
-
-</form>
+    </form>
 
 <br>
 
