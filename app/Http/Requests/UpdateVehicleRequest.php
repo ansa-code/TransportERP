@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateVehicleRequest extends FormRequest
 {
@@ -17,25 +18,81 @@ class UpdateVehicleRequest extends FormRequest
 
         return [
 
-            'vehicle_number' => 'required',
+            'vehicle_code' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('vehicles', 'vehicle_code')->ignore($vehicleId),
+            ],
 
-            'plate_number' => 'required|unique:vehicles,plate_number,' . $vehicleId,
+            'vehicle_type' => [
+                'required',
+                Rule::in([
+                    'Heavy Truck',
+                    'Small Truck',
+                    'Van',
+                    'Pickup',
+                    'Trailer',
+                    'Other',
+                ]),
+            ],
 
-            'vehicle_type' => 'required',
+            'brand' => 'nullable|string|max:100',
 
-            'brand' => 'required',
+            'model' => 'nullable|string|max:100',
 
-            'model' => 'required',
+            'plate_number' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('vehicles', 'plate_number')->ignore($vehicleId),
+            ],
 
-            'manufacture_year' => 'required',
+            'category' => 'nullable|string|max:255',
 
-            'capacity' => 'required|numeric',
+            'load_capacity' => 'nullable|numeric|min:0',
 
-            'status' => 'required',
+            'load_capacity_unit' => 'nullable|string|max:50',
 
-            'insurance_expiry' => 'required',
+            'ownership_type' => [
+                'required',
+                Rule::in([
+                    'Company Owned',
+                    'Hired',
+                    'Financed',
+                    'Other',
+                ]),
+            ],
 
-            'registration_expiry' => 'required',
+            'vendor_owner' => 'nullable|string|max:255',
+
+            'registered_company_name' => 'nullable|string|max:255',
+
+            'bank_instalment_amount' => 'nullable|numeric|min:0',
+
+            'instalment_duration' => 'nullable|integer|min:1',
+
+            'instalment_duration_unit' => 'nullable|string|max:50',
+
+            'registration_expiry' => 'nullable|date',
+
+            'insurance_expiry' => 'nullable|date',
+
+            'current_odometer' => 'nullable|integer|min:0',
+
+            'status' => [
+                'required',
+                Rule::in([
+                    'Active',
+                    'Assigned',
+                    'Idle',
+                    'Maintenance',
+                    'Inactive',
+                    'Archived',
+                ]),
+            ],
+
+            'remarks' => 'nullable|string',
 
         ];
     }

@@ -3,95 +3,491 @@
 namespace App\Http\Controllers;
 
 use App\Models\Vendor;
+use App\Models\Vehicle;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 
 class VendorController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request)
-{
-    $search = $request->search;
+    protected ActivityLogService $activityLogService;
 
-    $vendors = Vendor::where('vendor_name','like',"%$search%")
-        ->orWhere('company_name','like',"%$search%")
-        ->orWhere('phone','like',"%$search%")
-        ->paginate(5);
-
-    return view('vendors.index', compact('vendors','search'));
-}
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-{
-    return view('vendors.create');
-}
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-{
-    Vendor::create([
-
-        'vendor_name' => $request->vendor_name,
-        'company_name' => $request->company_name,
-        'phone' => $request->phone,
-        'email' => $request->email,
-        'address' => $request->address,
-        'service_type' => $request->service_type,
-        'status' => $request->status,
-        'notes' => $request->notes,
-
-    ]);
-
-    return redirect('/vendors')
-        ->with('success', 'Vendor Added Successfully!');
-}
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function __construct(ActivityLogService $activityLogService)
     {
-        //
+        $this->activityLogService = $activityLogService;
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-     public function edit($id)
-{
-    $vendor = Vendor::findOrFail($id);
+    /*
+    |--------------------------------------------------------------------------
+    | Vendor Listing
+    |--------------------------------------------------------------------------
+    */
 
-    return view('vendors.edit', compact('vendor'));
-}
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id)
-{
-    $vendor = Vendor::findOrFail($id);
+    public function index(Request $request)
+    {
+        $search = $request->search;
 
-    $vendor->update($request->all());
+        $vendorQuery = Vendor::query()
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
 
-    return redirect('/vendors')
-        ->with('success','Vendor Updated Successfully!');
-}
+                    $q->where('vendor_name', 'like', "%{$search}%")
+                        ->orWhere('company_name', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%")
+                        ->orWhere('contact', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('service_type', 'like', "%{$search}%")
+                        ->orWhere(
+                            'supplied_vehicle_plates',
+                            'like',
+                            "%{$search}%"
+                        );
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
-{
-    $vendor = Vendor::findOrFail($id);
+                });
+            });
 
-    $vendor->delete();
+        $totalVendors = (clone $vendorQuery)->count();
 
-    return redirect('/vendors')
-        ->with('success','Vendor Deleted Successfully!');
-}
+        $activeVendors = (clone $vendorQuery)
+            ->where('status', 'Active')
+            ->count();
+
+        $inactiveVendors = (clone $vendorQuery)
+            ->where('status', 'Inactive')
+            ->count();
+
+        $archivedVendors = (clone $vendorQuery)
+            ->where('status', 'Archived')
+            ->count();
+
+        $vendors = (clone $vendorQuery)
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return view(
+            'vendors.index',
+            compact(
+                'vendors',
+                'search',
+                'totalVendors',
+                'activeVendors',
+                'inactiveVendors',
+                'archivedVendors'
+            )
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Create Vendor Form
+    |--------------------------------------------------------------------------
+    */
+
+    public function create()
+    {
+        $vehicles = Vehicle::orderBy('plate_number')->get();
+
+        return view(
+            'vendors.create',
+            compact('vehicles')
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Store Vendor
+    |--------------------------------------------------------------------------
+    */
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+
+            'vendor_name' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'company_name' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'phone' => [
+                'nullable',
+                'string',
+                'max:50',
+            ],
+
+            'contact' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'email' => [
+                'nullable',
+                'email',
+                'max:255',
+            ],
+
+            'address' => [
+                'nullable',
+                'string',
+            ],
+
+            'service_type' => [
+                'required',
+                'array',
+                'min:1',
+            ],
+
+            'service_type.*' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+
+            'supplied_vehicle_plates' => [
+                'nullable',
+                'array',
+            ],
+
+            'supplied_vehicle_plates.*' => [
+                'exists:vehicles,plate_number',
+            ],
+
+            'rate_per_day' => [
+                'nullable',
+                'numeric',
+                'min:0',
+            ],
+
+            'rate_per_month' => [
+                'nullable',
+                'numeric',
+                'min:0',
+            ],
+
+            'rate_per_trip' => [
+                'nullable',
+                'numeric',
+                'min:0',
+            ],
+
+            'custom_rate' => [
+                'nullable',
+                'numeric',
+                'min:0',
+            ],
+
+            'custom_rate_label' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'payment_terms' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'payment_terms_days' => [
+                'nullable',
+                'integer',
+                'min:0',
+            ],
+
+            'tax_registration_data' => [
+                'nullable',
+                'string',
+            ],
+
+            'status' => [
+                'required',
+                'in:Active,Inactive,Archived',
+            ],
+
+            'notes' => [
+                'nullable',
+                'string',
+            ],
+
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Store Multiple Values
+        |--------------------------------------------------------------------------
+        */
+
+        $validated['service_type'] = implode(
+            ', ',
+            $validated['service_type']
+        );
+
+        $validated['supplied_vehicle_plates'] =
+            !empty($validated['supplied_vehicle_plates'])
+                ? implode(
+                    ', ',
+                    $validated['supplied_vehicle_plates']
+                )
+                : null;
+
+        $vendor = Vendor::create($validated);
+
+        $this->activityLogService->created(
+            module: 'Vendors',
+            subject: $vendor,
+            description:
+                "Created vendor record: {$vendor->vendor_name}."
+        );
+
+        return redirect()
+            ->route('vendors.index')
+            ->with(
+                'success',
+                'Vendor Added Successfully!'
+            );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Show Vendor
+    |--------------------------------------------------------------------------
+    */
+
+    public function show(string $id)
+    {
+        $vendor = Vendor::findOrFail($id);
+
+        return view(
+            'vendors.show',
+            compact('vendor')
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Edit Vendor Form
+    |--------------------------------------------------------------------------
+    */
+
+    public function edit(string $id)
+    {
+        $vendor = Vendor::findOrFail($id);
+
+        $vehicles = Vehicle::orderBy('plate_number')->get();
+
+        return view(
+            'vendors.edit',
+            compact(
+                'vendor',
+                'vehicles'
+            )
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Update Vendor
+    |--------------------------------------------------------------------------
+    */
+
+    public function update(
+        Request $request,
+        string $id
+    ) {
+        $vendor = Vendor::findOrFail($id);
+
+        $validated = $request->validate([
+
+            'vendor_name' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'company_name' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'phone' => [
+                'nullable',
+                'string',
+                'max:50',
+            ],
+
+            'contact' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'email' => [
+                'nullable',
+                'email',
+                'max:255',
+            ],
+
+            'address' => [
+                'nullable',
+                'string',
+            ],
+
+            'service_type' => [
+                'required',
+                'array',
+                'min:1',
+            ],
+
+            'service_type.*' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+
+            'supplied_vehicle_plates' => [
+                'nullable',
+                'array',
+            ],
+
+            'supplied_vehicle_plates.*' => [
+                'exists:vehicles,plate_number',
+            ],
+
+            'rate_per_day' => [
+                'nullable',
+                'numeric',
+                'min:0',
+            ],
+
+            'rate_per_month' => [
+                'nullable',
+                'numeric',
+                'min:0',
+            ],
+
+            'rate_per_trip' => [
+                'nullable',
+                'numeric',
+                'min:0',
+            ],
+
+            'custom_rate' => [
+                'nullable',
+                'numeric',
+                'min:0',
+            ],
+
+            'custom_rate_label' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'payment_terms' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'payment_terms_days' => [
+                'nullable',
+                'integer',
+                'min:0',
+            ],
+
+            'tax_registration_data' => [
+                'nullable',
+                'string',
+            ],
+
+            'status' => [
+                'required',
+                'in:Active,Inactive,Archived',
+            ],
+
+            'notes' => [
+                'nullable',
+                'string',
+            ],
+
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Store Multiple Values
+        |--------------------------------------------------------------------------
+        */
+
+        $validated['service_type'] = implode(
+            ', ',
+            $validated['service_type']
+        );
+
+        $validated['supplied_vehicle_plates'] =
+            !empty($validated['supplied_vehicle_plates'])
+                ? implode(
+                    ', ',
+                    $validated['supplied_vehicle_plates']
+                )
+                : null;
+
+        $oldValues = $vendor->getAttributes();
+
+        $vendor->update($validated);
+
+        $this->activityLogService->updated(
+            module: 'Vendors',
+            subject: $vendor,
+            oldValues: $oldValues,
+            newValues: $vendor->getAttributes(),
+            description:
+                "Updated vendor record: {$vendor->vendor_name}."
+        );
+
+        return redirect()
+            ->route('vendors.index')
+            ->with(
+                'success',
+                'Vendor Updated Successfully!'
+            );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Delete Vendor
+    |--------------------------------------------------------------------------
+    */
+
+    public function destroy(string $id)
+    {
+        $vendor = Vendor::findOrFail($id);
+
+        $oldValues = $vendor->getAttributes();
+        $vendorName = $vendor->vendor_name;
+
+        $this->activityLogService->deleted(
+            module: 'Vendors',
+            subject: $vendor,
+            oldValues: $oldValues,
+            description:
+                "Deleted vendor record: {$vendorName}."
+        );
+
+        $vendor->delete();
+
+        return redirect()
+            ->route('vendors.index')
+            ->with(
+                'success',
+                'Vendor Deleted Successfully!'
+            );
+    }
 }
