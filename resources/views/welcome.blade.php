@@ -473,7 +473,7 @@
 </button>
 </form>
 
-@if($errors->any())
+@if($errors?->any())
     <div class="error-box">
         {{ $errors->first() }}
     </div>
