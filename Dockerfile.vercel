@@ -42,7 +42,7 @@ RUN composer install \
     --prefer-dist
 
 # Frontend dependencies and build
-RUN npm ci && npm run build
+RUN npm install && npm run build
 
 # Laravel storage
 RUN php artisan storage:link || true
