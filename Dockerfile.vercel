@@ -43,6 +43,9 @@ RUN composer install \
 
 # Frontend dependencies and build
 RUN npm install && npm run build
+ 
+# TiDB Cloud SSL certificate
+COPY isrgrootx1.pem /etc/ssl/certs/isrgrootx1.pem
 
 # Laravel storage
 RUN php artisan storage:link || true
