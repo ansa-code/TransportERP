@@ -37,7 +37,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-
+Route::get('/health-check', function () {
+    return response('Laravel is running', 200);
+});
 /*
 |--------------------------------------------------------------------------
 | Authentication
