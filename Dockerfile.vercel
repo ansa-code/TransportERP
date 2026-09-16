@@ -43,9 +43,12 @@ RUN composer install \
 
 # Frontend dependencies and build
 RUN npm install && npm run build
- 
+
 # TiDB Cloud SSL certificate
 COPY isrgrootx1.pem /etc/ssl/certs/isrgrootx1.pem
+
+# Tell Laravel/PDO where the TiDB Cloud CA certificate is
+ENV MYSQL_ATTR_SSL_CA=/etc/ssl/certs/isrgrootx1.pem
 
 # Laravel storage
 RUN php artisan storage:link || true
@@ -63,10 +66,7 @@ RUN sed -ri \
     /etc/apache2/sites-available/000-default.conf \
     /etc/apache2/apache2.conf
 
-# Vercel provides PORT. Apache listens on it.
-RUN sed -i 's/Listen 80/Listen ${PORT}/' /etc/apache2/ports.conf \
-    && sed -i 's/:80>/:${PORT}>/g' /etc/apache2/sites-available/000-default.conf
-
+# Vercel uses port 80 by default
 EXPOSE 80
 
 CMD ["apache2-foreground"]
