@@ -26,6 +26,13 @@ RUN apt-get update && apt-get install -y \
     && a2enmod rewrite \
     && rm -rf /var/lib/apt/lists/*
 
+# Send Apache + PHP error logs to stdout/stderr so Vercel Runtime Logs capture them
+RUN set -ex \
+    && . /etc/apache2/envvars \
+    && ln -sfT /dev/stderr "$APACHE_LOG_DIR/error.log" \
+    && ln -sfT /dev/stdout "$APACHE_LOG_DIR/access.log" \
+    && ln -sfT /dev/stdout "$APACHE_LOG_DIR/other_vhosts_access.log"
+
 # Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
