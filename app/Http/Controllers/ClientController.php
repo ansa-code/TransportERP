@@ -34,32 +34,31 @@ class ClientController extends Controller
         | Clients
         |--------------------------------------------------------------------------
         */
-         
+
         $clients = Client::query()
-    ->when($search, function ($query) use ($search) {
-        $query->where(function ($q) use ($search) {
-            $q->where('client_name', 'like', "%{$search}%")
-                ->orWhere('company_name', 'like', "%{$search}%")
-                ->orWhere('client_code', 'like', "%{$search}%")
-                ->orWhere('phone', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%")
-                ->orWhere('trn', 'like', "%{$search}%")
-                ->orWhere('trade_licence', 'like', "%{$search}%")
-                ->orWhere('contact_person', 'like', "%{$search}%");
-        });
-    })
-    ->when($request->billing_type, function ($query, $billingType) {
-        $query->where('billing_type', $billingType);
-    })
-    ->when($request->city, function ($query, $city) {
-        $query->where('city', $city);
-    })
-    ->when($request->status, function ($query, $status) {
-        $query->where('status', $status);
-    })
-    ->latest()
-    ->get();
-        
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('client_name', 'like', "%{$search}%")
+                        ->orWhere('company_name', 'like', "%{$search}%")
+                        ->orWhere('client_code', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('trn', 'like', "%{$search}%")
+                        ->orWhere('trade_licence', 'like', "%{$search}%")
+                        ->orWhere('contact_person', 'like', "%{$search}%");
+                });
+            })
+            ->when($request->billing_type, function ($query, $billingType) {
+                $query->where('billing_type', $billingType);
+            })
+            ->when($request->city, function ($query, $city) {
+                $query->where('city', $city);
+            })
+            ->when($request->status, function ($query, $status) {
+                $query->where('status', $status);
+            })
+            ->latest()
+            ->get();
 
         /*
         |--------------------------------------------------------------------------
@@ -186,14 +185,126 @@ class ClientController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Attach Truck Count To Each Client
+        | Client Table - Current Monthly Value
+        |--------------------------------------------------------------------------
+        |
+        | Monthly value is calculated from the client's current assignments.
+        |
+        | Supported rate bases:
+        |
+        | Monthly / Per Month -> rate
+        | Weekly / Per Week   -> rate * 52 / 12
+        | Per Day / Daily     -> rate * 30
+        | Fixed / Fixed Rent  -> rate
+        |
+        | Per Trip / Usage / Custom cannot be converted to a fixed
+        | monthly value without actual usage/trip volume, so they are
+        | not included in the monthly calculation.
+        |
+        |--------------------------------------------------------------------------
+        */
+
+        $clientMonthlyValues = Assignment::query()
+            ->whereNotNull('client_id')
+            ->whereNotNull('rate')
+            ->whereDate(
+                'start_date',
+                '<=',
+                $today
+            )
+            ->where(function ($query) use ($today) {
+                $query->whereNull('end_date')
+                    ->orWhereDate(
+                        'end_date',
+                        '>=',
+                        $today
+                    );
+            })
+            ->select([
+                'client_id',
+                'rate',
+                'rate_basis',
+            ])
+            ->get()
+            ->groupBy('client_id')
+            ->map(function ($assignments) {
+
+                $monthlyValue = 0;
+                $hasMonthlyValue = false;
+
+                foreach ($assignments as $assignment) {
+
+                    $rate = (float) $assignment->rate;
+
+                    if ($rate < 0) {
+                        continue;
+                    }
+
+                    $rateBasis = strtolower(
+                        trim((string) $assignment->rate_basis)
+                    );
+
+                    switch ($rateBasis) {
+
+                        case 'monthly':
+                        case 'per month':
+
+                            $monthlyValue += $rate;
+                            $hasMonthlyValue = true;
+
+                            break;
+
+                        case 'weekly':
+                        case 'per week':
+
+                            $monthlyValue += ($rate * 52) / 12;
+                            $hasMonthlyValue = true;
+
+                            break;
+
+                        case 'per day':
+                        case 'daily':
+
+                            $monthlyValue += $rate * 30;
+                            $hasMonthlyValue = true;
+
+                            break;
+
+                        case 'fixed':
+                        case 'fixed rent':
+
+                            $monthlyValue += $rate;
+                            $hasMonthlyValue = true;
+
+                            break;
+                    }
+                }
+
+                return $hasMonthlyValue
+                    ? $monthlyValue
+                    : null;
+            });
+
+        /*
+        |--------------------------------------------------------------------------
+        | Attach Truck Count + Monthly Value To Each Client
         |--------------------------------------------------------------------------
         */
 
         foreach ($clients as $client) {
+
             $client->trucks_count = (int) (
                 $clientVehicleCounts[$client->id] ?? 0
             );
+
+            if (
+                $clientMonthlyValues->has($client->id)
+                && $clientMonthlyValues[$client->id] !== null
+            ) {
+                $client->monthly_value = (float) (
+                    $clientMonthlyValues[$client->id]
+                );
+            }
         }
 
         /*
@@ -428,7 +539,6 @@ class ClientController extends Controller
             compact('client')
         );
     }
-
     /*
     |--------------------------------------------------------------------------
     | Update Client

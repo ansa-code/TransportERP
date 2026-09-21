@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Assignment;
 use App\Models\Driver;
 use App\Services\ActivityLogService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -23,7 +25,27 @@ class DriverController extends Controller
         $passportCustody = $request->input('passport_custody');
         $status = $request->input('status');
 
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVER RECORDS
+        |--------------------------------------------------------------------------
+        */
+
         $drivers = Driver::query()
+
+            ->with([
+                'assignments' => function ($query) {
+                    $query
+                        ->with('vehicle')
+                        ->where('status', 'Active')
+                        ->whereDate('start_date', '<=', Carbon::today())
+                        ->where(function ($q) {
+                            $q->whereNull('end_date')
+                                ->orWhereDate('end_date', '>=', Carbon::today());
+                        })
+                        ->latest('start_date');
+                },
+            ])
 
             // Search
             ->when($search, function ($query, $search) {
@@ -44,12 +66,15 @@ class DriverController extends Controller
             })
 
             // Passport Custody Filter
-            ->when($passportCustody !== null && $passportCustody !== '', function ($query) use ($passportCustody) {
-                $query->where(
-                    'passport_held_by_company',
-                    $passportCustody === 'company' ? 1 : 0
-                );
-            })
+            ->when(
+                $passportCustody !== null && $passportCustody !== '',
+                function ($query) use ($passportCustody) {
+                    $query->where(
+                        'passport_held_by_company',
+                        $passportCustody === 'company' ? 1 : 0
+                    );
+                }
+            )
 
             // Employment Status Filter
             ->when($status, function ($query, $status) {
@@ -59,21 +84,52 @@ class DriverController extends Controller
             ->latest()
             ->get();
 
-        // =========================
-        // DRIVER DASHBOARD STATS
-        // =========================
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVER DASHBOARD STATS
+        |--------------------------------------------------------------------------
+        */
 
         $totalDrivers = Driver::count();
 
+        /*
+        |--------------------------------------------------------------------------
+        | COMPANY VISA
+        |--------------------------------------------------------------------------
+        |
+        | FRD separates:
+        | - Visa Type
+        | - Visa Provided By
+        |
+        | Therefore "Company Visa" is based on visa_provided_by.
+        |
+        */
+
         $companyVisaDrivers = Driver::where(
-            'visa_type',
-            'Company Visa'
+            'visa_provided_by',
+            'Company'
         )->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | OWN VISA
+        |--------------------------------------------------------------------------
+        |
+        | Keep this based on the actual Visa Type field for now.
+        | We do not assume that "Sponsor" automatically means "Own Visa".
+        |
+        */
 
         $ownVisaDrivers = Driver::where(
             'visa_type',
             'Own Visa'
         )->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | PASSPORT HELD
+        |--------------------------------------------------------------------------
+        */
 
         $passportHeldDrivers = Driver::where(
             'passport_held_by_company',
@@ -104,19 +160,46 @@ class DriverController extends Controller
             'driver_code' => 'required|string|max:255|unique:drivers,driver_code',
             'driver_name' => 'required|string|min:2|max:150',
             'cnic' => 'nullable|string|max:255',
-            'license_number' => 'nullable|string|max:255|unique:drivers,license_number',
+
+            'license_number' => [
+                'nullable',
+                'string',
+                'max:255',
+                'unique:drivers,license_number',
+            ],
+
             'license_expiry' => 'nullable|date',
             'phone' => 'nullable|string|max:255',
             'nationality' => 'nullable|string|max:255',
-            'passport_number' => 'nullable|string|max:255|unique:drivers,passport_number',
+
+            'passport_number' => [
+                'nullable',
+                'string',
+                'max:255',
+                'unique:drivers,passport_number',
+            ],
+
             'passport_held_by_company' => 'required|boolean',
+
             'visa_type' => 'nullable|string|max:255',
             'visa_provided_by' => 'nullable|string|max:255',
             'visa_expiry' => 'nullable|date',
-            'emirates_id' => 'nullable|string|max:255|unique:drivers,emirates_id',
+
+            'emirates_id' => [
+                'nullable',
+                'string',
+                'max:255',
+                'unique:drivers,emirates_id',
+            ],
+
             'basic_salary' => 'required|numeric|min:0',
             'assigned_vehicle_id' => 'nullable|integer',
-            'employment_status' => 'required|in:Active,On Leave,Inactive,Archived',
+
+            'employment_status' => [
+                'required',
+                'in:Active,On Leave,Inactive,Archived',
+            ],
+
             'remarks' => 'nullable|string',
             'address' => 'nullable|string',
             'date_of_birth' => 'nullable|date',
@@ -164,7 +247,6 @@ class DriverController extends Controller
             ],
 
             'driver_name' => 'required|string|min:2|max:150',
-
             'cnic' => 'nullable|string|max:255',
 
             'license_number' => [
@@ -186,6 +268,7 @@ class DriverController extends Controller
             ],
 
             'passport_held_by_company' => 'required|boolean',
+
             'visa_type' => 'nullable|string|max:255',
             'visa_provided_by' => 'nullable|string|max:255',
             'visa_expiry' => 'nullable|date',
@@ -199,7 +282,12 @@ class DriverController extends Controller
 
             'basic_salary' => 'required|numeric|min:0',
             'assigned_vehicle_id' => 'nullable|integer',
-            'employment_status' => 'required|in:Active,On Leave,Inactive,Archived',
+
+            'employment_status' => [
+                'required',
+                'in:Active,On Leave,Inactive,Archived',
+            ],
+
             'remarks' => 'nullable|string',
             'address' => 'nullable|string',
             'date_of_birth' => 'nullable|date',

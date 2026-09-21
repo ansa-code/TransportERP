@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Assignment;
 
 class Driver extends Model
 {
@@ -39,4 +40,12 @@ class Driver extends Model
         'license_expiry' => 'date',
         'basic_salary' => 'decimal:2',
     ];
+
+    /**
+     * Driver assignments.
+     */
+    public function assignments()
+    {
+        return $this->hasMany(Assignment::class);
+    }
 }

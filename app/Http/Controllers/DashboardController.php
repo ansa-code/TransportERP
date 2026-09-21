@@ -8,11 +8,11 @@ use App\Models\Driver;
 use App\Models\Expense;
 use App\Models\Fuel;
 use App\Models\Invoice;
-use App\Models\Maintenance;
 use App\Models\Payroll;
-use App\Models\Trip;
+use use\App\Models\Trip;
 use App\Models\Vehicle;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -24,41 +24,94 @@ class DashboardController extends Controller
         |--------------------------------------------------------------------------
         | Main Counts
         |--------------------------------------------------------------------------
+        |
+        | Combine vehicle, driver, assignment and trip status counts
+        | into ONE database round-trip.
+        |
         */
 
-        $totalVehicles = Vehicle::count();
+        $statusRows = DB::select("
+            SELECT 'vehicles' AS entity, LOWER(status) AS status, COUNT(*) AS total
+            FROM vehicles
+            GROUP BY LOWER(status)
 
-        $activeVehicles = Vehicle::whereRaw('LOWER(status) = ?', ['active'])->count();
+            UNION ALL
 
-        $inactiveVehicles = Vehicle::whereRaw('LOWER(status) = ?', ['inactive'])->count();
+            SELECT 'drivers' AS entity, LOWER(status) AS status, COUNT(*) AS total
+            FROM drivers
+            GROUP BY LOWER(status)
 
-        $assignedVehicles = Vehicle::whereRaw('LOWER(status) = ?', ['assigned'])->count();
+            UNION ALL
 
-        $idleVehicles = Vehicle::whereRaw('LOWER(status) = ?', ['idle'])->count();
+            SELECT 'assignments' AS entity, LOWER(status) AS status, COUNT(*) AS total
+            FROM assignments
+            GROUP BY LOWER(status)
 
-        $maintenanceVehicles = Vehicle::whereRaw(
-            'LOWER(status) IN (?, ?)',
-            ['under-maintenance', 'under maintenance']
-        )->count();
+            UNION ALL
 
-        $totalDrivers = Driver::count();
+            SELECT 'trips' AS entity, LOWER(status) AS status, COUNT(*) AS total
+            FROM trips
+            GROUP BY LOWER(status)
+        ");
 
-        $activeDrivers = Driver::whereRaw('LOWER(status) = ?', ['active'])->count();
+        $statusCounts = collect($statusRows)->keyBy(function ($row) {
+            return $row->entity . '|' . $row->status;
+        });
 
-        $onLeaveDrivers = Driver::whereRaw(
-            'LOWER(status) IN (?, ?)',
-            ['on leave', 'on-leave']
-        )->count();
+        $statusTotal = function (string $entity): int {
+            return $this->statusTotal($GLOBALS['statusCounts'] ?? collect(), $entity);
+        };
 
-        $activeAssignments = Assignment::whereRaw(
-            'LOWER(status) IN (?, ?)',
-            ['active', 'ongoing']
-        )->count();
+        $vehicleStatusCounts = $statusCounts->filter(
+            fn ($row) => $row->entity === 'vehicles'
+        );
 
-        $activeTrips = Trip::whereRaw(
-            'LOWER(status) IN (?, ?)',
-            ['active', 'ongoing']
-        )->count();
+        $driverStatusCounts = $statusCounts->filter(
+            fn ($row) => $row->entity === 'drivers'
+        );
+
+        $assignmentStatusCounts = $statusCounts->filter(
+            fn ($row) => $row->entity === 'assignments'
+        );
+
+        $tripStatusCounts = $statusCounts->filter(
+            fn ($row) => $row->entity === 'trips'
+        );
+
+        $getStatus = function ($collection, string $status): int {
+            $row = $collection->first(
+                fn ($item) => $item->status === $status
+            );
+
+            return (int) ($row->total ?? 0);
+        };
+
+        $totalVehicles = (int) $vehicleStatusCounts->sum('total');
+
+        $activeVehicles = $getStatus($vehicleStatusCounts, 'active');
+        $inactiveVehicles = $getStatus($vehicleStatusCounts, 'inactive');
+        $assignedVehicles = $getStatus($vehicleStatusCounts, 'assigned');
+        $idleVehicles = $getStatus($vehicleStatusCounts, 'idle');
+
+        $maintenanceVehicles =
+            $getStatus($vehicleStatusCounts, 'under-maintenance')
+            + $getStatus($vehicleStatusCounts, 'under maintenance');
+
+        $totalDrivers = (int) $driverStatusCounts->sum('total');
+
+        $activeDrivers = $getStatus($driverStatusCounts, 'active');
+
+        $onLeaveDrivers =
+            $getStatus($driverStatusCounts, 'on leave')
+            + $getStatus($driverStatusCounts, 'on-leave');
+
+        $activeAssignments =
+            $getStatus($assignmentStatusCounts, 'active')
+            + $getStatus($assignmentStatusCounts, 'ongoing');
+
+        $activeTrips =
+            $getStatus($tripStatusCounts, 'active')
+            + $getStatus($tripStatusCounts, 'ongoing');
 
         /*
         |--------------------------------------------------------------------------
@@ -66,25 +119,42 @@ class DashboardController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $monthStart = $now->copy()->startOfMonth();
-        $monthEnd = $now->copy()->endOfMonth();
+        $monthStart = $now->copy()->startOfMonth()->toDateString();
+        $monthEnd = $now->copy()->endOfMonth()->toDateString();
 
-        $monthlyRevenue = Invoice::whereBetween(
-            'invoice_date',
-            [$monthStart->toDateString(), $monthEnd->toDateString()]
-        )->sum('total_amount');
+        $monthlyFinanceRows = DB::select("
+            SELECT 'revenue' AS metric, COALESCE(SUM(total_amount), 0) AS total
+            FROM invoices
+            WHERE invoice_date BETWEEN ? AND ?
 
-        $monthlyExpenses = Expense::whereBetween(
-            'expense_date',
-            [$monthStart->toDateString(), $monthEnd->toDateString()]
-        )->sum('amount');
+            UNION ALL
 
-        $monthlyPayroll = Payroll::whereBetween(
-            'salary_month',
-            [$monthStart->toDateString(), $monthEnd->toDateString()]
-        )->sum('net_salary');
+            SELECT 'expenses' AS metric, COALESCE(SUM(amount), 0) AS total
+            FROM expenses
+            WHERE expense_date BETWEEN ? AND ?
 
-        $monthlyProfit = $monthlyRevenue
+            UNION ALL
+
+            SELECT 'payroll' AS metric, COALESCE(SUM(net_salary), 0) AS total
+            FROM payrolls
+            WHERE salary_month BETWEEN ? AND ?
+        ", [
+            $monthStart,
+            $monthEnd,
+            $monthStart,
+            $monthEnd,
+            $monthStart,
+            $monthEnd,
+        ]);
+
+        $monthlyFinance = collect($monthlyFinanceRows)->keyBy('metric');
+
+        $monthlyRevenue = (float) ($monthlyFinance['revenue']->total ?? 0);
+        $monthlyExpenses = (float) ($monthlyFinance['expenses']->total ?? 0);
+        $monthlyPayroll = (float) ($monthlyFinance['payroll']->total ?? 0);
+
+        $monthlyProfit =
+            $monthlyRevenue
             - $monthlyExpenses
             - $monthlyPayroll;
 
@@ -92,17 +162,37 @@ class DashboardController extends Controller
         |--------------------------------------------------------------------------
         | Invoice Outstanding / Overdue
         |--------------------------------------------------------------------------
+        |
+        | One query instead of two.
+        |
         */
 
-        $outstandingInvoices = Invoice::where('balance', '>', 0)
-            ->count();
+        $invoiceSummary = DB::selectOne("
+            SELECT
+                SUM(CASE WHEN balance > 0 THEN 1 ELSE 0 END) AS invoice_count,
+                SUM(CASE WHEN balance > 0 THEN balance ELSE 0 END) AS outstanding_balance,
+                SUM(
+                    CASE
+                        WHEN balance > 0
+                        AND due_date IS NOT NULL
+                        AND due_date < ?
+                        THEN balance
+                        ELSE 0
+                    END
+                ) AS overdue_balance
+            FROM invoices
+        ", [
+            $now->toDateString(),
+        ]);
 
-        $outstandingBalance = Invoice::where('balance', '>', 0)
-            ->sum('balance');
+        $outstandingInvoices =
+            (int) ($invoiceSummary->invoice_count ?? 0);
 
-        $overdueBalance = Invoice::where('balance', '>', 0)
-            ->whereDate('due_date', '<', $now->toDateString())
-            ->sum('balance');
+        $outstandingBalance =
+            (float) ($invoiceSummary->outstanding_balance ?? 0);
+
+        $overdueBalance =
+            (float) ($invoiceSummary->overdue_balance ?? 0);
 
         /*
         |--------------------------------------------------------------------------
@@ -110,125 +200,104 @@ class DashboardController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $reimbursableFuel = Fuel::where('reimbursable', true)
-            ->sum('reimbursement_amount');
+        $reimbursableFuel = Fuel::where(
+            'reimbursable',
+            true
+        )->sum('reimbursement_amount');
 
         /*
         |--------------------------------------------------------------------------
         | Expiring Documents
         |--------------------------------------------------------------------------
+        |
+        | Driver + Vehicle + Client expiry calculations in ONE query.
+        |
         */
 
         $today = $now->copy()->startOfDay();
-
         $expiry7 = $now->copy()->addDays(7)->endOfDay();
         $expiry15 = $now->copy()->addDays(15)->endOfDay();
         $expiry30 = $now->copy()->addDays(30)->endOfDay();
 
-        $documentsExpiring7 = 0;
-        $documentsExpiring15 = 0;
-        $documentsExpiring30 = 0;
+        $expirySummary = DB::selectOne("
+            SELECT
+                SUM(
+                    CASE
+                        WHEN expiry_date BETWEEN ? AND ?
+                        THEN 1 ELSE 0
+                    END
+                ) AS expiring_7,
 
-        /*
-        | Driver documents
-        */
+                SUM(
+                    CASE
+                        WHEN expiry_date BETWEEN ? AND ?
+                        THEN 1 ELSE 0
+                    END
+                ) AS expiring_15,
 
-        $driverExpiries = Driver::query()
-            ->where(function ($query) {
-                $query->whereNotNull('license_expiry')
-                    ->orWhereNotNull('visa_expiry');
-            })
-            ->get(['license_expiry', 'visa_expiry']);
+                SUM(
+                    CASE
+                        WHEN expiry_date BETWEEN ? AND ?
+                        THEN 1 ELSE 0
+                    END
+                ) AS expiring_30
 
-        foreach ($driverExpiries as $driver) {
-            foreach ([
-                $driver->license_expiry,
-                $driver->visa_expiry,
-            ] as $expiry) {
-                if (!$expiry) {
-                    continue;
-                }
+            FROM (
+                SELECT license_expiry AS expiry_date
+                FROM drivers
+                WHERE license_expiry IS NOT NULL
 
-                $expiryDate = Carbon::parse($expiry)->endOfDay();
+                UNION ALL
 
-                if ($expiryDate->between($today, $expiry7)) {
-                    $documentsExpiring7++;
-                }
+                SELECT visa_expiry AS expiry_date
+                FROM drivers
+                WHERE visa_expiry IS NOT NULL
 
-                if ($expiryDate->between($today, $expiry15)) {
-                    $documentsExpiring15++;
-                }
+                UNION ALL
 
-                if ($expiryDate->between($today, $expiry30)) {
-                    $documentsExpiring30++;
-                }
-            }
-        }
+                SELECT insurance_expiry AS expiry_date
+                FROM vehicles
+                WHERE insurance_expiry IS NOT NULL
 
-        /*
-        | Vehicle documents
-        */
+                UNION ALL
 
-        $vehicleExpiries = Vehicle::query()
-            ->where(function ($query) {
-                $query->whereNotNull('insurance_expiry')
-                    ->orWhereNotNull('registration_expiry');
-            })
-            ->get(['insurance_expiry', 'registration_expiry']);
+                SELECT registration_expiry AS expiry_date
+                FROM vehicles
+                WHERE registration_expiry IS NOT NULL
 
-        foreach ($vehicleExpiries as $vehicle) {
-            foreach ([
-                $vehicle->insurance_expiry,
-                $vehicle->registration_expiry,
-            ] as $expiry) {
-                if (!$expiry) {
-                    continue;
-                }
+                UNION ALL
 
-                $expiryDate = Carbon::parse($expiry)->endOfDay();
+                SELECT trade_licence_expiry AS expiry_date
+                FROM clients
+                WHERE trade_licence_expiry IS NOT NULL
+            ) AS expiry_dates
+        ", [
+            $today,
+            $expiry7,
 
-                if ($expiryDate->between($today, $expiry7)) {
-                    $documentsExpiring7++;
-                }
+            $today,
+            $expiry15,
 
-                if ($expiryDate->between($today, $expiry15)) {
-                    $documentsExpiring15++;
-                }
+            $today,
+            $expiry30,
+        ]);
 
-                if ($expiryDate->between($today, $expiry30)) {
-                    $documentsExpiring30++;
-                }
-            }
-        }
+        $documentsExpiring7 =
+            (int) ($expirySummary->expiring_7 ?? 0);
 
-        /*
-        | Client trade licence
-        */
+        $documentsExpiring15 =
+            (int) ($expirySummary->expiring_15 ?? 0);
 
-        $clientExpiries = Client::query()
-            ->whereNotNull('trade_licence_expiry')
-            ->pluck('trade_licence_expiry');
-
-        foreach ($clientExpiries as $expiry) {
-            $expiryDate = Carbon::parse($expiry)->endOfDay();
-
-            if ($expiryDate->between($today, $expiry7)) {
-                $documentsExpiring7++;
-            }
-
-            if ($expiryDate->between($today, $expiry15)) {
-                $documentsExpiring15++;
-            }
-
-            if ($expiryDate->between($today, $expiry30)) {
-                $documentsExpiring30++;
-            }
-        }
+        $documentsExpiring30 =
+            (int) ($expirySummary->expiring_30 ?? 0);
 
         /*
         |--------------------------------------------------------------------------
         | Monthly Trend - Last 6 Months
         |--------------------------------------------------------------------------
+        |
+        | Revenue + Expenses + Payroll in ONE database round-trip.
+        |
         */
 
         $trendLabels = [];
@@ -236,34 +305,95 @@ class DashboardController extends Controller
         $expenseTrend = [];
         $profitTrend = [];
 
+        $trendStart = $now->copy()
+            ->subMonths(5)
+            ->startOfMonth()
+            ->toDateString();
+
+        $trendEnd = $now->copy()
+            ->endOfMonth()
+            ->toDateString();
+
+        $trendRows = DB::select("
+            SELECT
+                'revenue' AS metric,
+                DATE_FORMAT(invoice_date, '%Y-%m') AS month,
+                SUM(total_amount) AS total
+            FROM invoices
+            WHERE invoice_date BETWEEN ? AND ?
+            GROUP BY DATE_FORMAT(invoice_date, '%Y-%m')
+
+            UNION ALL
+
+            SELECT
+                'expenses' AS metric,
+                DATE_FORMAT(expense_date, '%Y-%m') AS month,
+                SUM(amount) AS total
+            FROM expenses
+            WHERE expense_date BETWEEN ? AND ?
+            GROUP BY DATE_FORMAT(expense_date, '%Y-%m')
+
+            UNION ALL
+
+            SELECT
+                'payroll' AS metric,
+                DATE_FORMAT(salary_month, '%Y-%m') AS month,
+                SUM(net_salary) AS total
+            FROM payrolls
+            WHERE salary_month BETWEEN ? AND ?
+            GROUP BY DATE_FORMAT(salary_month, '%Y-%m')
+        ", [
+            $trendStart,
+            $trendEnd,
+            $trendStart,
+            $trendEnd,
+            $trendStart,
+            $trendEnd,
+        ]);
+
+        $trendData = collect($trendRows);
+
         for ($i = 5; $i >= 0; $i--) {
             $start = $now->copy()
                 ->subMonths($i)
                 ->startOfMonth();
 
-            $end = $start->copy()->endOfMonth();
+            $monthKey = $start->format('Y-m');
 
-            $revenue = Invoice::whereBetween(
-                'invoice_date',
-                [$start->toDateString(), $end->toDateString()]
-            )->sum('total_amount');
+            $revenue = (float) (
+                $trendData
+                    ->where('metric', 'revenue')
+                    ->where('month', $monthKey)
+                    ->sum('total')
+            );
 
-            $expenses = Expense::whereBetween(
-                'expense_date',
-                [$start->toDateString(), $end->toDateString()]
-            )->sum('amount');
+            $expenses = (float) (
+                $trendData
+                    ->where('metric', 'expenses')
+                    ->where('month', $monthKey)
+                    ->sum('total')
+            );
 
-            $payroll = Payroll::whereBetween(
-                'salary_month',
-                [$start->toDateString(), $end->toDateString()]
-            )->sum('net_salary');
+            $payroll = (float) (
+                $trendData
+                    ->where('metric', 'payroll')
+                    ->where('month', $monthKey)
+                    ->sum('total')
+            );
 
-            $profit = $revenue - $expenses - $payroll;
+            $profit =
+                $revenue
+                - $expenses
+                - $payroll;
 
             $trendLabels[] = $start->format('M Y');
-            $revenueTrend[] = (float) $revenue;
-            $expenseTrend[] = (float) ($expenses + $payroll);
-            $profitTrend[] = (float) $profit;
+
+            $revenueTrend[] = $revenue;
+
+            $expenseTrend[] =
+                $expenses + $payroll;
+
+            $profitTrend[] = $profit;
         }
 
         /*
@@ -279,7 +409,10 @@ class DashboardController extends Controller
         ])
             ->whereRaw(
                 'LOWER(status) IN (?, ?)',
-                ['active', 'ongoing']
+                [
+                    'active',
+                    'ongoing',
+                ]
             )
             ->latest()
             ->take(6)
@@ -297,8 +430,14 @@ class DashboardController extends Controller
             $criticalAlerts->push([
                 'type' => 'finance',
                 'title' => 'Overdue invoices',
-                'message' => 'Outstanding overdue balance requires attention.',
-                'value' => 'AED ' . number_format($overdueBalance, 2),
+                'message' =>
+                    'Outstanding overdue balance requires attention.',
+                'value' =>
+                    'AED ' .
+                    number_format(
+                        $overdueBalance,
+                        2
+                    ),
             ]);
         }
 
@@ -306,26 +445,40 @@ class DashboardController extends Controller
             $criticalAlerts->push([
                 'type' => 'document',
                 'title' => 'Documents expiring soon',
-                'message' => 'Documents are expiring within 7 days.',
-                'value' => $documentsExpiring7 . ' document(s)',
+                'message' =>
+                    'Documents are expiring within 7 days.',
+                'value' =>
+                    $documentsExpiring7 .
+                    ' document(s)',
             ]);
         }
 
         if ($maintenanceVehicles > 0) {
             $criticalAlerts->push([
                 'type' => 'maintenance',
-                'title' => 'Vehicles under maintenance',
-                'message' => 'Vehicles currently unavailable for operations.',
-                'value' => $maintenanceVehicles . ' vehicle(s)',
+                'title' =>
+                    'Vehicles under maintenance',
+                'message' =>
+                    'Vehicles currently unavailable for operations.',
+                'value' =>
+                    $maintenanceVehicles .
+                    ' vehicle(s)',
             ]);
         }
 
         if ($reimbursableFuel > 0) {
             $criticalAlerts->push([
                 'type' => 'fuel',
-                'title' => 'Reimbursable fuel',
-                'message' => 'Fuel reimbursement requires recovery tracking.',
-                'value' => 'AED ' . number_format($reimbursableFuel, 2),
+                'title' =>
+                    'Reimbursable fuel',
+                'message' =>
+                    'Fuel reimbursement requires recovery tracking.',
+                'value' =>
+                    'AED ' .
+                    number_format(
+                        $reimbursableFuel,
+                        2
+                    ),
             ]);
         }
 
@@ -335,43 +488,53 @@ class DashboardController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        return view('dashboard', compact(
-            'totalVehicles',
-            'activeVehicles',
-            'inactiveVehicles',
-            'assignedVehicles',
-            'idleVehicles',
-            'maintenanceVehicles',
+        return view(
+            'dashboard',
+            compact(
+                'totalVehicles',
+                'activeVehicles',
+                'inactiveVehicles',
+                'assignedVehicles',
+                'idleVehicles',
+                'maintenanceVehicles',
 
-            'totalDrivers',
-            'activeDrivers',
-            'onLeaveDrivers',
+                'totalDrivers',
+                'activeDrivers',
+                'onLeaveDrivers',
 
-            'activeAssignments',
-            'activeTrips',
+                'activeAssignments',
+                'activeTrips',
 
-            'monthlyRevenue',
-            'monthlyExpenses',
-            'monthlyPayroll',
-            'monthlyProfit',
+                'monthlyRevenue',
+                'monthlyExpenses',
+                'monthlyPayroll',
+                'monthlyProfit',
 
-            'outstandingInvoices',
-            'outstandingBalance',
-            'overdueBalance',
+                'outstandingInvoices',
+                'outstandingBalance',
+                'overdueBalance',
 
-            'reimbursableFuel',
+                'reimbursableFuel',
 
-            'documentsExpiring7',
-            'documentsExpiring15',
-            'documentsExpiring30',
+                'documentsExpiring7',
+                'documentsExpiring15',
+                'documentsExpiring30',
 
-            'trendLabels',
-            'revenueTrend',
-            'expenseTrend',
-            'profitTrend',
+                'trendLabels',
+                'revenueTrend',
+                'expenseTrend',
+                'profitTrend',
 
-            'activeOperations',
-            'criticalAlerts'
-        ));
+                'activeOperations',
+                'criticalAlerts'
+            )
+        );
+    }
+
+    private function statusTotal($collection, string $entity): int
+    {
+        return (int) $collection
+            ->filter(fn ($row) => $row->entity === $entity)
+            ->sum('total');
     }
 }

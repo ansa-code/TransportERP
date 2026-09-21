@@ -60,9 +60,9 @@
 
 
     {{-- MAIN FORM --}}
-    <form action="{{ route('maintenances.store') }}"
-          method="POST">
-
+        <form action="{{ route('maintenances.store') }}"
+      method="POST"
+      enctype="multipart/form-data">
         @csrf
 
 
@@ -636,29 +636,31 @@
 
 
                 {{-- INVOICE / RECEIPT --}}
-                <div class="maintenance-field">
+<div class="maintenance-field">
 
-                    <label for="invoice_receipt">
-                        Invoice / Receipt
-                    </label>
+    <label for="invoice_receipt">
+        Invoice / Receipt
+    </label>
 
-                    <input type="text"
-                           name="invoice_receipt"
-                           id="invoice_receipt"
-                           class="maintenance-input"
-                           value="{{ old('invoice_receipt') }}"
-                           placeholder="Invoice or receipt reference">
+    <input type="file"
+           name="invoice_receipt"
+           id="invoice_receipt"
+           class="maintenance-input"
+           accept=".jpg,.jpeg,.png,.pdf">
 
-                    @error('invoice_receipt')
+    <small class="maintenance-help-text">
+        JPG, JPEG, PNG or PDF. Maximum 5 MB.
+    </small>
 
-                        <small class="maintenance-field-error">
-                            {{ $message }}
-                        </small>
+    @error('invoice_receipt')
 
-                    @enderror
+        <small class="maintenance-field-error">
+            {{ $message }}
+        </small>
 
-                </div>
+    @enderror
 
+</div>
             </div>
 
         </div>

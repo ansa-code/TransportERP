@@ -8,6 +8,7 @@ use App\Models\Fuel;
 use App\Services\ActivityLogService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class MaintenanceController extends Controller
 {
@@ -28,12 +29,6 @@ class MaintenanceController extends Controller
     {
         $search = $request->search;
         $repairType = $request->repair_type;
-
-        /*
-        |--------------------------------------------------------------------------
-        | Maintenance Records
-        |--------------------------------------------------------------------------
-        */
 
         $maintenances = Maintenance::with('vehicle')
             ->when($search, function ($query) use ($search) {
@@ -105,7 +100,6 @@ class MaintenanceController extends Controller
             ->sort()
             ->values();
 
-
         /*
         |--------------------------------------------------------------------------
         | KPI - Open Repairs
@@ -116,7 +110,6 @@ class MaintenanceController extends Controller
             'Open',
             'In Progress',
         ])->count();
-
 
         /*
         |--------------------------------------------------------------------------
@@ -137,7 +130,6 @@ class MaintenanceController extends Controller
             ]
         )->sum('total_cost');
 
-
         /*
         |--------------------------------------------------------------------------
         | KPI - Monthly Fuel Cost
@@ -156,7 +148,6 @@ class MaintenanceController extends Controller
                     ->toDateString(),
             ]
         )->sum('total_amount');
-
 
         /*
         |--------------------------------------------------------------------------
@@ -199,7 +190,6 @@ class MaintenanceController extends Controller
             );
         }
 
-
         /*
         |--------------------------------------------------------------------------
         | Fuel Records
@@ -208,16 +198,9 @@ class MaintenanceController extends Controller
 
         $fuelRecordsCount = Fuel::count();
 
-
         /*
         |--------------------------------------------------------------------------
         | Fuel Efficiency
-        |--------------------------------------------------------------------------
-        |
-        | Efficiency = distance travelled / fuel consumed.
-        |
-        | Distance is calculated from consecutive odometer
-        | readings for the same vehicle.
         |--------------------------------------------------------------------------
         */
 
@@ -263,7 +246,6 @@ class MaintenanceController extends Controller
                 $currentOdometer;
         }
 
-
         /*
         |--------------------------------------------------------------------------
         | Calculate Fuel Efficiency
@@ -282,7 +264,6 @@ class MaintenanceController extends Controller
                 1
             );
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -307,7 +288,6 @@ class MaintenanceController extends Controller
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Create Maintenance Form
@@ -323,7 +303,6 @@ class MaintenanceController extends Controller
             compact('vehicles')
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -399,8 +378,9 @@ class MaintenanceController extends Controller
 
             'invoice_receipt' => [
                 'nullable',
-                'string',
-                'max:255',
+                'file',
+                'mimes:jpg,jpeg,png,pdf',
+                'max:5120',
             ],
 
             'status' => [
@@ -433,6 +413,26 @@ class MaintenanceController extends Controller
             + (float) $validated['labour_cost']
             + (float) $validated['other_cost'];
 
+        /*
+        |--------------------------------------------------------------------------
+        | Invoice / Receipt Attachment
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->hasFile('invoice_receipt')) {
+
+            $validated['invoice_receipt'] =
+                $request->file('invoice_receipt')
+                    ->store(
+                        'maintenances/invoices',
+                        'public'
+                    );
+
+        } else {
+
+            $validated['invoice_receipt'] = null;
+        }
+
         $maintenance =
             Maintenance::create($validated);
 
@@ -462,7 +462,6 @@ class MaintenanceController extends Controller
             );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Show Maintenance
@@ -479,7 +478,6 @@ class MaintenanceController extends Controller
             compact('maintenance')
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -504,7 +502,6 @@ class MaintenanceController extends Controller
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Update Maintenance
@@ -517,12 +514,6 @@ class MaintenanceController extends Controller
     ) {
         $maintenance =
             Maintenance::findOrFail($id);
-
-        /*
-        |--------------------------------------------------------------------------
-        | Capture Old Values
-        |--------------------------------------------------------------------------
-        */
 
         $oldValues =
             $maintenance->getAttributes();
@@ -593,8 +584,9 @@ class MaintenanceController extends Controller
 
             'invoice_receipt' => [
                 'nullable',
-                'string',
-                'max:255',
+                'file',
+                'mimes:jpg,jpeg,png,pdf',
+                'max:5120',
             ],
 
             'status' => [
@@ -623,6 +615,42 @@ class MaintenanceController extends Controller
             (float) $validated['parts_cost']
             + (float) $validated['labour_cost']
             + (float) $validated['other_cost'];
+
+        /*
+        |--------------------------------------------------------------------------
+        | Invoice / Receipt Attachment
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->hasFile('invoice_receipt')) {
+
+            if (
+                $maintenance->invoice_receipt
+                && Storage::disk('public')->exists(
+                    $maintenance->invoice_receipt
+                )
+            ) {
+                Storage::disk('public')->delete(
+                    $maintenance->invoice_receipt
+                );
+            }
+
+            $validated['invoice_receipt'] =
+                $request->file('invoice_receipt')
+                    ->store(
+                        'maintenances/invoices',
+                        'public'
+                    );
+
+        } else {
+
+            unset($validated['invoice_receipt']);
+        }
+        /*
+        |--------------------------------------------------------------------------
+        | Update Maintenance
+        |--------------------------------------------------------------------------
+        */
 
         $maintenance->update(
             $validated
@@ -655,7 +683,6 @@ class MaintenanceController extends Controller
             );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Delete Maintenance
@@ -681,6 +708,23 @@ class MaintenanceController extends Controller
 
         $vehicle =
             $maintenance->vehicle;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Delete Stored Attachment
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $maintenance->invoice_receipt
+            && Storage::disk('public')->exists(
+                $maintenance->invoice_receipt
+            )
+        ) {
+            Storage::disk('public')->delete(
+                $maintenance->invoice_receipt
+            );
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -719,7 +763,6 @@ class MaintenanceController extends Controller
             );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Generate Maintenance Number
@@ -757,8 +800,9 @@ class MaintenanceController extends Controller
                 STR_PAD_LEFT
             );
     }
-/*
-      |--------------------------------------------------------------------------
+
+    /*
+    |--------------------------------------------------------------------------
     | Update Vehicle Status
     |--------------------------------------------------------------------------
     */

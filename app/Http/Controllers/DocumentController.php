@@ -15,10 +15,97 @@ use Illuminate\View\View;
 
 class DocumentController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $documents = Document::query()
+        $search = trim((string) $request->input('search', ''));
+        $documentType = $request->input('document_type');
+        $duePeriod = $request->input('due_period');
+
+        $documentsQuery = Document::query()
             ->where('is_current', true)
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('document_type', 'like', "%{$search}%")
+                        ->orWhere('document_number', 'like', "%{$search}%")
+                        ->orWhere('notes', 'like', "%{$search}%")
+                        ->orWhereHasMorph(
+                            'related',
+                            [
+                                Vehicle::class,
+                                Driver::class,
+                                Client::class,
+                                Vendor::class,
+                            ],
+                            function ($relatedQuery, $type) use ($search) {
+                                if ($type === Vehicle::class) {
+                                    $relatedQuery->where(
+                                        'plate_number',
+                                        'like',
+                                        "%{$search}%"
+                                    );
+                                } elseif ($type === Driver::class) {
+                                    $relatedQuery->where(
+                                        'driver_name',
+                                        'like',
+                                        "%{$search}%"
+                                    );
+                                } elseif ($type === Client::class) {
+                                    $relatedQuery->where(
+                                        'client_name',
+                                        'like',
+                                        "%{$search}%"
+                                    );
+                                } elseif ($type === Vendor::class) {
+                                    $relatedQuery->where(
+                                        'vendor_name',
+                                        'like',
+                                        "%{$search}%"
+                                    );
+                                }
+                            }
+                        );
+                });
+            })
+            ->when($documentType, function ($query) use ($documentType) {
+                if ($documentType === 'License') {
+                    $query->whereIn('document_type', [
+                        'License',
+                        'Driver License',
+                        'Driving License',
+                    ]);
+                } elseif ($documentType === 'Registration') {
+                    $query->whereIn('document_type', [
+                        'Registration',
+                        'Vehicle Registration',
+                        'Truck Registration',
+                    ]);
+                } elseif ($documentType === 'Insurance') {
+                    $query->whereIn('document_type', [
+                        'Insurance',
+                        'Vehicle Insurance',
+                    ]);
+                } else {
+                    $query->where('document_type', $documentType);
+                }
+            })
+            ->when($duePeriod, function ($query) use ($duePeriod) {
+                $today = now()->startOfDay();
+
+                if ($duePeriod === 'overdue') {
+                    $query->whereNotNull('expiry_date')
+                        ->whereDate('expiry_date', '<', $today);
+                } elseif (in_array($duePeriod, ['7', '15', '30'], true)) {
+                    $query->whereNotNull('expiry_date')
+                        ->whereDate('expiry_date', '>=', $today)
+                        ->whereDate(
+                            'expiry_date',
+                            '<=',
+                            $today->copy()->addDays((int) $duePeriod)
+                        );
+                }
+            });
+
+        $documents = $documentsQuery
             ->orderByRaw('expiry_date IS NULL')
             ->orderBy('expiry_date')
             ->orderByDesc('created_at')
@@ -66,11 +153,21 @@ class DocumentController extends Controller
             'expiring_30_days' => Document::where('is_current', true)
                 ->whereNotNull('expiry_date')
                 ->whereDate('expiry_date', '>=', $today)
-                ->whereDate('expiry_date', '<=', $today->copy()->addDays(30))
+                ->whereDate(
+                    'expiry_date',
+                    '<=',
+                    $today->copy()->addDays(30)
+                )
                 ->count(),
         ];
 
-        return view('documents.index', compact('documents', 'stats'));
+        return view('documents.index', compact(
+            'documents',
+            'stats',
+            'search',
+            'documentType',
+            'duePeriod'
+        ));
     }
 
     public function create(): View
@@ -259,8 +356,12 @@ class DocumentController extends Controller
 
         return redirect()
             ->route('documents.index')
-            ->with('success', 'Document replaced successfully. Version history has been preserved.');
+            ->with(
+                'success',
+                'Document replaced successfully. Version history has been preserved.'
+            );
     }
+
     public function destroy(Document $document): RedirectResponse
     {
         DB::transaction(function () use ($document) {

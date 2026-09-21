@@ -512,47 +512,6 @@
 
     </div>
 
-    <div class="filter-card">
-
-        <form
-            method="GET"
-            action="{{ route('traffic-fines.index') }}"
-            class="filter-form"
-        >
-
-            <div class="filter-group">
-
-                <label for="search">
-                    Search
-                </label>
-
-                <input
-                    type="text"
-                    id="search"
-                    name="search"
-                    class="search-input"
-                    value="{{ $search ?? '' }}"
-                    placeholder="Fine number, vehicle, driver or reason..."
-                    autocomplete="off"
-                >
-
-            </div>
-
-            @if(!empty($search))
-
-                <a
-                    href="{{ route('traffic-fines.index') }}"
-                    class="clear-btn"
-                >
-                    Clear
-                </a>
-
-            @endif
-
-        </form>
-
-    </div>
-
     @php
         $allFines = $fines->getCollection();
 
@@ -632,6 +591,47 @@
                 Driver deduction records
             </div>
         </div>
+
+    </div>
+
+    <div class="filter-card">
+
+        <form
+            method="GET"
+            action="{{ route('traffic-fines.index') }}"
+            class="filter-form"
+        >
+
+            <div class="filter-group">
+
+                <label for="search">
+                    Search
+                </label>
+
+                <input
+                    type="text"
+                    id="search"
+                    name="search"
+                    class="search-input"
+                    value="{{ $search ?? '' }}"
+                    placeholder="Fine number, vehicle, driver or reason..."
+                    autocomplete="off"
+                >
+
+            </div>
+
+            @if(!empty($search))
+
+                <a
+                    href="{{ route('traffic-fines.index') }}"
+                    class="clear-btn"
+                >
+                    Clear
+                </a>
+
+            @endif
+
+        </form>
 
     </div>
     <div class="traffic-card">

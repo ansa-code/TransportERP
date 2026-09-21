@@ -441,52 +441,75 @@
         </div>
         {{-- DOCUMENT + REMARKS --}}
         <div class="content-grid">
+       
+        {{-- INVOICE / RECEIPT --}}
+<div class="profile-card">
 
-            {{-- INVOICE / RECEIPT --}}
-            <div class="profile-card">
+    <div class="card-header">
 
-                <div class="card-header">
+        <div>
+            <h3>
+                Invoice / Receipt
+            </h3>
 
-                    <div>
-                        <h3>
-                            Invoice / Receipt
-                        </h3>
+            <p>
+                Supporting finance document for this maintenance job.
+            </p>
+        </div>
 
-                        <p>
-                            Supporting finance document for this maintenance job.
-                        </p>
-                    </div>
-
-                </div>
+    </div>
 
 
-                <div class="document-box">
+    <div class="document-box">
 
-                    @if($maintenance->invoice_receipt)
+        @if($maintenance->invoice_receipt)
 
-                        <div class="document-value">
+            @if(\Illuminate\Support\Facades\Storage::disk('public')->exists($maintenance->invoice_receipt))
 
-                            <span class="document-icon">
-                                📄
-                            </span>
+                <div class="document-value">
 
-                            <span>
-                                {{ $maintenance->invoice_receipt }}
-                            </span>
+                    <span class="document-icon">
+                        📄
+                    </span>
 
-                        </div>
-
-                    @else
-
-                        <div class="empty-state">
-                            No invoice or receipt recorded.
-                        </div>
-
-                    @endif
+                    <a
+                        href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($maintenance->invoice_receipt) }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        View Invoice / Receipt
+                    </a>
 
                 </div>
 
+            @else
+
+                {{-- Legacy text/reference value --}}
+                <div class="document-value">
+
+                    <span class="document-icon">
+                        📄
+                    </span>
+
+                    <span>
+                        {{ $maintenance->invoice_receipt }}
+                    </span>
+
+                </div>
+
+            @endif
+
+        @else
+
+            <div class="empty-state">
+                No invoice or receipt recorded.
             </div>
+
+        @endif
+
+    </div>
+
+</div>
 
 
             {{-- REMARKS --}}

@@ -7,10 +7,6 @@
         padding: 0;
     }
 
-    /* =========================================================
-       HEADER
-    ========================================================= */
-
     .documents-header {
         display: flex;
         justify-content: space-between;
@@ -40,11 +36,7 @@
         padding: 0 16px;
         border: 1px solid #193b8f;
         border-radius: 7px;
-        background: linear-gradient(
-            135deg,
-            #101d42,
-            #193b8f
-        );
+        background: linear-gradient(135deg, #101d42, #193b8f);
         color: #fff;
         font-size: 13px;
         font-weight: 600;
@@ -57,11 +49,6 @@
         background: #101d42;
         color: #fff;
     }
-
-
-    /* =========================================================
-       KPI CARDS — INDEX = WHITE
-    ========================================================= */
 
     .documents-kpi-grid {
         display: grid;
@@ -120,11 +107,6 @@
         font-size: 11px;
     }
 
-
-    /* =========================================================
-       EXPIRY CENTER
-    ========================================================= */
-
     .expiry-card {
         background: #fff;
         border: 1px solid #e5e7eb;
@@ -155,11 +137,6 @@
         font-size: 11px;
     }
 
-
-    /* =========================================================
-       FILTERS
-    ========================================================= */
-
     .expiry-filters {
         display: flex;
         align-items: flex-end;
@@ -181,8 +158,8 @@
         font-weight: 600;
     }
 
+    .filter-input,
     .filter-select {
-        width: 190px;
         height: 38px;
         padding: 0 10px;
         border: 1px solid #d1d5db;
@@ -191,14 +168,24 @@
         color: #374151;
         font-size: 12px;
         outline: none;
+        box-sizing: border-box;
     }
 
+    .filter-input {
+        width: 300px;
+    }
+
+    .filter-select {
+        width: 190px;
+    }
+
+    .filter-input:focus,
     .filter-select:focus {
         border-color: #2563eb;
         box-shadow: 0 0 0 3px rgba(37,99,235,.10);
     }
 
-    .filter-reset {
+    .filter-clear {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -210,18 +197,37 @@
         color: #475569;
         font-size: 12px;
         font-weight: 600;
-        cursor: pointer;
+        text-decoration: none;
+        white-space: nowrap;
     }
 
-    .filter-reset:hover {
+    .filter-clear:hover {
         background: #f1f5f9;
         color: #101d42;
     }
 
+    /* FILTER BUTTON - ADDED */
+    .filter-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 38px;
+        padding: 0 16px;
+        border: 1px solid #2563eb;
+        border-radius: 7px;
+        background: #2563eb;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: .2s;
+    }
 
-    /* =========================================================
-       TABLE
-    ========================================================= */
+    .filter-button:hover {
+        background: #1d4ed8;
+        border-color: #1d4ed8;
+    }
 
     .table-wrapper {
         width: 100%;
@@ -294,11 +300,6 @@
         color: #d97706;
     }
 
-
-    /* =========================================================
-       REMINDER BADGES
-    ========================================================= */
-
     .reminder-badge {
         display: inline-flex;
         align-items: center;
@@ -324,11 +325,6 @@
         background: rgba(25,135,84,.12);
         color: #147044;
     }
-
-
-    /* =========================================================
-       STATUS BADGES
-    ========================================================= */
 
     .status-badge {
         display: inline-flex;
@@ -357,87 +353,65 @@
         color: #475569;
     }
 
-                /* =========================================================
-   ACTIONS
-========================================================= */
+    .document-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+    }
 
-.document-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    white-space: nowrap;
-}
+    .action-btn {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        min-height: 32px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: .2s;
+    }
 
-.action-btn {
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    min-height: 32px;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-    transition: .2s;
-}
+    .action-edit {
+        background: #2563eb !important;
+        background-color: #2563eb !important;
+        border: 1px solid #2563eb !important;
+        color: #ffffff !important;
+    }
 
+    .action-edit:hover {
+        background: #1d4ed8 !important;
+        background-color: #1d4ed8 !important;
+        border-color: #1d4ed8 !important;
+        color: #ffffff !important;
+    }
 
-/* =========================================================
-   EDIT — MEDIUM BLUE
-========================================================= */
+    .action-delete {
+        background: #dc3545 !important;
+        background-color: #dc3545 !important;
+        border: 1px solid #dc3545 !important;
+        color: #ffffff !important;
+    }
 
-.action-edit {
-    background: #2563eb !important;
-    background-color: #2563eb !important;
-    border: 1px solid #2563eb !important;
-    color: #ffffff !important;
-}
+    .action-delete:hover {
+        background: #b02a37 !important;
+        background-color: #b02a37 !important;
+        border-color: #b02a37 !important;
+        color: #ffffff !important;
+    }
 
-.action-edit:hover {
-    background: #1d4ed8 !important;
-    background-color: #1d4ed8 !important;
-    border-color: #1d4ed8 !important;
-    color: #ffffff !important;
-}
+    .document-link {
+        display: block;
+        color: inherit;
+        text-decoration: none;
+    }
 
-
-/* =========================================================
-   DELETE — RED
-========================================================= */
-
-.action-delete {
-    background: #dc3545 !important;
-    background-color: #dc3545 !important;
-    border: 1px solid #dc3545 !important;
-    color: #ffffff !important;
-}
-
-.action-delete:hover {
-    background: #b02a37 !important;
-    background-color: #b02a37 !important;
-    border-color: #b02a37 !important;
-    color: #ffffff !important;
-}
-
-
-/* =========================================================
-   CLICKABLE DOCUMENT
-========================================================= */
-
-.document-link {
-    display: block;
-    color: inherit;
-    text-decoration: none;
-}
-
-.document-link:hover .document-name {
-    color: #2563eb;
-    text-decoration: underline;
-}
-    /* =========================================================
-       EMPTY STATE
-    ========================================================= */
+    .document-link:hover .document-name {
+        color: #2563eb;
+        text-decoration: underline;
+    }
 
     .empty-documents {
         padding: 65px 20px;
@@ -469,21 +443,13 @@
         font-size: 13px;
     }
 
-
-    /* =========================================================
-       RESPONSIVE
-    ========================================================= */
-
     @media (max-width: 1000px) {
-
         .documents-kpi-grid {
             grid-template-columns: repeat(2, minmax(0,1fr));
         }
-
     }
 
     @media (max-width: 700px) {
-
         .documents-header {
             flex-direction: column;
         }
@@ -501,23 +467,15 @@
             flex-direction: column;
         }
 
-        .filter-select {
+        .filter-input,
+        .filter-select,
+        .filter-clear {
             width: 100%;
         }
-
-        .filter-reset {
-            width: 100%;
-        }
-
     }
 </style>
 
-
 <div class="documents-page">
-
-    <!-- =========================================================
-         HEADER
-    ========================================================== -->
 
     <div class="documents-header">
 
@@ -533,7 +491,6 @@
 
         </div>
 
-
         <a
             href="{{ route('documents.create') }}"
             class="upload-btn"
@@ -542,11 +499,6 @@
         </a>
 
     </div>
-
-
-    <!-- =========================================================
-         KPI CARDS
-    ========================================================== -->
 
     <div class="documents-kpi-grid">
 
@@ -566,7 +518,6 @@
 
         </div>
 
-
         <div class="documents-kpi">
 
             <div class="documents-kpi-label">
@@ -583,7 +534,6 @@
 
         </div>
 
-
         <div class="documents-kpi">
 
             <div class="documents-kpi-label">
@@ -599,7 +549,6 @@
             </div>
 
         </div>
-
 
         <div class="documents-kpi">
 
@@ -619,11 +568,6 @@
 
     </div>
 
-
-    <!-- =========================================================
-         EXPIRY CENTER
-    ========================================================== -->
-
     <div class="expiry-card">
 
         <div class="expiry-card-header">
@@ -642,10 +586,32 @@
 
         </div>
 
+        <form
+            method="GET"
+            action="{{ route('documents.index') }}"
+            class="expiry-filters"
+        >
 
-        <!-- FILTERS -->
+            <div class="filter-group">
 
-        <div class="expiry-filters">
+                <label
+                    for="documentSearch"
+                    class="filter-label"
+                >
+                    Search
+                </label>
+
+                <input
+                    type="text"
+                    id="documentSearch"
+                    name="search"
+                    class="filter-input"
+                    value="{{ $search ?? '' }}"
+                    placeholder="Document, number, vehicle, driver..."
+                    autocomplete="off"
+                >
+
+            </div>
 
             <div class="filter-group">
 
@@ -657,42 +623,61 @@
                 </label>
 
                 <select
-                    id="documentTypeFilter"
-                    class="filter-select"
-                >
+    id="documentTypeFilter"
+    name="document_type"
+    class="filter-select"
+    onchange="this.form.submit()"
+>
 
                     <option value="">
                         All Document Types
                     </option>
 
-                    <option value="Visa">
+                    <option
+                        value="Visa"
+                        {{ ($documentType ?? '') === 'Visa' ? 'selected' : '' }}
+                    >
                         Visa
                     </option>
 
-                    <option value="License">
+                    <option
+                        value="License"
+                        {{ ($documentType ?? '') === 'License' ? 'selected' : '' }}
+                    >
                         License
                     </option>
 
-                    <option value="Registration">
+                    <option
+                        value="Registration"
+                        {{ ($documentType ?? '') === 'Registration' ? 'selected' : '' }}
+                    >
                         Registration
                     </option>
 
-                    <option value="Insurance">
+                    <option
+                        value="Insurance"
+                        {{ ($documentType ?? '') === 'Insurance' ? 'selected' : '' }}
+                    >
                         Insurance
                     </option>
 
-                    <option value="Contract">
+                    <option
+                        value="Contract"
+                        {{ ($documentType ?? '') === 'Contract' ? 'selected' : '' }}
+                    >
                         Contract
                     </option>
 
-                    <option value="Other">
+                    <option
+                        value="Other"
+                        {{ ($documentType ?? '') === 'Other' ? 'selected' : '' }}
+                    >
                         Other
                     </option>
 
                 </select>
 
             </div>
-
 
             <div class="filter-group">
 
@@ -704,47 +689,65 @@
                 </label>
 
                 <select
-                    id="duePeriodFilter"
-                    class="filter-select"
-                >
-
-                    <option value="">
+    id="duePeriodFilter"
+    name="due_period"
+    class="filter-select"
+    onchange="this.form.submit()"
+>
+                    <option
+                        value=""
+                        {{ ($duePeriod ?? '') === '' ? 'selected' : '' }}
+                    >
                         All
                     </option>
 
-                    <option value="overdue">
+                    <option
+                        value="overdue"
+                        {{ ($duePeriod ?? '') === 'overdue' ? 'selected' : '' }}
+                    >
                         Overdue
                     </option>
 
-                    <option value="7">
+                    <option
+                        value="7"
+                        {{ ($duePeriod ?? '') === '7' ? 'selected' : '' }}
+                    >
                         Within 7 Days
                     </option>
 
-                    <option value="15">
+                    <option
+                        value="15"
+                        {{ ($duePeriod ?? '') === '15' ? 'selected' : '' }}
+                    >
                         Within 15 Days
                     </option>
 
-                    <option value="30">
+                    <option
+                        value="30"
+                        {{ ($duePeriod ?? '') === '30' ? 'selected' : '' }}
+                    >
                         Within 30 Days
                     </option>
 
                 </select>
 
             </div>
+            @if(
+                !empty($search) ||
+                !empty($documentType) ||
+                !empty($duePeriod)
+            )
 
+                <a
+                    href="{{ route('documents.index') }}"
+                    class="filter-clear"
+                >
+                    Clear
+                </a>
 
-            <button
-                type="button"
-                class="filter-reset"
-                id="resetDocumentFilters"
-            >
-                Reset
-            </button>
-
-        </div>
-        <!-- =========================================================
-             DOCUMENT TABLE
-        ========================================================== -->
+            @endif
+            
+        </form>
 
         <div class="table-wrapper">
 
@@ -769,16 +772,11 @@
 
                 </thead>
 
-
                 <tbody>
 
                     @forelse($documents as $document)
 
                         @php
-
-                            /*
-                             * Expiry calculation
-                             */
 
                             $expiryDate = $document->expiry_date;
 
@@ -794,11 +792,6 @@
                                     );
 
                             }
-
-
-                            /*
-                             * Reminder state
-                             */
 
                             if ($daysRemaining === null) {
 
@@ -838,16 +831,10 @@
 
                             }
 
-
-                            /*
-                             * Related entity
-                             */
-
                             $related = $document->related;
 
                             $relatedName = 'Not Available';
                             $relatedType = 'Unknown';
-
 
                             if ($related) {
 
@@ -855,7 +842,6 @@
                                     class_basename(
                                         $document->related_type
                                     );
-
 
                                 $relatedName = match ($relatedType) {
 
@@ -885,11 +871,6 @@
 
                             }
 
-
-                            /*
-                             * Status
-                             */
-
                             $status =
                                 strtolower(
                                     $document->status ?? 'active'
@@ -897,18 +878,7 @@
 
                         @endphp
 
-
-                        <tr
-                            class="document-row"
-                            data-document-type="{{ strtolower($document->document_type ?? '') }}"
-                            data-days="{{ $daysRemaining !== null ? $daysRemaining : '' }}"
-                        >
-
-
-                            <!-- =================================================
-                                 DOCUMENT
-                                 CLICK = SHOW PAGE
-                            ================================================== -->
+                        <tr class="document-row">
 
                             <td>
 
@@ -933,11 +903,6 @@
 
                             </td>
 
-
-                            <!-- =================================================
-                                 RELATED ENTITY
-                            ================================================== -->
-
                             <td>
 
                                 <div class="related-name">
@@ -949,11 +914,6 @@
                                 </div>
 
                             </td>
-
-
-                            <!-- =================================================
-                                 ISSUE DATE
-                            ================================================== -->
 
                             <td>
 
@@ -970,11 +930,6 @@
                                 @endif
 
                             </td>
-
-
-                            <!-- =================================================
-                                 EXPIRY DATE
-                            ================================================== -->
 
                             <td>
 
@@ -996,11 +951,6 @@
 
                             </td>
 
-
-                            <!-- =================================================
-                                 REMINDER
-                            ================================================== -->
-
                             <td>
 
                                 <span
@@ -1010,11 +960,6 @@
                                 </span>
 
                             </td>
-
-
-                            <!-- =================================================
-                                 STATUS
-                            ================================================== -->
 
                             <td>
 
@@ -1026,17 +971,9 @@
 
                             </td>
 
-
-                            <!-- =================================================
-                                 ACTIONS
-                                 EDIT + DELETE ONLY
-                            ================================================== -->
-
                             <td>
 
                                 <div class="document-actions">
-
-                                    <!-- EDIT -->
 
                                     <a
                                         href="{{ route('documents.edit', $document) }}"
@@ -1044,9 +981,6 @@
                                     >
                                         Edit
                                     </a>
-
-
-                                    <!-- DELETE -->
 
                                     <form
                                         action="{{ route('documents.destroy', $document) }}"
@@ -1056,7 +990,6 @@
                                     >
 
                                         @csrf
-
                                         @method('DELETE')
 
                                         <button
@@ -1073,7 +1006,6 @@
                             </td>
 
                         </tr>
-
 
                     @empty
 
@@ -1092,8 +1024,7 @@
                                     </h3>
 
                                     <p>
-                                        No documents have been uploaded yet.
-                                        Use the Upload Document button to add the first document.
+                                        No documents match your current search or filters.
                                     </p>
 
                                 </div>
@@ -1113,165 +1044,5 @@
     </div>
 
 </div>
-
-
-<!-- =========================================================
-     FILTER JAVASCRIPT
-========================================================== -->
-
-<script>
-
-document.addEventListener('DOMContentLoaded', function () {
-
-    const typeFilter =
-        document.getElementById('documentTypeFilter');
-
-    const dueFilter =
-        document.getElementById('duePeriodFilter');
-
-    const resetButton =
-        document.getElementById('resetDocumentFilters');
-
-    const rows =
-        document.querySelectorAll('.document-row');
-
-
-    function filterDocuments() {
-
-        const selectedType =
-            typeFilter
-                ? typeFilter.value.toLowerCase()
-                : '';
-
-        const selectedDue =
-            dueFilter
-                ? dueFilter.value
-                : '';
-
-
-        rows.forEach(function (row) {
-
-            const rowType =
-                row.dataset.documentType || '';
-
-            const daysValue =
-                row.dataset.days;
-
-            const days =
-                daysValue !== ''
-                    ? parseInt(daysValue, 10)
-                    : null;
-
-
-            let typeMatches = true;
-            let dueMatches = true;
-
-
-            /*
-             * Document Type
-             */
-
-            if (selectedType !== '') {
-
-                typeMatches =
-                    rowType === selectedType;
-
-            }
-
-
-            /*
-             * Due Period
-             */
-
-            if (selectedDue !== '') {
-
-                if (days === null) {
-
-                    dueMatches = false;
-
-                } else if (selectedDue === 'overdue') {
-
-                    dueMatches = days < 0;
-
-                } else {
-
-                    const limit =
-                        parseInt(selectedDue, 10);
-
-                    dueMatches =
-                        days >= 0 &&
-                        days <= limit;
-
-                }
-
-            }
-
-
-            row.style.display =
-                typeMatches && dueMatches
-                    ? ''
-                    : 'none';
-
-        });
-
-    }
-
-
-    /*
-     * Document Type filter
-     */
-
-    if (typeFilter) {
-
-        typeFilter.addEventListener(
-            'change',
-            filterDocuments
-        );
-
-    }
-
-
-    /*
-     * Due Period filter
-     */
-
-    if (dueFilter) {
-
-        dueFilter.addEventListener(
-            'change',
-            filterDocuments
-        );
-
-    }
-
-
-    /*
-     * Reset filters
-     */
-
-    if (resetButton) {
-
-        resetButton.addEventListener(
-            'click',
-            function () {
-
-                if (typeFilter) {
-                    typeFilter.value = '';
-                }
-
-                if (dueFilter) {
-                    dueFilter.value = '';
-                }
-
-                filterDocuments();
-
-            }
-        );
-
-    }
-
-});
-
-</script>
 
 @endsection

@@ -154,8 +154,6 @@
         box-shadow: 0 0 0 3px rgba(13, 110, 253, .10);
     }
 
-
-
     .clear-btn {
         padding: 10px 14px;
         background: #6c757d;
@@ -378,32 +376,32 @@
        ACTIONS
     ========================= */
 
-     .action-buttons {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 6px;
-    flex-wrap: nowrap;
-    white-space: nowrap;
-}
+    .action-buttons {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 6px;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+    }
 
-.edit-btn,
-.delete-btn {
-    width: 52px;
-    min-width: 52px;
-    height: 32px;
-    padding: 0;
-    margin: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 800;
-    line-height: 1;
-    flex-shrink: 0;
-}
+    .edit-btn,
+    .delete-btn {
+        width: 52px;
+        min-width: 52px;
+        height: 32px;
+        padding: 0;
+        margin: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 800;
+        line-height: 1;
+        flex-shrink: 0;
+    }
 
     .edit-btn {
         background: #0d6efd;
@@ -429,7 +427,7 @@
 
     .actions-column {
         width: 120px !important;
-        main-width: 120px;
+        min-width: 120px;
     }
 
 
@@ -446,8 +444,6 @@
         .search-input {
             grid-column: span 3;
         }
-
-       
 
     }
 
@@ -627,8 +623,9 @@
         </div>
 
     </div>
-      
-       {{-- =========================
+
+
+    {{-- =========================
          SEARCH + FILTERS
     ========================== --}}
 
@@ -679,7 +676,8 @@
             </select>
 
 
-            {{-- Passport Custody --}}
+    {{-- Continue with PART 2 immediately after this line --}}
+           {{-- Passport Custody --}}
 
             <select
                 name="passport_custody"
@@ -747,7 +745,6 @@
                 </option>
 
             </select>
-
 
 
             {{-- Clear Button --}}
@@ -901,9 +898,23 @@
 
                             <td>
 
-                                {{ $driver->assigned_vehicle_id
-                                    ? '#' . $driver->assigned_vehicle_id
-                                    : '-' }}
+                                @php
+                                    $activeAssignment = $driver->assignments->first();
+                                @endphp
+
+                                @if($activeAssignment && $activeAssignment->vehicle)
+
+                                    {{ $activeAssignment->vehicle->plate_number ?? '#' . $activeAssignment->vehicle->id }}
+
+                                @elseif($driver->assigned_vehicle_id)
+
+                                    #{{ $driver->assigned_vehicle_id }}
+
+                                @else
+
+                                    -
+
+                                @endif
 
                             </td>
 
@@ -1027,7 +1038,9 @@
     </div>
 
 </div>
-             <script>
+
+
+<script>
     document.querySelectorAll('.filter-select').forEach(function (select) {
         select.addEventListener('change', function () {
             this.form.submit();
@@ -1035,6 +1048,4 @@
     });
 </script>
 
-
 @endsection
-

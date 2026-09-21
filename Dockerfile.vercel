@@ -73,7 +73,8 @@ RUN sed -ri \
     /etc/apache2/sites-available/000-default.conf \
     /etc/apache2/apache2.conf
 
-# Vercel uses port 80 by default
+# Vercel container port
 EXPOSE 80
 
-CMD ["apache2-foreground"]
+# Make Apache listen on Vercel's PORT (defaults to 80)
+CMD ["sh", "-c", "PORT=${PORT:-80}; sed -ri \"s/^Listen [0-9]+/Listen ${PORT}/\" /etc/apache2/ports.conf; sed -ri \"s/<VirtualHost \\*:[0-9]+>/<VirtualHost *:${PORT}>/\" /etc/apache2/sites-available/000-default.conf; apache2-foreground"]

@@ -373,7 +373,7 @@
         background: #bb2d3b;
     }
 
-       
+
     /* =========================
        EMPTY
     ========================== */
@@ -384,26 +384,27 @@
         color: #64748b !important;
         font-weight: 600 !important;
     }
-     
-       .clear-btn {
-    height: 40px;
-    padding: 0 14px;
-    background: #6c757d;
-    color: white;
-    text-decoration: none;
-    border-radius: 12px;
-    font-size: 13px;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    white-space: nowrap;
-}
 
-.clear-btn:hover {
-    background: #5c636a;
-    color: white;
-}
+    .clear-btn {
+        height: 40px;
+        padding: 0 14px;
+        background: #6c757d;
+        color: white;
+        text-decoration: none;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+    }
+
+    .clear-btn:hover {
+        background: #5c636a;
+        color: white;
+    }
+
 
     /* =========================
        RESPONSIVE
@@ -484,163 +485,6 @@
         </a>
 
     </div>
-
-
-    {{-- =========================
-         FILTERS
-    ========================== --}}
-
-    <form
-        action="{{ route('clients.index') }}"
-        method="GET"
-        class="client-filters"
-    >
-
-        <input
-            type="text"
-            name="search"
-            value="{{ $search ?? '' }}"
-            class="client-search"
-            placeholder="🔍 Search client, TRN, contract or contact person..."
-        >
-
-        <select
-            name="billing_type"
-            class="client-select"
-        >
-
-            <option value="">
-                Billing Type 
-            </option>
-
-            <option value="Per Trip"
-                {{ request('billing_type') == 'Per Trip' ? 'selected' : '' }}>
-                Per Trip
-            </option>
-
-            <option value="Weekly"
-                {{ request('billing_type') == 'Weekly' ? 'selected' : '' }}>
-                Weekly
-            </option>
-
-            <option value="Monthly"
-                {{ request('billing_type') == 'Monthly' ? 'selected' : '' }}>
-                Monthly
-            </option>
-
-            <option value="Fixed Rent"
-                {{ request('billing_type') == 'Fixed Rent' ? 'selected' : '' }}>
-                Fixed Rent
-            </option>
-
-            <option value="Usage"
-                {{ request('billing_type') == 'Usage' ? 'selected' : '' }}>
-                Usage
-            </option>
-
-            <option value="Mixed"
-                {{ request('billing_type') == 'Mixed' ? 'selected' : '' }}>
-                Mixed
-            </option>
-
-            <option value="Custom"
-                {{ request('billing_type') == 'Custom' ? 'selected' : '' }}>
-                Custom
-            </option>
-
-        </select>
-
-
-        <select
-            name="city"
-            class="client-select"
-        >
-
-            <option value="">
-                Emirate 
-            </option>
-
-            <option value="Dubai"
-                {{ request('city') == 'Dubai' ? 'selected' : '' }}>
-                Dubai
-            </option>
-
-            <option value="Abu Dhabi"
-                {{ request('city') == 'Abu Dhabi' ? 'selected' : '' }}>
-                Abu Dhabi
-            </option>
-
-            <option value="Sharjah"
-                {{ request('city') == 'Sharjah' ? 'selected' : '' }}>
-                Sharjah
-            </option>
-
-            <option value="Ajman"
-                {{ request('city') == 'Ajman' ? 'selected' : '' }}>
-                Ajman
-            </option>
-
-            <option value="Umm Al Quwain"
-                {{ request('city') == 'Umm Al Quwain' ? 'selected' : '' }}>
-                Umm Al Quwain
-            </option>
-
-            <option value="Ras Al Khaimah"
-                {{ request('city') == 'Ras Al Khaimah' ? 'selected' : '' }}>
-                Ras Al Khaimah
-            </option>
-
-            <option value="Fujairah"
-                {{ request('city') == 'Fujairah' ? 'selected' : '' }}>
-                Fujairah
-            </option>
-
-        </select>
-
-
-        <select
-            name="status"
-            class="client-select"
-        >
-
-            <option value="">
-                Contract Status 
-            </option>
-
-            <option value="Active"
-                {{ request('status') == 'Active' ? 'selected' : '' }}>
-                Active
-            </option>
-
-            <option value="Inactive"
-                {{ request('status') == 'Inactive' ? 'selected' : '' }}>
-                Inactive
-            </option>
-
-            <option value="Archived"
-                {{ request('status') == 'Archived' ? 'selected' : '' }}>
-                Archived
-            </option>
-
-        </select>
-           
-        @if(
-    $search ||
-    request('billing_type') ||
-    request('city') ||
-    request('status')
-)
-
-    <a
-        href="{{ route('clients.index') }}"
-        class="clear-btn"
-    >
-        Clear
-    </a>
-
-@endif
-
-    </form>
 
 
     {{-- =========================
@@ -737,6 +581,161 @@
     </div>
 
 
+    {{-- =========================
+         FILTERS
+    ========================== --}}
+
+    <form
+        action="{{ route('clients.index') }}"
+        method="GET"
+        class="client-filters"
+    >
+
+        <input
+            type="text"
+            name="search"
+            value="{{ $search ?? '' }}"
+            class="client-search"
+            placeholder="🔍 Search client, TRN, contract or contact person..."
+        >
+
+        <select
+            name="billing_type"
+            class="client-select"
+        >
+
+            <option value="">
+                Billing Type
+            </option>
+
+            <option value="Per Trip"
+                {{ request('billing_type') == 'Per Trip' ? 'selected' : '' }}>
+                Per Trip
+            </option>
+
+            <option value="Weekly"
+                {{ request('billing_type') == 'Weekly' ? 'selected' : '' }}>
+                Weekly
+            </option>
+
+            <option value="Monthly"
+                {{ request('billing_type') == 'Monthly' ? 'selected' : '' }}>
+                Monthly
+            </option>
+
+            <option value="Fixed Rent"
+                {{ request('billing_type') == 'Fixed Rent' ? 'selected' : '' }}>
+                Fixed Rent
+            </option>
+
+            <option value="Usage"
+                {{ request('billing_type') == 'Usage' ? 'selected' : '' }}>
+                Usage
+            </option>
+
+            <option value="Mixed"
+                {{ request('billing_type') == 'Mixed' ? 'selected' : '' }}>
+                Mixed
+            </option>
+
+            <option value="Custom"
+                {{ request('billing_type') == 'Custom' ? 'selected' : '' }}>
+                Custom
+            </option>
+
+        </select>
+
+
+        <select
+            name="city"
+            class="client-select"
+        >
+
+            <option value="">
+                Emirate
+            </option>
+
+            <option value="Dubai"
+                {{ request('city') == 'Dubai' ? 'selected' : '' }}>
+                Dubai
+            </option>
+
+            <option value="Abu Dhabi"
+                {{ request('city') == 'Abu Dhabi' ? 'selected' : '' }}>
+                Abu Dhabi
+            </option>
+
+            <option value="Sharjah"
+                {{ request('city') == 'Sharjah' ? 'selected' : '' }}>
+                Sharjah
+            </option>
+
+            <option value="Ajman"
+                {{ request('city') == 'Ajman' ? 'selected' : '' }}>
+                Ajman
+            </option>
+
+            <option value="Umm Al Quwain"
+                {{ request('city') == 'Umm Al Quwain' ? 'selected' : '' }}>
+                Umm Al Quwain
+            </option>
+
+            <option value="Ras Al Khaimah"
+                {{ request('city') == 'Ras Al Khaimah' ? 'selected' : '' }}>
+                Ras Al Khaimah
+            </option>
+
+            <option value="Fujairah"
+                {{ request('city') == 'Fujairah' ? 'selected' : '' }}>
+                Fujairah
+            </option>
+
+        </select>
+
+
+        <select
+            name="status"
+            class="client-select"
+        >
+
+            <option value="">
+                Contract Status
+            </option>
+
+            <option value="Active"
+                {{ request('status') == 'Active' ? 'selected' : '' }}>
+                Active
+            </option>
+
+            <option value="Inactive"
+                {{ request('status') == 'Inactive' ? 'selected' : '' }}>
+                Inactive
+            </option>
+
+            <option value="Archived"
+                {{ request('status') == 'Archived' ? 'selected' : '' }}>
+                Archived
+            </option>
+
+        </select>
+
+        @if(
+            $search ||
+            request('billing_type') ||
+            request('city') ||
+            request('status')
+        )
+
+            <a
+                href="{{ route('clients.index') }}"
+                class="clear-btn"
+            >
+                Clear
+            </a>
+
+        @endif
+
+    </form>
     {{-- =========================
          CLIENT DIRECTORY
     ========================== --}}
@@ -925,7 +924,8 @@
             </table>
 
         </div>
-        </div>
+
+    </div>
 
 </div>
 
