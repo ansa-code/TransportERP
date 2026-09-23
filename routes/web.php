@@ -95,7 +95,17 @@ Route::resource('leaves', LeaveController::class);
 
 Route::resource('vendors', VendorController::class);
 
+Route::get(
+    'fuels/{id}/receipt',
+    [FuelController::class, 'receipt']
+)->name('fuels.receipt');
+
 Route::resource('fuels', FuelController::class);
+
+Route::get(
+    'expenses/{id}/receipt',
+    [ExpenseController::class, 'receipt']
+)->name('expenses.receipt');
 
 Route::resource('expenses', ExpenseController::class);
 
@@ -113,13 +123,21 @@ Route::post(
 
 Route::resource('payrolls', PayrollController::class);
 
+Route::get(
+    'traffic-fines/{id}/attachment',
+    [TrafficFineController::class, 'attachment']
+)->name('traffic-fines.attachment');
+
 Route::resource('traffic-fines', TrafficFineController::class);
 
 Route::resource('driver-advances', DriverAdvanceController::class);
 
+Route::get(
+    'payments/{payment}/attachment',
+    [PaymentController::class, 'attachment']
+)->name('payments.attachment');
+
 Route::resource('payments', PaymentController::class);
-
-
 /*
 |--------------------------------------------------------------------------
 | Reports
@@ -162,7 +180,14 @@ Route::patch(
 
 
 Route::resource('users', UserController::class);
+
+Route::get(
+    'documents/{document}/file',
+    [DocumentController::class, 'file']
+)->name('documents.file');
+
 Route::resource('documents', DocumentController::class);
+
 Route::post(
     'documents/{document}/replace',
     [DocumentController::class, 'replace']

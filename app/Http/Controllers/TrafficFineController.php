@@ -239,42 +239,58 @@ class TrafficFineController extends Controller
             );
     }
 
-    /**
-     * Display a specific traffic fine.
-     */
-    public function show($id)
-    {
-        $fine = TrafficFine::with([
-            'vehicle',
-            'driver',
-        ])->findOrFail($id);
+       /**
+ * Display a specific traffic fine.
+ */
+public function show($id)
+{
+    $fine = TrafficFine::with([
+        'vehicle',
+        'driver',
+    ])->findOrFail($id);
 
-        return view(
-            'traffic_fines.show',
-            compact('fine')
-        );
-    }
+    return view(
+        'traffic_fines.show',
+        compact('fine')
+    );
+}
 
-    /**
-     * Show edit form.
-     */
-    public function edit($id)
-    {
-        $fine = TrafficFine::findOrFail($id);
+/**
+ * Display traffic fine attachment.
+ */
+public function attachment($id)
+{
+    $fine = TrafficFine::findOrFail($id);
 
-        $vehicles = Vehicle::orderBy('plate_number')->get();
+    abort_unless($fine->attachment, 404);
 
-        $drivers = Driver::orderBy('driver_name')->get();
+    $disk = Storage::disk('public');
 
-        return view(
-            'traffic_fines.edit',
-            compact(
-                'fine',
-                'vehicles',
-                'drivers'
-            )
-        );
-    }
+    abort_unless($disk->exists($fine->attachment), 404);
+
+    return $disk->response($fine->attachment);
+}
+
+/**
+ * Show edit form.
+ */
+public function edit($id)
+{
+    $fine = TrafficFine::findOrFail($id);
+
+    $vehicles = Vehicle::orderBy('plate_number')->get();
+
+    $drivers = Driver::orderBy('driver_name')->get();
+
+    return view(
+        'traffic_fines.edit',
+        compact(
+            'fine',
+            'vehicles',
+            'drivers'
+        )
+    );
+}
 
     /**
      * Update an existing traffic fine.

@@ -247,6 +247,26 @@ class DocumentController extends Controller
         return view('documents.show', compact('document'));
     }
 
+    /**
+     * Display document file.
+     */
+    public function file(Document $document)
+    {
+        abort_unless($document->file_path, 404);
+
+        $disk = Storage::disk('public');
+
+        abort_unless(
+            $disk->exists($document->file_path),
+            404
+        );
+
+        return $disk->response(
+            $document->file_path,
+            $document->original_file_name
+        );
+    }
+
     public function edit(Document $document): View
     {
         $vehicles = Vehicle::orderBy('plate_number')->get();

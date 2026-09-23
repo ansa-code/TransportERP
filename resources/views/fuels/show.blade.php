@@ -696,7 +696,7 @@
                     </div>
 
                     <a
-                        href="{{ asset('storage/' . $fuel->receipt) }}"
+                        href="{{ route('fuels.receipt', $fuel->id) }}"
                         target="_blank"
                         class="receipt-btn"
                     >

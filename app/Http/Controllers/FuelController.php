@@ -296,6 +296,19 @@ class FuelController extends Controller
         return view('fuels.show', compact('fuel'));
     }
 
+    public function receipt($id)
+    {
+        $fuel = Fuel::findOrFail($id);
+
+        abort_unless($fuel->receipt, 404);
+
+        $disk = Storage::disk('public');
+
+        abort_unless($disk->exists($fuel->receipt), 404);
+
+        return $disk->response($fuel->receipt);
+    }
+
     public function edit($id)
     {
         $fuel = Fuel::findOrFail($id);

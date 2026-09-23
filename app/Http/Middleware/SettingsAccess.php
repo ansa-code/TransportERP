@@ -23,7 +23,7 @@ class SettingsAccess
         // Super Admin / Owner → Full access
         if ($user->hasAnyRole([
             'Super Admin',
-            
+            'super-admin',
             'Owner',
             'owner',
             'super_admin',

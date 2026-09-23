@@ -327,31 +327,53 @@ class PaymentController extends Controller
             );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Show Payment
-    |--------------------------------------------------------------------------
-    */
+          /*
+|--------------------------------------------------------------------------
+| Show Payment
+|--------------------------------------------------------------------------
+*/
 
-    public function show(Payment $payment)
-    {
-        $payment->load([
-            'client',
-            'allocations.invoice',
-            'invoices',
-        ]);
+public function show(Payment $payment)
+{
+    $payment->load([
+        'client',
+        'allocations.invoice',
+        'invoices',
+    ]);
 
-        return view(
-            'payments.show',
-            compact('payment')
-        );
-    }
+    return view(
+        'payments.show',
+        compact('payment')
+    );
+}
 
-    /*
-    |--------------------------------------------------------------------------
-    | Edit Payment Form
-    |--------------------------------------------------------------------------
-    */
+/*
+|--------------------------------------------------------------------------
+| Display Payment Attachment
+|--------------------------------------------------------------------------
+*/
+
+public function attachment(Payment $payment)
+{
+    abort_unless($payment->attachment, 404);
+
+    $disk = Storage::disk('public');
+
+    abort_unless(
+        $disk->exists($payment->attachment),
+        404
+    );
+
+    return $disk->response(
+        $payment->attachment
+    );
+}
+
+/*
+|--------------------------------------------------------------------------
+| Edit Payment Form
+|--------------------------------------------------------------------------
+*/
 
     public function edit(Payment $payment)
     {

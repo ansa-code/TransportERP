@@ -1101,15 +1101,14 @@
 
                             @if($fine->attachment)
 
-                                @php
-                                    $attachmentPath = ltrim($fine->attachment, '/');
-                                    $attachmentUrl = asset('storage/' . $attachmentPath);
-                                    $attachmentExtension = strtolower(
-                                        pathinfo($attachmentPath, PATHINFO_EXTENSION)
-                                    );
-                                    $attachmentName = basename($attachmentPath);
-                                    @endphp
-
+                              @php
+    $attachmentPath = ltrim($fine->attachment, '/');
+    $attachmentUrl = route('traffic-fines.attachment', $fine->id);
+    $attachmentExtension = strtolower(
+        pathinfo($attachmentPath, PATHINFO_EXTENSION)
+    );
+    $attachmentName = basename($attachmentPath);
+@endphp
                                 <div class="attachment-preview">
 
                                     @if(in_array($attachmentExtension, ['jpg', 'jpeg', 'png']))

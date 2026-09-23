@@ -864,12 +864,12 @@
                     </div>
 
                     <a
-                        href="{{ asset('storage/' . $payment->attachment) }}"
-                        target="_blank"
-                        class="attachment-btn"
-                    >
-                        Open Attachment
-                    </a>
+    href="{{ route('payments.attachment', $payment) }}"
+    target="_blank"
+    class="attachment-btn"
+>
+    Open Attachment
+</a>
 
                 </div>
 

@@ -967,13 +967,12 @@
                             </div>
 
                             <a
-                                href="{{ asset('storage/' . $expense->receipt) }}"
-                                target="_blank"
-                                class="receipt-link"
-                            >
-                                Open Receipt
-                            </a>
-
+    href="{{ route('expenses.receipt', $expense->id) }}"
+    target="_blank"
+    class="receipt-link"
+>
+    Open Receipt
+</a>
                         </div>
 
                     @else

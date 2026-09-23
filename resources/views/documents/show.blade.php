@@ -4,10 +4,10 @@
 
 <style>
     .document-show-page {
-        padding: 28px 32px;
+        padding: 0;
     }
 
-    .document-show-header {
+    .document-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
@@ -15,1123 +15,775 @@
         margin-bottom: 24px;
     }
 
-    .document-show-title {
+    .document-title {
         margin: 0 0 5px;
         color: #101d42;
         font-size: 28px;
         font-weight: 700;
     }
 
-    .document-show-subtitle {
+    .document-subtitle {
         margin: 0;
         color: #6b7280;
         font-size: 14px;
     }
 
-    .header-actions {
+    .document-actions {
         display: flex;
-        gap: 9px;
+        gap: 10px;
         flex-wrap: wrap;
     }
 
-    .btn-primary-erp,
-    .btn-secondary-erp,
-    .btn-danger-erp {
+    .document-btn {
+        border: none;
+        border-radius: 8px;
+        padding: 9px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        height: 38px;
-        padding: 0 15px;
-        border-radius: 7px;
-        font-size: 13px;
-        font-weight: 600;
-        text-decoration: none;
+        gap: 6px;
         cursor: pointer;
-        transition: .2s;
-        border: 1px solid transparent;
     }
 
-    .btn-primary-erp {
-        border-color: #193b8f;
-        background: linear-gradient(135deg, #101d42, #193b8f);
-        color: #fff;
+    .document-btn-back {
+        background: #e5e7eb;
+        color: #111827;
     }
 
-    .btn-primary-erp:hover {
-        background: #101d42;
-        color: #fff;
+    .document-btn-edit {
+        background: #2563eb;
+        color: #ffffff;
     }
 
-    .btn-secondary-erp {
-        border-color: #d1d5db;
-        background: #fff;
-        color: #374151;
-    }
-
-    .btn-secondary-erp:hover {
-        background: #f8fafc;
-        color: #101d42;
-    }
-
-    .btn-danger-erp {
-        border-color: #dc3545;
-        background: #dc3545;
-        color: #fff;
-    }
-
-    .btn-danger-erp:hover {
-        background: #b42333;
-        color: #fff;
+    .document-btn-delete {
+        background: #dc2626;
+        color: #ffffff;
     }
 
     .document-hero {
-        position: relative;
-        overflow: hidden;
-        padding: 26px;
-        margin-bottom: 22px;
-        border-radius: 13px;
         background: linear-gradient(135deg,#101d42,#193b8f);
-        box-shadow: 0 8px 24px rgba(16,29,66,.18);
+        border-radius: 16px;
+        padding: 28px;
+        color: #ffffff;
+        margin-bottom: 24px;
     }
 
-    .document-hero::after {
-        content: "";
-        position: absolute;
-        width: 220px;
-        height: 220px;
-        right: -70px;
-        top: -100px;
-        border-radius: 50%;
-        background: rgba(255,255,255,.06);
-    }
-
-    .hero-content {
-        position: relative;
-        z-index: 1;
-    }
-
-    .hero-top {
+    .document-hero-top {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
         gap: 20px;
-        margin-bottom: 22px;
+        margin-bottom: 24px;
     }
 
-    .hero-document-type {
-        margin-bottom: 6px;
-        color: rgba(255,255,255,.72);
-        font-size: 12px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: .06em;
-    }
-
-    .hero-document-title {
-        margin: 0;
-        color: #fff;
-        font-size: 23px;
+    .document-hero-title {
+        margin: 0 0 6px;
+        font-size: 24px;
         font-weight: 700;
     }
 
-    .hero-document-number {
-        margin-top: 6px;
-        color: rgba(255,255,255,.72);
-        font-size: 13px;
+    .document-hero-number {
+        margin: 0;
+        color: rgba(255,255,255,.78);
+        font-size: 14px;
     }
 
-    .status-badge {
+    .document-status {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        min-width: 78px;
-        padding: 6px 11px;
-        border-radius: 20px;
-        font-size: 11px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        font-size: 12px;
         font-weight: 700;
         text-transform: uppercase;
+        letter-spacing: .4px;
     }
 
-    .status-active {
-        background: rgba(25,135,84,.20);
-        color: #d1fae5;
+    .document-status-active {
+        background: rgba(34,197,94,.18);
+        color: #bbf7d0;
     }
 
-    .status-expired {
-        background: rgba(220,53,69,.20);
+    .document-status-expired {
+        background: rgba(239,68,68,.18);
         color: #fecaca;
     }
 
-    .status-archived {
-        background: rgba(148,163,184,.20);
-        color: #e2e8f0;
+    .document-status-other {
+        background: rgba(255,255,255,.15);
+        color: #ffffff;
     }
 
-    .hero-cards {
+    .document-summary-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0,1fr));
-        gap: 12px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
     }
 
-    .hero-card {
-        padding: 15px;
-        border: 1px solid rgba(255,255,255,.08);
-        border-radius: 9px;
+    .document-summary-card {
         background: rgba(37,99,235,.30);
+        border: 1px solid rgba(255,255,255,.10);
+        border-radius: 12px;
+        padding: 16px;
     }
 
-    .hero-card-label {
+    .document-summary-label {
+        display: block;
+        color: rgba(255,255,255,.68);
+        font-size: 12px;
         margin-bottom: 6px;
-        color: rgba(255,255,255,.65);
-        font-size: 10px;
-        font-weight: 600;
-        text-transform: uppercase;
     }
 
-    .hero-card-value {
-        overflow: hidden;
-        color: #fff;
-        font-size: 14px;
-        font-weight: 700;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .details-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0,1fr));
-        gap: 20px;
-        margin-bottom: 22px;
-    }
-
-    .details-card {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 11px;
-        box-shadow: 0 4px 16px rgba(15,23,42,.06);
-        overflow: hidden;
-    }
-
-    .details-card-header {
-        padding: 17px 20px;
-        border-bottom: 1px solid #eef0f3;
-    }
-
-    .details-card-title {
-        margin: 0;
-        color: #101d42;
+    .document-summary-value {
+        display: block;
+        color: #ffffff;
         font-size: 16px;
         font-weight: 700;
+        word-break: break-word;
     }
 
-    .details-list {
-        padding: 5px 20px;
+    .document-section {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 24px;
+        margin-bottom: 20px;
     }
 
-    .detail-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 20px;
-        padding: 13px 0;
-        border-bottom: 1px solid #f1f5f9;
+    .document-section-title {
+        margin: 0 0 18px;
+        color: #101d42;
+        font-size: 18px;
+        font-weight: 700;
     }
 
-    .detail-row:last-child {
-        border-bottom: none;
+    .document-details-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px 28px;
     }
 
-    .detail-label {
-        color: #64748b;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    .detail-value {
-        color: #1f2937;
-        font-size: 13px;
-        font-weight: 600;
-        text-align: right;
-    }
-
-    .file-card {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 15px;
-        padding: 18px 20px;
-    }
-
-    .file-info {
+    .document-detail-item {
         min-width: 0;
     }
 
-    .file-label {
-        margin-bottom: 5px;
-        color: #64748b;
-        font-size: 11px;
+    .document-detail-label {
+        display: block;
+        color: #6b7280;
+        font-size: 12px;
         font-weight: 600;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        letter-spacing: .3px;
+    }
+
+    .document-detail-value {
+        color: #111827;
+        font-size: 14px;
+        font-weight: 600;
+        word-break: break-word;
+    }
+
+    .document-file-box {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        background: #f9fafb;
+    }
+
+    .document-file-info {
+        min-width: 0;
+    }
+
+    .document-file-name {
+        margin: 0 0 4px;
+        color: #111827;
+        font-size: 14px;
+        font-weight: 700;
+        word-break: break-word;
+    }
+
+    .document-file-meta {
+        margin: 0;
+        color: #6b7280;
+        font-size: 12px;
+    }
+
+    .document-file-link {
+        flex-shrink: 0;
+        background: #2563eb;
+        color: #ffffff;
+        text-decoration: none;
+        border-radius: 8px;
+        padding: 8px 13px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .document-notes {
+        margin: 0;
+        color: #374151;
+        line-height: 1.7;
+        white-space: pre-wrap;
+    }
+
+    .document-version-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .document-version-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .document-version-table th,
+    .document-version-table td {
+        padding: 12px 14px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    .document-version-table th {
+        background: #f9fafb;
+        color: #374151;
+        font-size: 12px;
+        font-weight: 700;
         text-transform: uppercase;
     }
 
-    .file-name {
-        overflow: hidden;
-        color: #101d42;
+    .document-version-table td {
+        color: #4b5563;
         font-size: 13px;
-        font-weight: 600;
-        text-overflow: ellipsis;
-        white-space: nowrap;
     }
 
-    .file-button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 34px;
-        padding: 7px 13px;
-        border-radius: 6px;
-        background: #2563eb;
-        color: #fff;
-        font-size: 12px;
-        font-weight: 600;
-        text-decoration: none;
-        white-space: nowrap;
-    }
-
-    .file-button:hover {
-        background: #193b8f;
-        color: #fff;
-    }
-
-    .notes-card {
-        margin-bottom: 22px;
-    }
-
-    .notes-content {
-        padding: 18px 20px;
-        color: #475569;
-        font-size: 13px;
-        line-height: 1.65;
-        white-space: pre-line;
-    }
-
-    .replace-content {
-        padding: 20px;
-    }
-
-    .replace-description {
-        margin: 0 0 18px;
-        color: #64748b;
-        font-size: 13px;
-        line-height: 1.6;
-    }
-
-    .replace-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0,1fr));
-        gap: 18px 20px;
-    }
-
-    .replace-group {
-        min-width: 0;
-    }
-
-    .replace-label {
-        display: block;
-        margin-bottom: 7px;
-        color: #374151;
-        font-size: 13px;
-        font-weight: 600;
-    }
-
-    .replace-input,
-    .replace-select {
-        width: 100%;
-        height: 38px;
-        padding: 0 11px;
-        border: 1px solid #d1d5db;
-        border-radius: 7px;
-        background: #fff;
-        color: #1f2937;
-        font-size: 13px;
-        outline: none;
-        box-sizing: border-box;
-        transition: .2s;
-    }
-
-    .replace-input[type="file"] {
-        padding: 7px 10px;
-    }
-
-    .replace-input:focus,
-    .replace-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37,99,235,.10);
-    }
-
-    .replace-hint {
-        margin-top: 6px;
-        color: #94a3b8;
-        font-size: 11px;
-    }
-
-    .replace-footer {
-        display: flex;
-        justify-content: flex-end;
-        padding-top: 18px;
-        margin-top: 20px;
-        border-top: 1px solid #eef0f3;
-    }
-
-    .version-list {
-        padding: 5px 20px 15px;
-    }
-
-    .version-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 15px;
-        padding: 13px 0;
-        border-bottom: 1px solid #f1f5f9;
-    }
-
-    .version-item:last-child {
-        border-bottom: none;
-    }
-
-    .version-info {
-        min-width: 0;
-    }
-
-    .version-number {
-        color: #101d42;
-        font-size: 13px;
-        font-weight: 700;
-    }
-
-    .version-date {
-        margin-top: 3px;
-        color: #94a3b8;
-        font-size: 11px;
-    }
-
-    .version-link {
+    .document-version-link {
         color: #2563eb;
-        font-size: 12px;
-        font-weight: 600;
         text-decoration: none;
-        white-space: nowrap;
-    }
-
-    .version-link:hover {
-        color: #193b8f;
-    }
-
-    .empty-version {
-        padding: 20px 0;
-        color: #94a3b8;
-        font-size: 13px;
-        text-align: center;
-    }
-
-    .danger-zone {
-        padding: 18px 20px;
-        margin-bottom: 22px;
-        background: #fff;
-        border: 1px solid #fecaca;
-        border-radius: 11px;
-        box-shadow: 0 4px 16px rgba(15,23,42,.04);
-    }
-
-    .danger-zone-title {
-        margin: 0 0 5px;
-        color: #991b1b;
-        font-size: 14px;
-        font-weight: 700;
-    }
-
-    .danger-zone-text {
-        margin: 0 0 14px;
-        color: #64748b;
-        font-size: 12px;
+        font-weight: 600;
     }
 
     @media (max-width: 900px) {
-        .hero-cards {
-            grid-template-columns: repeat(2, minmax(0,1fr));
-        }
-
-        .details-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .replace-grid {
-            grid-template-columns: 1fr;
+        .document-summary-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
 
-    @media (max-width: 768px) {
-        .document-show-page {
-            padding: 20px 15px;
-        }
-
-        .document-show-header,
-        .hero-top {
+    @media (max-width: 700px) {
+        .document-header,
+        .document-hero-top,
+        .document-file-box {
             flex-direction: column;
+            align-items: stretch;
         }
 
-        .header-actions {
-            width: 100%;
-        }
-
-        .header-actions a {
-            flex: 1;
-        }
-
-        .hero-cards {
+        .document-details-grid {
             grid-template-columns: 1fr;
         }
 
-        .detail-row {
-            flex-direction: column;
-            gap: 4px;
+        .document-summary-grid {
+            grid-template-columns: 1fr;
         }
 
-        .detail-value {
-            text-align: left;
-        }
-
-        .file-card,
-        .version-item {
-            align-items: flex-start;
-            flex-direction: column;
-        }
-
-        .replace-footer {
-            justify-content: stretch;
-        }
-
-        .replace-footer button {
+        .document-actions {
             width: 100%;
+        }
+
+        .document-btn {
+            flex: 1;
         }
     }
 </style>
 
 <div class="document-show-page">
 
-    <div class="document-show-header">
+    <div class="document-header">
+
         <div>
-            <h1 class="document-show-title">Document Details</h1>
-            <p class="document-show-subtitle">
-                View document information, validity and version history.
+            <h1 class="document-title">
+                Document Details
+            </h1>
+
+            <p class="document-subtitle">
+                View document information, file and version history.
             </p>
         </div>
 
-        <div class="header-actions">
+        <div class="document-actions">
+
+            <a
+                href="{{ route('documents.index') }}"
+                class="document-btn document-btn-back"
+            >
+                ← Back
+            </a>
+
             <a
                 href="{{ route('documents.edit', $document) }}"
-                class="btn-primary-erp"
+                class="document-btn document-btn-edit"
             >
                 Edit
             </a>
 
-            <a
-                href="{{ route('documents.index') }}"
-                class="btn-secondary-erp"
-            >
-                ← Back
-            </a>
         </div>
+
     </div>
 
-    @php
-        $related = $document->related;
-
-        $relatedType = match ($document->related_type) {
-            \App\Models\Vehicle::class => 'Vehicle',
-            \App\Models\Driver::class => 'Driver',
-            \App\Models\Client::class => 'Client',
-            \App\Models\Vendor::class => 'Vendor',
-            default => class_basename($document->related_type),
-        };
-
-        $relatedName = match ($document->related_type) {
-            \App\Models\Vehicle::class =>
-                $related?->plate_number
-                ?? $related?->vehicle_code
-                ?? 'Unknown Vehicle',
-
-            \App\Models\Driver::class =>
-                $related?->driver_name
-                ?? 'Unknown Driver',
-
-            \App\Models\Client::class =>
-                $related?->client_name
-                ?? 'Unknown Client',
-
-            \App\Models\Vendor::class =>
-                $related?->vendor_name
-                ?? 'Unknown Vendor',
-
-            default => 'Unknown',
-        };
-
-        $statusClass = match ($document->status) {
-            'expired' => 'status-expired',
-            'archived' => 'status-archived',
-            default => 'status-active',
-        };
-    @endphp
-
-    {{-- HERO --}}
     <div class="document-hero">
-        <div class="hero-content">
 
-            <div class="hero-top">
-                <div>
-                    <div class="hero-document-type">
-                        {{ $document->document_type }}
-                    </div>
+        <div class="document-hero-top">
 
-                    <h2 class="hero-document-title">
-                        {{ $document->original_file_name ?? 'Document' }}
-                    </h2>
+            <div>
+                <h2 class="document-hero-title">
+                    {{ $document->document_type }}
+                </h2>
 
-                    @if($document->document_number)
-                        <div class="hero-document-number">
-                            Document No: {{ $document->document_number }}
-                        </div>
-                    @endif
-                </div>
-
-                <div>
-                    <span class="status-badge {{ $statusClass }}">
-                        {{ $document->status }}
-                    </span>
-                </div>
+                <p class="document-hero-number">
+                    DocumentNumber: {{ $document->document_number ?? '—' }}
+                </p>
             </div>
 
-            <div class="hero-cards">
-
-                <div class="hero-card">
-                    <div class="hero-card-label">
-                        Related Entity
-                    </div>
-
-                    <div class="hero-card-value">
-                        {{ $relatedType }}
-                    </div>
-                </div>
-
-                <div class="hero-card">
-                    <div class="hero-card-label">
-                        Record
-                    </div>
-
-                    <div class="hero-card-value">
-                        {{ $relatedName }}
-                    </div>
-                </div>
-
-                <div class="hero-card">
-                    <div class="hero-card-label">
-                        Expiry Date
-                    </div>
-
-                    <div class="hero-card-value">
-                        {{ $document->expiry_date
-                            ? $document->expiry_date->format('d M Y')
-                            : 'No Expiry'
-                        }}
-                    </div>
-                </div>
-
-                <div class="hero-card">
-                    <div class="hero-card-label">
-                        Version
-                    </div>
-
-                    <div class="hero-card-value">
-                        v{{ $document->version }}
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
-    </div>
-
-    {{-- DETAILS --}}
-    <div class="details-grid">
-
-        <div class="details-card">
-
-            <div class="details-card-header">
-                <h3 class="details-card-title">
-                    Document Information
-                </h3>
-            </div>
-
-            <div class="details-list">
-
-                <div class="detail-row">
-                    <span class="detail-label">
-                        Document Type
-                    </span>
-
-                    <span class="detail-value">
-                        {{ $document->document_type }}
-                    </span>
-                </div>
-
-                <div class="detail-row">
-                    <span class="detail-label">
-                        Document Number
-                    </span>
-
-                    <span class="detail-value">
-                        {{ $document->document_number ?: '—' }}
-                    </span>
-                </div>
-
-                <div class="detail-row">
-                    <span class="detail-label">
-                        Issue Date
-                    </span>
-
-                    <span class="detail-value">
-                        {{ $document->issue_date
-                            ? $document->issue_date->format('d M Y')
-                            : '—'
-                        }}
-                    </span>
-                </div>
-
-                <div class="detail-row">
-                    <span class="detail-label">
-                        Expiry Date
-                    </span>
-
-                    <span class="detail-value">
-                        {{ $document->expiry_date
-                            ? $document->expiry_date->format('d M Y')
-                            : 'No Expiry'
-                        }}
-                    </span>
-                </div>
-
-                <div class="detail-row">
-                    <span class="detail-label">
-                        Status
-                    </span>
-
-                    <span class="detail-value">
-                        {{ ucfirst($document->status) }}
-                    </span>
-                </div>
-
-            </div>
-        </div>
-
-        <div class="details-card">
-
-            <div class="details-card-header">
-                <h3 class="details-card-title">
-                    Related Entity
-                </h3>
-            </div>
-
-            <div class="details-list">
-
-                <div class="detail-row">
-                    <span class="detail-label">
-                        Entity Type
-                    </span>
-
-                    <span class="detail-value">
-                        {{ $relatedType }}
-                    </span>
-                </div>
-
-                <div class="detail-row">
-                    <span class="detail-label">
-                        Record
-                    </span>
-
-                    <span class="detail-value">
-                        {{ $relatedName }}
-                    </span>
-                </div>
-
-                <div class="detail-row">
-                    <span class="detail-label">
-                        Record ID
-                    </span>
-
-                    <span class="detail-value">
-                        #{{ $document->related_id }}
-                    </span>
-                </div>
-
-                <div class="detail-row">
-                    <span class="detail-label">
-                        Current Version
-                    </span>
-
-                    <span class="detail-value">
-                        v{{ $document->version }}
-                    </span>
-                </div>
-
-                <div class="detail-row">
-                    <span class="detail-label">
-                        Uploaded
-                    </span>
-
-                    <span class="detail-value">
-                        {{ $document->created_at->format('d M Y, h:i A') }}
-                    </span>
-                </div>
-
-            </div>
-        </div>
-
-    </div>
-
-    {{-- CURRENT FILE --}}
-    <div class="details-card" style="margin-bottom:22px;">
-
-        <div class="details-card-header">
-            <h3 class="details-card-title">
-                Document File
-            </h3>
-        </div>
-
-        <div class="file-card">
-
-            <div class="file-info">
-
-                <div class="file-label">
-                    Stored File
-                </div>
-
-                <div class="file-name">
-                    {{ $document->original_file_name ?? 'Document file' }}
-                </div>
-
-            </div>
-
-            @if($document->file_path)
-                <a
-                    href="{{ asset('storage/' . $document->file_path) }}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="file-button"
-                >
-                    Open File
-                </a>
+            @if($document->status === 'active')
+                <span class="document-status document-status-active">
+                    Active
+                </span>
+            @elseif($document->status === 'expired')
+                <span class="document-status document-status-expired">
+                    Expired
+                </span>
+            @else
+                <span class="document-status document-status-other">
+                    {{ ucfirst($document->status) }}
+                </span>
             @endif
 
         </div>
 
-    </div>
+        <div class="document-summary-grid">
 
-    {{-- REPLACE DOCUMENT --}}
-    <div class="details-card" style="margin-bottom:22px;">
+            <div class="document-summary-card">
+                <span class="document-summary-label">
+                    Document Type
+                </span>
 
-        <div class="details-card-header">
-            <h3 class="details-card-title">
-                Replace Document
-            </h3>
-        </div>
+                <span class="document-summary-value">
+                    {{ $document->document_type }}
+                </span>
+            </div>
 
-        <div class="replace-content">
+            <div class="document-summary-card">
+                <span class="document-summary-label">
+                    Version
+                </span>
 
-            <p class="replace-description">
-                Upload a new file to create the next document version.
-                The previous version will remain available in the version history.
-            </p>
+                <span class="document-summary-value">
+                    {{ $document->version }}
+                </span>
+            </div>
 
-            <form
-            action="{{ route('documents.replace', $document) }}"
-                method="POST"
-                enctype="multipart/form-data"
-            >
+            <div class="document-summary-card">
+                <span class="document-summary-label">
+                    Issue Date
+                </span>
 
-                @csrf
+                <span class="document-summary-value">
+                    {{ $document->issue_date ? \Carbon\Carbon::parse($document->issue_date)->format('d M Y') : '—' }}
+                </span>
+            </div>
 
-                <div class="replace-grid">
+            <div class="document-summary-card">
+                <span class="document-summary-label">
+                    Expiry Date
+                </span>
 
-                    <div class="replace-group">
-
-                        <label class="replace-label">
-                            New File <span style="color:#dc3545;">*</span>
-                        </label>
-
-                        <input
-                            type="file"
-                            name="file"
-                            class="replace-input"
-                            required
-                            accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
-                        >
-
-                        <div class="replace-hint">
-                            PDF, JPG, PNG, WEBP, DOC or DOCX — maximum 10 MB.
-                        </div>
-
-                    </div>
-
-                    <div class="replace-group">
-
-                        <label class="replace-label">
-                            DocumentNumber
-                        </label>
-
-                        <input
-                            type="text"
-                            name="document_number"
-                            class="replace-input"
-                            value="{{ $document->document_number }}"
-                            maxlength="150"
-                            placeholder="Enter document number"
-                        >
-
-                    </div>
-
-                    <div class="replace-group">
-
-                        <label class="replace-label">
-                            Issue Date
-                        </label>
-
-                        <input
-                            type="date"
-                            name="issue_date"
-                            class="replace-input"
-                            value="{{ $document->issue_date?->format('Y-m-d') }}"
-                        >
-
-                    </div>
-
-                    <div class="replace-group">
-
-                        <label class="replace-label">
-                            New Expiry Date
-                        </label>
-
-                        <input
-                            type="date"
-                            name="expiry_date"
-                            class="replace-input"
-                            value="{{ $document->expiry_date?->format('Y-m-d') }}"
-                        >
-
-                    </div>
-
-                    <div class="replace-group">
-
-                        <label class="replace-label">
-                            Status <span style="color:#dc3545;">*</span>
-                        </label>
-
-                        <select
-                            name="status"
-                            class="replace-select"
-                            required
-                        >
-                            <option
-                                value="active"
-                                {{ $document->status === 'active' ? 'selected' : '' }}
-                            >
-                                Active
-                            </option>
-
-                            <option
-                                value="expired"
-                                {{ $document->status === 'active' ? 'selected' : '' }}
-                            >
-                                Active
-                            </option>
-
-                            <option
-                                value="expired"
-                                {{ $document->status === 'expired' ? 'selected' : '' }}
-                            >
-                                Expired
-                            </option>
-
-                            <option
-                                value="archived"
-                                {{ $document->status === 'archived' ? 'selected' : '' }}
-                            >
-                                Archived
-                            </option>
-                        </select>
-
-                    </div>
-
-                    <div class="replace-group">
-
-                        <label class="replace-label">
-                            Notes
-                        </label>
-
-                        <input
-                            type="text"
-                            name="notes"
-                            class="replace-input"
-                            value="{{ $document->notes }}"
-                            placeholder="Replacement notes"
-                        >
-
-                    </div>
-
-                </div>
-
-                <div class="replace-footer">
-
-                    <button
-                        type="submit"
-                        class="btn-primary-erp"
-                        onclick="return confirm('Replace this document and create a new version?');"
-                    >
-                        Replace & Create Version
-                    </button>
-
-                </div>
-
-            </form>
+                <span class="document-summary-value">
+                    {{ $document->expiry_date ? \Carbon\Carbon::parse($document->expiry_date)->format('d M Y') : '—' }}
+                </span>
+            </div>
 
         </div>
 
     </div>
 
-    {{-- NOTES --}}
-    <div class="details-card notes-card">
+    <div class="document-section">
 
-        <div class="details-card-header">
-            <h3 class="details-card-title">
-                Notes
-            </h3>
-        </div>
-
-        <div class="notes-content">
-            {{ $document->notes ?: 'No notes have been added for this document.' }}
-        </div>
-
-    </div>
-    {{-- VERSION HISTORY --}}
-    <div class="details-card" style="margin-bottom:22px;">
-
-        <div class="details-card-header">
-            <h3 class="details-card-title">
-                Version History
-            </h3>
-        </div>
-
-        <div class="version-list">
-
-            @if($document->parentDocument)
-
-                <div class="version-item">
-
-                    <div class="version-info">
-
-                        <div class="version-number">
-                            Previous Version — v{{ $document->parentDocument->version }}
-                        </div>
-
-                        <div class="version-date">
-                            {{ $document->parentDocument->created_at->format('d M Y, h:i A') }}
-                        </div>
-
-                    </div>
-
-                    @if($document->parentDocument->file_path)
-                        <a
-                            href="{{ asset('storage/' . $document->parentDocument->file_path) }}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="version-link"
-                        >
-                            Open File
-                        </a>
-                    @endif
-
-                </div>
-
-            @endif
-
-            @forelse($document->versions as $version)
-
-                <div class="version-item">
-
-                    <div class="version-info">
-
-                        <div class="version-number">
-                            Version {{ $version->version }}
-
-                            @if($version->is_current)
-                                — Current
-                            @endif
-                        </div>
-
-                        <div class="version-date">
-                            {{ $version->created_at->format('d M Y, h:i A') }}
-                        </div>
-
-                    </div>
-
-                    @if($version->file_path)
-                        <a
-                        href="{{ asset('storage/' . $version->file_path) }}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="version-link"
-                        >
-                            Open File
-                        </a>
-                    @endif
-
-                </div>
-
-            @empty
-
-                @if(!$document->parentDocument)
-                    <div class="empty-version">
-                        No replacement versions available.
-                    </div>
-                @endif
-
-            @endforelse
-
-        </div>
-
-    </div>
-
-    {{-- DELETE --}}
-    <div class="danger-zone">
-
-        <h3 class="danger-zone-title">
-            Document Actions
+        <h3 class="document-section-title">
+            Document Information
         </h3>
 
-        <p class="danger-zone-text">
-            Deleting this document will remove its stored file and associated version records.
+        <div class="document-details-grid">
+
+            <div class="document-detail-item">
+
+                <span class="document-detail-label">
+                    Document Type
+                </span>
+
+                <div class="document-detail-value">
+                    {{ $document->document_type }}
+                </div>
+
+            </div>
+
+            <div class="document-detail-item">
+
+                <span class="document-detail-label">
+                    Document Number
+                </span>
+
+                <div class="document-detail-value">
+                    {{ $document->document_number ?? '—' }}
+                </div>
+
+            </div>
+
+            <div class="document-detail-item">
+
+                <span class="document-detail-label">
+                    Issue Date
+                </span>
+
+                <div class="document-detail-value">
+                    {{ $document->issue_date ? \Carbon\Carbon::parse($document->issue_date)->format('d M Y') : '—' }}
+                </div>
+
+            </div>
+
+            <div class="document-detail-item">
+
+                <span class="document-detail-label">
+                    Expiry Date
+                </span>
+
+                <div class="document-detail-value">
+                    {{ $document->expiry_date ? \Carbon\Carbon::parse($document->expiry_date)->format('d M Y') : '—' }}
+                </div>
+
+            </div>
+
+            <div class="document-detail-item">
+
+                <span class="document-detail-label">
+                    Related Type
+                </span>
+
+                <div class="document-detail-value">
+                    {{ class_basename($document->related_type) }}
+                </div>
+
+            </div>
+
+            <div class="document-detail-item">
+
+                <span class="document-detail-label">
+                    Related ID
+                </span>
+
+                <div class="document-detail-value">
+                    {{ $document->related_id }}
+                </div>
+
+            </div>
+
+            <div class="document-detail-item">
+
+                <span class="document-detail-label">
+                    Version
+                </span>
+
+                <div class="document-detail-value">
+                    {{ $document->version }}
+                </div>
+
+            </div>
+
+            <div class="document-detail-item">
+
+                <span class="document-detail-label">
+                    Current Version
+                </span>
+
+                <div class="document-detail-value">
+                    {{ $document->is_current ? 'Yes' : 'No' }}
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="document-section">
+
+        <h3 class="document-section-title">
+            Document File
+        </h3>
+
+        @if($document->file_path)
+
+            <div class="document-file-box">
+
+                <div class="document-file-info">
+
+                    <p class="document-file-name">
+                        {{ $document->original_file_name ?? basename($document->file_path) }}
+                    </p>
+
+                    <p class="document-file-meta">
+                        {{ $document->file_mime_type ?? 'File' }}
+                    </p>
+
+                </div>
+
+                <a
+                    href="{{ route('documents.file', $document) }}"
+                    target="_blank"
+                    class="document-file-link"
+                >
+                    View File
+                </a>
+
+            </div>
+
+        @else
+
+            <p class="document-notes">
+                No file attached to this document.
+            </p>
+
+        @endif
+
+    </div>
+    <div class="document-section">
+
+        <h3 class="document-section-title">
+            Replace Document
+        </h3>
+
+        <form
+            action="{{ route('documents.replace', $document) }}"
+            method="POST"
+            enctype="multipart/form-data"
+        >
+            @csrf
+
+            <div class="document-details-grid">
+
+                <div class="document-detail-item">
+
+                    <label
+                        for="file"
+                        class="document-detail-label"
+                    >
+                        New Document File
+                    </label>
+
+                    <input
+                        type="file"
+                        id="file"
+                        name="file"
+                        class="form-control"
+                        required
+                    >
+
+                </div>
+
+                <div class="document-detail-item">
+
+                    <label
+                        for="notes"
+                        class="document-detail-label"
+                    >
+                        Notes
+                    </label>
+
+                    <textarea
+                        id="notes"
+                        name="notes"
+                        class="form-control"
+                        rows="3"
+                    ></textarea>
+
+                </div>
+
+            </div>
+
+            <div style="margin-top: 18px;">
+
+                <button
+                    type="submit"
+                    class="document-btn document-btn-edit"
+                >
+                    Replace Document
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+    @if($document->notes)
+
+        <div class="document-section">
+
+            <h3 class="document-section-title">
+                Notes
+            </h3>
+
+            <p class="document-notes">
+                {{ $document->notes }}
+            </p>
+
+        </div>
+
+    @endif
+
+    <div class="document-section">
+
+        <h3 class="document-section-title">
+            Version History
+        </h3>
+
+        @if($document->parentDocument)
+
+            <div class="document-file-box" style="margin-bottom: 18px;">
+
+                <div class="document-file-info">
+
+                    <p class="document-file-name">
+                        Previous Version
+                    </p>
+
+                    <p class="document-file-meta">
+                        Version {{ $document->parentDocument->version }}
+                    </p>
+
+                </div>
+
+                <a
+                    href="{{ route('documents.file', $document->parentDocument) }}"
+                    target="_blank"
+                    class="document-file-link"
+                >
+                    View Previous
+                </a>
+
+            </div>
+
+        @endif
+
+        @if($document->versions && $document->versions->count())
+
+            <div class="document-version-table-wrapper">
+
+                <table class="document-version-table">
+
+                    <thead>
+                        <tr>
+                            <th>
+                                Version
+                            </th>
+
+                            <th>
+                                File
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th>
+                                Created
+                            </th>
+
+                            <th>
+                                Action
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach($document->versions as $version)
+
+                            <tr>
+
+                                <td>
+                                    {{ $version->version }}
+                                </td>
+
+                                <td>
+                                    {{ $version->original_file_name ?? basename($version->file_path) }}
+                                </td>
+
+                                <td>
+                                    {{ $version->is_current ? 'Current' : 'Previous' }}
+                                </td>
+
+                                <td>
+                                    {{ $version->created_at ? $version->created_at->format('d M Y H:i') : '—' }}
+                                </td>
+
+                                <td>
+
+                                    <a
+                                        href="{{ route('documents.file', $version) }}"
+                                        target="_blank"
+                                        class="document-version-link"
+                                    >
+                                        View File
+                                    </a>
+
+                                </td>
+
+                            </tr>
+
+                        @endforeach
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        @else
+
+            <p class="document-notes">
+                No previous versions available.
+            </p>
+
+        @endif
+
+    </div>
+
+    <div class="document-section">
+
+        <h3 class="document-section-title">
+            Delete Document
+        </h3>
+
+        <p class="document-notes" style="margin-bottom: 16px;">
+            Deleting this document will permanently remove the document record.
         </p>
 
         <formaction="{{ route('documents.destroy', $document) }}"
-            method="POST"
-            onsubmit="return confirm('Are you sure you want to delete this document?');"
-        >
+              method="POST"
+              onsubmit="return confirm('Are you sure you want to delete this document?');">
 
             @csrf
             @method('DELETE')
 
             <button
                 type="submit"
-                class="btn-danger-erp"
+                class="document-btn document-btn-delete"
             >
                 Delete Document
             </button>

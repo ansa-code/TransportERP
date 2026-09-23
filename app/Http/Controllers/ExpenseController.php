@@ -393,20 +393,35 @@ class ExpenseController extends Controller
     }
 
     public function show($id)
-    {
-        $expense = Expense::with([
-            'vehicle',
-            'driver',
-            'client',
-            'assignment',
-            'trip',
-        ])->findOrFail($id);
+{
+    $expense = Expense::with([
+        'vehicle',
+        'driver',
+        'client',
+        'assignment',
+        'trip',
+    ])->findOrFail($id);
 
-        return view(
-            'expenses.show',
-            compact('expense')
-        );
-    }
+    return view(
+        'expenses.show',
+        compact('expense')
+    );
+}
+
+public function receipt($id)
+{
+    $expense = Expense::findOrFail($id);
+
+    abort_unless($expense->receipt, 404);
+
+    $disk = Storage::disk('public');
+
+    abort_unless($disk->exists($expense->receipt), 404);
+
+    return $disk->response($expense->receipt);
+}
+
+
 
     public function edit($id)
     {
