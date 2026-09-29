@@ -752,8 +752,7 @@
             </li>
 
         </ul>
-``
-<!-- =====================================================
+        <!-- =====================================================
              ADMINISTRATION
         ====================================================== -->
 
@@ -820,6 +819,21 @@
                         <span class="menu-icon">📋</span>
 
                         <span>Activity Logs</span>
+
+                    </a>
+
+                </li>
+
+
+                <!-- Error Log -->
+
+                <li class="{{ request()->routeIs('error-logs.*') ? 'active' : '' }}">
+
+                    <a href="{{ route('error-logs.index') }}">
+
+                        <span class="menu-icon">⚠️</span>
+
+                        <span>Error Log</span>
 
                     </a>
 
@@ -983,6 +997,10 @@
 
                     Activity Logs
 
+                @elseif(request()->is('error-logs*'))
+
+                    Error Log
+
                 @elseif(request()->is('settings*'))
 
                     Settings
@@ -1051,6 +1069,8 @@
         </div>
 
     </div>
+
+
     <!-- =========================================================
          JAVASCRIPT
     ========================================================= -->

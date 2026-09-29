@@ -70,9 +70,24 @@
         box-shadow: 0 0 0 3px rgba(13,110,253,.10);
     }
 
+    .form-control.is-invalid {
+        border-color: #dc3545;
+    }
+
+    .form-control.is-invalid:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 3px rgba(220,53,69,.10);
+    }
+
     textarea.form-control {
         resize: vertical;
         min-height: 100px;
+    }
+
+    .field-error {
+        color: #dc3545;
+        font-size: 13px;
+        margin-top: 6px;
     }
 
     .form-actions {
@@ -102,6 +117,16 @@
         padding: 12px;
         border-radius: 6px;
         margin-bottom: 20px;
+    }
+
+    .error-box strong {
+        display: block;
+        margin-bottom: 6px;
+    }
+
+    .error-box ul {
+        margin: 0;
+        padding-left: 20px;
     }
 
     @media (max-width: 700px) {
@@ -156,9 +181,13 @@
                         type="text"
                         name="driver_code"
                         value="{{ old('driver_code') }}"
-                        class="form-control"
+                        class="form-control @error('driver_code') is-invalid @enderror"
                         required
                     >
+
+                    @error('driver_code')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
@@ -175,11 +204,15 @@
                         type="text"
                         name="driver_name"
                         value="{{ old('driver_name') }}"
-                        class="form-control"
+                        class="form-control @error('driver_name') is-invalid @enderror"
                         minlength="2"
                         maxlength="150"
                         required
                     >
+
+                    @error('driver_name')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
@@ -194,8 +227,12 @@
                         type="text"
                         name="phone"
                         value="{{ old('phone') }}"
-                        class="form-control"
+                        class="form-control @error('phone') is-invalid @enderror"
                     >
+
+                    @error('phone')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
@@ -210,9 +247,13 @@
                         type="text"
                         name="nationality"
                         value="{{ old('nationality') }}"
-                        class="form-control"
+                        class="form-control @error('nationality') is-invalid @enderror"
                         placeholder="Enter nationality"
                     >
+
+                    @error('nationality')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
@@ -227,8 +268,12 @@
                         type="text"
                         name="passport_number"
                         value="{{ old('passport_number') }}"
-                        class="form-control"
+                        class="form-control @error('passport_number') is-invalid @enderror"
                     >
+
+                    @error('passport_number')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
@@ -243,7 +288,7 @@
 
                     <select
                         name="passport_held_by_company"
-                        class="form-control"
+                        class="form-control @error('passport_held_by_company') is-invalid @enderror"
                         required
                     >
 
@@ -258,6 +303,10 @@
 
                     </select>
 
+                    @error('passport_held_by_company')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+
                 </div>
 
 
@@ -271,8 +320,12 @@
                         type="text"
                         name="visa_type"
                         value="{{ old('visa_type') }}"
-                        class="form-control"
+                        class="form-control @error('visa_type') is-invalid @enderror"
                     >
+
+                    @error('visa_type')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
@@ -285,7 +338,7 @@
 
                     <select
                         name="visa_provided_by"
-                        class="form-control"
+                        class="form-control @error('visa_provided_by') is-invalid @enderror"
                     >
 
                         <option value="">Select</option>
@@ -307,6 +360,10 @@
 
                     </select>
 
+                    @error('visa_provided_by')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+
                 </div>
 
 
@@ -320,8 +377,12 @@
                         type="date"
                         name="visa_expiry"
                         value="{{ old('visa_expiry') }}"
-                        class="form-control"
+                        class="form-control @error('visa_expiry') is-invalid @enderror"
                     >
+
+                    @error('visa_expiry')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
@@ -336,8 +397,12 @@
                         type="text"
                         name="emirates_id"
                         value="{{ old('emirates_id') }}"
-                        class="form-control"
+                        class="form-control @error('emirates_id') is-invalid @enderror"
                     >
+
+                    @error('emirates_id')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
@@ -352,8 +417,12 @@
                         type="text"
                         name="license_number"
                         value="{{ old('license_number') }}"
-                        class="form-control"
+                        class="form-control @error('license_number') is-invalid @enderror"
                     >
+
+                    @error('license_number')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
@@ -368,12 +437,14 @@
                         type="date"
                         name="license_expiry"
                         value="{{ old('license_expiry') }}"
-                        class="form-control"
+                        class="form-control @error('license_expiry') is-invalid @enderror"
                     >
 
+                    @error('license_expiry')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+
                 </div>
-
-
                 {{-- Basic Salary --}}
 
                 <div class="form-group">
@@ -386,30 +457,48 @@
                         type="number"
                         name="basic_salary"
                         value="{{ old('basic_salary', 0) }}"
-                        class="form-control"
+                        class="form-control @error('basic_salary') is-invalid @enderror"
                         min="0"
                         step="0.01"
                         required
                     >
 
-                </div>
-
-
-                {{-- Assigned Vehicle --}}
-
-                <div class="form-group">
-
-                    <label>Assigned Vehicle</label>
-
-                    <input
-                        type="number"
-                        name="assigned_vehicle_id"
-                        value="{{ old('assigned_vehicle_id') }}"
-                        class="form-control"
-                        placeholder="Vehicle ID"
-                    >
+                    @error('basic_salary')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
+
+
+                  {{-- Assigned Vehicle --}}
+
+<div class="form-group">
+
+    <label>Assigned Vehicle</label>
+
+    <select
+        name="assigned_vehicle_id"
+        class="form-control @error('assigned_vehicle_id') is-invalid @enderror"
+    >
+
+        <option value="">Select Vehicle</option>
+
+        @foreach($vehicles as $vehicle)
+            <option
+                value="{{ $vehicle->id }}"
+                {{ old('assigned_vehicle_id') == $vehicle->id ? 'selected' : '' }}
+            >
+                {{ $vehicle->plate_number }}
+            </option>
+        @endforeach
+
+    </select>
+
+    @error('assigned_vehicle_id')
+        <div class="field-error">{{ $message }}</div>
+    @enderror
+
+</div>
 
 
                 {{-- Employment Status --}}
@@ -422,7 +511,7 @@
 
                     <select
                         name="employment_status"
-                        class="form-control"
+                        class="form-control @error('employment_status') is-invalid @enderror"
                         required
                     >
 
@@ -448,6 +537,10 @@
 
                     </select>
 
+                    @error('employment_status')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+
                 </div>
 
 
@@ -459,27 +552,40 @@
 
                     <textarea
                         name="remarks"
-                        class="form-control"
+                        class="form-control @error('remarks') is-invalid @enderror"
                     >{{ old('remarks') }}</textarea>
+
+                    @error('remarks')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
 
-                {{-- Old fields retained --}}
+                {{-- CNIC --}}
 
                 <div class="form-group">
 
-                    <label>CNIC</label>
+                    <label>
+                        CNIC <span class="required">*</span>
+                    </label>
 
                     <input
                         type="text"
                         name="cnic"
                         value="{{ old('cnic') }}"
-                        class="form-control"
+                        class="form-control @error('cnic') is-invalid @enderror"
+                        required
                     >
+
+                    @error('cnic')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
+
+                {{-- Address --}}
 
                 <div class="form-group">
 
@@ -489,11 +595,17 @@
                         type="text"
                         name="address"
                         value="{{ old('address') }}"
-                        class="form-control"
+                        class="form-control @error('address') is-invalid @enderror"
                     >
+
+                    @error('address')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
+
+                {{-- Date of Birth --}}
 
                 <div class="form-group">
 
@@ -503,11 +615,17 @@
                         type="date"
                         name="date_of_birth"
                         value="{{ old('date_of_birth') }}"
-                        class="form-control"
+                        class="form-control @error('date_of_birth') is-invalid @enderror"
                     >
+
+                    @error('date_of_birth')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
+
+                {{-- Joining Date --}}
 
                 <div class="form-group">
 
@@ -517,11 +635,17 @@
                         type="date"
                         name="joining_date"
                         value="{{ old('joining_date') }}"
-                        class="form-control"
+                        class="form-control @error('joining_date') is-invalid @enderror"
                     >
+
+                    @error('joining_date')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
+
+                {{-- Status --}}
 
                 <div class="form-group">
 
@@ -529,16 +653,29 @@
 
                     <select
                         name="status"
-                        class="form-control"
+                        class="form-control @error('status') is-invalid @enderror"
                     >
 
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
+                        <option value="Active"
+                            {{ old('status', 'Active') == 'Active' ? 'selected' : '' }}>
+                            Active
+                        </option>
+
+                        <option value="Inactive"
+                            {{ old('status') == 'Inactive' ? 'selected' : '' }}>
+                            Inactive
+                        </option>
 
                     </select>
 
+                    @error('status')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+
                 </div>
 
+
+                {{-- Notes --}}
 
                 <div class="form-group full">
 
@@ -546,8 +683,12 @@
 
                     <textarea
                         name="notes"
-                        class="form-control"
+                        class="form-control @error('notes') is-invalid @enderror"
                     >{{ old('notes') }}</textarea>
+
+                    @error('notes')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 

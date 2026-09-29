@@ -72,9 +72,43 @@
         box-shadow: 0 0 0 3px rgba(13,110,253,.10);
     }
 
+    .form-control.is-invalid {
+        border-color: #dc3545;
+    }
+
+    .form-control.is-invalid:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 3px rgba(220,53,69,.10);
+    }
+
     textarea.form-control {
         resize: vertical;
         min-height: 100px;
+    }
+
+    .field-error {
+        color: #dc3545;
+        font-size: 13px;
+        margin-top: 6px;
+    }
+
+    .error-box {
+        background: #f8d7da;
+        color: #842029;
+        border: 1px solid #f5c2c7;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+    }
+
+    .error-box strong {
+        display: block;
+        margin-bottom: 6px;
+    }
+
+    .error-box ul {
+        margin: 0;
+        padding-left: 20px;
     }
 
     .form-actions {
@@ -129,6 +163,21 @@
         </div>
 
 
+        @if ($errors->any())
+
+            <div class="error-box">
+                <strong>Please fix the following:</strong>
+
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+
+        @endif
+
+
         <form action="{{ route('drivers.update', $driver->id) }}" method="POST">
 
             @csrf
@@ -150,9 +199,13 @@
                         type="text"
                         name="driver_code"
                         value="{{ old('driver_code', $driver->driver_code) }}"
-                        class="form-control"
+                        class="form-control @error('driver_code') is-invalid @enderror"
                         required
                     >
+
+                    @error('driver_code')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
@@ -169,11 +222,15 @@
                         type="text"
                         name="driver_name"
                         value="{{ old('driver_name', $driver->driver_name) }}"
-                        class="form-control"
+                        class="form-control @error('driver_name') is-invalid @enderror"
                         minlength="2"
                         maxlength="150"
                         required
                     >
+
+                    @error('driver_name')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
@@ -188,8 +245,12 @@
                         type="text"
                         name="phone"
                         value="{{ old('phone', $driver->phone) }}"
-                        class="form-control"
+                        class="form-control @error('phone') is-invalid @enderror"
                     >
+
+                    @error('phone')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
@@ -204,8 +265,12 @@
                         type="text"
                         name="nationality"
                         value="{{ old('nationality', $driver->nationality) }}"
-                        class="form-control"
+                        class="form-control @error('nationality') is-invalid @enderror"
                     >
+
+                    @error('nationality')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
@@ -220,8 +285,12 @@
                         type="text"
                         name="passport_number"
                         value="{{ old('passport_number', $driver->passport_number) }}"
-                        class="form-control"
+                        class="form-control @error('passport_number') is-invalid @enderror"
                     >
+
+                    @error('passport_number')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
@@ -236,7 +305,7 @@
 
                     <select
                         name="passport_held_by_company"
-                        class="form-control"
+                        class="form-control @error('passport_held_by_company') is-invalid @enderror"
                         required
                     >
 
@@ -252,6 +321,10 @@
 
                     </select>
 
+                    @error('passport_held_by_company')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+
                 </div>
 
 
@@ -265,8 +338,12 @@
                         type="text"
                         name="visa_type"
                         value="{{ old('visa_type', $driver->visa_type) }}"
-                        class="form-control"
+                        class="form-control @error('visa_type') is-invalid @enderror"
                     >
+
+                    @error('visa_type')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
@@ -279,7 +356,7 @@
 
                     <select
                         name="visa_provided_by"
-                        class="form-control"
+                        class="form-control @error('visa_provided_by') is-invalid @enderror"
                     >
 
                         <option value="">Select</option>
@@ -301,6 +378,10 @@
 
                     </select>
 
+                    @error('visa_provided_by')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+
                 </div>
 
 
@@ -314,8 +395,12 @@
                         type="date"
                         name="visa_expiry"
                         value="{{ old('visa_expiry', $driver->visa_expiry) }}"
-                        class="form-control"
+                        class="form-control @error('visa_expiry') is-invalid @enderror"
                     >
+
+                    @error('visa_expiry')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
@@ -330,8 +415,12 @@
                         type="text"
                         name="emirates_id"
                         value="{{ old('emirates_id', $driver->emirates_id) }}"
-                        class="form-control"
+                        class="form-control @error('emirates_id') is-invalid @enderror"
                     >
+
+                    @error('emirates_id')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
@@ -346,8 +435,12 @@
                         type="text"
                         name="license_number"
                         value="{{ old('license_number', $driver->license_number) }}"
-                        class="form-control"
+                        class="form-control @error('license_number') is-invalid @enderror"
                     >
+
+                    @error('license_number')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
                 </div>
 
@@ -362,123 +455,156 @@
                         type="date"
                         name="license_expiry"
                         value="{{ old('license_expiry', $driver->license_expiry) }}"
-                        class="form-control"
+                        class="form-control @error('license_expiry') is-invalid @enderror"
                     >
 
+                    @error('license_expiry')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+
                 </div>
-
-
                 {{-- Basic Salary --}}
-
                 <div class="form-group">
-
                     <label>
                         Basic Salary <span class="required">*</span>
                     </label>
 
                     <input
                         type="number"
+                        step="0.01"
                         name="basic_salary"
                         value="{{ old('basic_salary', $driver->basic_salary) }}"
-                        class="form-control"
-                        min="0"
-                        step="0.01"
+                        class="form-control @error('basic_salary') is-invalid @enderror"
                         required
                     >
 
+                    @error('basic_salary')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
                 </div>
-
 
                 {{-- Assigned Vehicle --}}
-
                 <div class="form-group">
-
                     <label>Assigned Vehicle</label>
 
-                    <input
-                        type="number"
+                    <select
                         name="assigned_vehicle_id"
-                        value="{{ old('assigned_vehicle_id', $driver->assigned_vehicle_id) }}"
-                        class="form-control"
-                        min="1"
+                        class="form-control @error('assigned_vehicle_id') is-invalid @enderror"
                     >
+                        <option value="">Select Vehicle</option>
 
+                        @foreach($vehicles as $vehicle)
+                            <option
+                                value="{{ $vehicle->id }}"
+                                {{ old('assigned_vehicle_id', $driver->assigned_vehicle_id) == $vehicle->id ? 'selected' : '' }}
+                            >
+                                {{ $vehicle->plate_number }}
+                            </option>
+                        @endforeach
+                    </select>
+
+                    @error('assigned_vehicle_id')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
                 </div>
 
-
                 {{-- Employment Status --}}
-
                 <div class="form-group">
-
                     <label>
                         Employment Status <span class="required">*</span>
                     </label>
 
                     <select
                         name="employment_status"
-                        class="form-control"
+                        class="form-control @error('employment_status') is-invalid @enderror"
                         required
                     >
+                        <option value="">Select Employment Status</option>
 
-                        <option value="Active"
-                            {{ old('employment_status', $driver->employment_status) == 'Active' ? 'selected' : '' }}>
+                        <option
+                            value="Active"
+                            {{ old('employment_status', $driver->employment_status) == 'Active' ? 'selected' : '' }}
+                        >
                             Active
                         </option>
 
-                        <option value="On Leave"
-                            {{ old('employment_status', $driver->employment_status) == 'On Leave' ? 'selected' : '' }}>
+                        <option
+                            value="On Leave"
+                            {{ old('employment_status', $driver->employment_status) == 'On Leave' ? 'selected' : '' }}
+                        >
                             On Leave
                         </option>
 
-                        <option value="Inactive"
-                            {{ old('employment_status', $driver->employment_status) == 'Inactive' ? 'selected' : '' }}>
+                        <option
+                            value="Inactive"
+                            {{ old('employment_status', $driver->employment_status) == 'Inactive' ? 'selected' : '' }}
+                        >
                             Inactive
                         </option>
 
-                        <option value="Archived"
-                            {{ old('employment_status', $driver->employment_status) == 'Archived' ? 'selected' : '' }}>
+                        <option
+                            value="Archived"
+                            {{ old('employment_status', $driver->employment_status) == 'Archived' ? 'selected' : '' }}
+                        >
                             Archived
                         </option>
-
                     </select>
 
+                    @error('employment_status')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
                 </div>
 
-
                 {{-- Remarks --}}
-
-                <div class="form-group full-width">
-
+                <div class="form-group">
                     <label>Remarks</label>
 
                     <textarea
                         name="remarks"
-                        class="form-control"
-                        rows="4"
+                        rows="3"
+                        class="form-control @error('remarks') is-invalid @enderror"
                     >{{ old('remarks', $driver->remarks) }}</textarea>
 
+                    @error('remarks')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
                 </div>
 
+                {{-- CNIC --}}
+                <div class="form-group">
+                    <label>
+                        CNIC <span class="required">*</span>
+                    </label>
+
+                    <input
+                        type="text"
+                        name="cnic"
+                        value="{{ old('cnic', $driver->cnic) }}"
+                        class="form-control @error('cnic') is-invalid @enderror"
+                        required
+                    >
+
+                    @error('cnic')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+                </div>
 
             </div>
-
 
             <div class="form-actions">
 
-                <button type="submit" class="update-btn">
-                    Update Driver
-                </button>
+    <a href="{{ route('drivers.index') }}" class="cancel-btn">
+        Cancel
+    </a>
 
-                <a href="{{ route('drivers.index') }}" class="cancel-btn">
-                    Cancel
-                </a>
+    <button type="submit" class="update-btn">
+        Update Driver
+    </button>
 
-            </div>
+</div>
 
         </form>
-
     </div>
-
 </div>
 
 @endsection

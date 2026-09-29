@@ -26,6 +26,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\ErrorLogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,6 +41,7 @@ Route::get('/', function () {
 Route::get('/health-check', function () {
     return response('Laravel is running', 200);
 });
+
 /*
 |--------------------------------------------------------------------------
 | Authentication
@@ -55,7 +57,6 @@ Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])
     ->name('logout');
 
-
 /*
 |--------------------------------------------------------------------------
 | Dashboard
@@ -64,7 +65,6 @@ Route::post('/logout', [LoginController::class, 'logout'])
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware('auth');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -85,7 +85,6 @@ Route::resource('trips', TripController::class);
 Route::resource('maintenances', MaintenanceController::class);
 
 Route::resource('leaves', LeaveController::class);
-
 
 /*
 |--------------------------------------------------------------------------
@@ -138,6 +137,7 @@ Route::get(
 )->name('payments.attachment');
 
 Route::resource('payments', PaymentController::class);
+
 /*
 |--------------------------------------------------------------------------
 | Reports
@@ -147,13 +147,11 @@ Route::resource('payments', PaymentController::class);
 Route::get('/reports', [ReportController::class, 'index'])
     ->name('reports.index');
 
-
 /*
 |--------------------------------------------------------------------------
 | Alerts
 |--------------------------------------------------------------------------
 */
-
 
 Route::get('/alerts', [AlertController::class, 'index'])
     ->name('alerts.index');
@@ -171,13 +169,11 @@ Route::patch('/alerts/read-all', [AlertController::class, 'markAllAsRead'])
 */
 
 Route::resource('roles', RoleController::class);
-    
 
 Route::patch(
     'roles/{role}/toggle-status',
     [RoleController::class, 'toggleStatus']
 )->name('roles.toggle-status');
-
 
 Route::resource('users', UserController::class);
 
@@ -198,6 +194,24 @@ Route::get('/activity-logs', [ActivityLogController::class, 'index'])
 
 Route::get('/activity-logs/{activityLog}', [ActivityLogController::class, 'show'])
     ->name('activity-logs.show');
+
+/*
+|--------------------------------------------------------------------------
+| Error Logs
+|--------------------------------------------------------------------------
+*/
+
+Route::get('error-logs', [ErrorLogController::class, 'index'])
+    ->name('error-logs.index');
+
+Route::get('error-logs/{id}', [ErrorLogController::class, 'show'])
+    ->name('error-logs.show');
+
+Route::patch('error-logs/{id}/resolve', [ErrorLogController::class, 'resolve'])
+    ->name('error-logs.resolve');
+
+Route::patch('error-logs/{id}/reopen', [ErrorLogController::class, 'reopen'])
+    ->name('error-logs.reopen');
 
 Route::middleware('settings')->group(function () {
 
