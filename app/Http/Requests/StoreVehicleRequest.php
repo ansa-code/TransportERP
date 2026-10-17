@@ -15,7 +15,6 @@ class StoreVehicleRequest extends FormRequest
     public function rules(): array
     {
         return [
-
             'vehicle_code' => [
                 'required',
                 'string',
@@ -36,7 +35,6 @@ class StoreVehicleRequest extends FormRequest
             ],
 
             'brand' => 'nullable|string|max:100',
-
             'model' => 'nullable|string|max:100',
 
             'plate_number' => [
@@ -47,9 +45,7 @@ class StoreVehicleRequest extends FormRequest
             ],
 
             'category' => 'nullable|string|max:255',
-
             'load_capacity' => 'nullable|numeric|min:0',
-
             'load_capacity_unit' => 'nullable|string|max:50',
 
             'ownership_type' => [
@@ -63,19 +59,12 @@ class StoreVehicleRequest extends FormRequest
             ],
 
             'vendor_owner' => 'nullable|string|max:255',
-
             'registered_company_name' => 'nullable|string|max:255',
-
             'bank_instalment_amount' => 'nullable|numeric|min:0',
-
             'instalment_duration' => 'nullable|integer|min:1',
-
             'instalment_duration_unit' => 'nullable|string|max:50',
-
             'registration_expiry' => 'nullable|date',
-
             'insurance_expiry' => 'nullable|date',
-
             'current_odometer' => 'nullable|integer|min:0',
 
             'status' => [
@@ -91,7 +80,33 @@ class StoreVehicleRequest extends FormRequest
             ],
 
             'remarks' => 'nullable|string',
+        ];
+    }
 
+    public function messages(): array
+    {
+        return [
+            'vehicle_code.unique' =>
+                'This Vehicle ID / Code already exists. Please enter a different code.',
+
+            'plate_number.unique' =>
+                'This plate number is already registered. Please enter a different plate number.',
+
+            'vehicle_code.required' =>
+                'Please enter a Vehicle ID / Code.',
+
+            'plate_number.required' =>
+                'Please enter a plate number.',
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'vehicle_code' => 'Vehicle ID / Code',
+            'plate_number' => 'Plate Number',
+            'vehicle_type' => 'Vehicle Type',
+            'ownership_type' => 'Ownership Type',
         ];
     }
 }

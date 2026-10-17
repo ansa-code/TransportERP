@@ -150,7 +150,6 @@
         </div>
 
         @if ($errors->any())
-
             <div class="error-box">
                 <strong>Please fix the following:</strong>
 
@@ -160,11 +159,9 @@
                     @endforeach
                 </ul>
             </div>
-
         @endif
 
         <form action="{{ route('drivers.store') }}" method="POST">
-
             @csrf
 
             <div class="form-grid">
@@ -172,7 +169,6 @@
                 {{-- Driver Code --}}
 
                 <div class="form-group">
-
                     <label>
                         Driver ID / Code <span class="required">*</span>
                     </label>
@@ -188,14 +184,11 @@
                     @error('driver_code')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-
                 </div>
-
 
                 {{-- Name --}}
 
                 <div class="form-group">
-
                     <label>
                         Name <span class="required">*</span>
                     </label>
@@ -213,14 +206,11 @@
                     @error('driver_name')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-
                 </div>
-
 
                 {{-- Mobile --}}
 
                 <div class="form-group">
-
                     <label>Mobile</label>
 
                     <input
@@ -233,14 +223,11 @@
                     @error('phone')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-
                 </div>
-
 
                 {{-- Nationality --}}
 
                 <div class="form-group">
-
                     <label>Nationality</label>
 
                     <input
@@ -254,14 +241,11 @@
                     @error('nationality')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-
                 </div>
-
 
                 {{-- Passport --}}
 
                 <div class="form-group">
-
                     <label>Passport Number</label>
 
                     <input
@@ -274,14 +258,11 @@
                     @error('passport_number')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-
                 </div>
-
 
                 {{-- Passport Held --}}
 
                 <div class="form-group">
-
                     <label>
                         Passport Held by Company <span class="required">*</span>
                     </label>
@@ -291,8 +272,8 @@
                         class="form-control @error('passport_held_by_company') is-invalid @enderror"
                         required
                     >
-
-                        <option value="0">
+                        <option value="0"
+                            {{ old('passport_held_by_company', '0') == '0' ? 'selected' : '' }}>
                             No
                         </option>
 
@@ -300,47 +281,54 @@
                             {{ old('passport_held_by_company') == '1' ? 'selected' : '' }}>
                             Yes
                         </option>
-
                     </select>
 
                     @error('passport_held_by_company')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-
                 </div>
-
 
                 {{-- Visa Type --}}
 
                 <div class="form-group">
-
                     <label>Visa Type</label>
 
-                    <input
-                        type="text"
+                    <select
                         name="visa_type"
-                        value="{{ old('visa_type') }}"
                         class="form-control @error('visa_type') is-invalid @enderror"
                     >
+                        <option value="">Select Visa Type</option>
+
+                        <option value="Temporary"
+                            {{ old('visa_type') == 'Temporary' ? 'selected' : '' }}>
+                            Temporary
+                        </option>
+
+                        <option value="Permanent"
+                            {{ old('visa_type') == 'Permanent' ? 'selected' : '' }}>
+                            Permanent
+                        </option>
+
+                        <option value="Other"
+                            {{ old('visa_type') == 'Other' ? 'selected' : '' }}>
+                            Other
+                        </option>
+                    </select>
 
                     @error('visa_type')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-
                 </div>
-
 
                 {{-- Visa Provided By --}}
 
                 <div class="form-group">
-
                     <label>Visa Provided By</label>
 
                     <select
                         name="visa_provided_by"
                         class="form-control @error('visa_provided_by') is-invalid @enderror"
                     >
-
                         <option value="">Select</option>
 
                         <option value="Company"
@@ -357,20 +345,16 @@
                             {{ old('visa_provided_by') == 'Other' ? 'selected' : '' }}>
                             Other
                         </option>
-
                     </select>
 
                     @error('visa_provided_by')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-
                 </div>
-
 
                 {{-- Visa Expiry --}}
 
                 <div class="form-group">
-
                     <label>Visa Expiry</label>
 
                     <input
@@ -383,14 +367,11 @@
                     @error('visa_expiry')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-
                 </div>
-
 
                 {{-- Emirates ID --}}
 
                 <div class="form-group">
-
                     <label>Emirates ID</label>
 
                     <input
@@ -403,14 +384,11 @@
                     @error('emirates_id')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-
                 </div>
-
 
                 {{-- Licence Number --}}
 
                 <div class="form-group">
-
                     <label>Licence Number</label>
 
                     <input
@@ -423,14 +401,11 @@
                     @error('license_number')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-
                 </div>
-
 
                 {{-- Licence Expiry --}}
 
                 <div class="form-group">
-
                     <label>Licence Expiry</label>
 
                     <input
@@ -443,12 +418,11 @@
                     @error('license_expiry')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-
                 </div>
+
                 {{-- Basic Salary --}}
 
                 <div class="form-group">
-
                     <label>
                         Basic Salary <span class="required">*</span>
                     </label>
@@ -466,45 +440,36 @@
                     @error('basic_salary')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-
                 </div>
 
+                {{-- Assigned Vehicle --}}
 
-                  {{-- Assigned Vehicle --}}
+                <div class="form-group">
+                    <label>Assigned Vehicle</label>
 
-<div class="form-group">
+                    <select
+                        name="assigned_vehicle_id"
+                        class="form-control @error('assigned_vehicle_id') is-invalid @enderror"
+                    >
+                        <option value="">Select Vehicle</option>
 
-    <label>Assigned Vehicle</label>
+                        @foreach($vehicles as $vehicle)
+                            <option
+                                value="{{ $vehicle->id }}"
+                                {{ old('assigned_vehicle_id') == $vehicle->id ? 'selected' : '' }}
+                            >
+                                {{ $vehicle->plate_number }}
+                            </option>
+                        @endforeach
+                    </select>
 
-    <select
-        name="assigned_vehicle_id"
-        class="form-control @error('assigned_vehicle_id') is-invalid @enderror"
-    >
-
-        <option value="">Select Vehicle</option>
-
-        @foreach($vehicles as $vehicle)
-            <option
-                value="{{ $vehicle->id }}"
-                {{ old('assigned_vehicle_id') == $vehicle->id ? 'selected' : '' }}
-            >
-                {{ $vehicle->plate_number }}
-            </option>
-        @endforeach
-
-    </select>
-
-    @error('assigned_vehicle_id')
-        <div class="field-error">{{ $message }}</div>
-    @enderror
-
-</div>
-
-
+                    @error('assigned_vehicle_id')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+                </div>
                 {{-- Employment Status --}}
 
                 <div class="form-group">
-
                     <label>
                         Employment Status <span class="required">*</span>
                     </label>
@@ -514,7 +479,6 @@
                         class="form-control @error('employment_status') is-invalid @enderror"
                         required
                     >
-
                         <option value="Active"
                             {{ old('employment_status', 'Active') == 'Active' ? 'selected' : '' }}>
                             Active
@@ -534,20 +498,16 @@
                             {{ old('employment_status') == 'Archived' ? 'selected' : '' }}>
                             Archived
                         </option>
-
                     </select>
 
                     @error('employment_status')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-
                 </div>
-
 
                 {{-- Remarks --}}
 
                 <div class="form-group full">
-
                     <label>Remarks</label>
 
                     <textarea
@@ -558,14 +518,11 @@
                     @error('remarks')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-
                 </div>
-
 
                 {{-- CNIC --}}
 
                 <div class="form-group">
-
                     <label>
                         CNIC <span class="required">*</span>
                     </label>
@@ -581,14 +538,11 @@
                     @error('cnic')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-
                 </div>
-
 
                 {{-- Address --}}
 
                 <div class="form-group">
-
                     <label>Address</label>
 
                     <input
@@ -601,34 +555,29 @@
                     @error('address')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-
                 </div>
-
 
                 {{-- Date of Birth --}}
 
                 <div class="form-group">
-
                     <label>Date of Birth</label>
 
                     <input
                         type="date"
                         name="date_of_birth"
                         value="{{ old('date_of_birth') }}"
+                    max="{{ now()->subYears(18)->toDateString() }}"
                         class="form-control @error('date_of_birth') is-invalid @enderror"
                     >
 
                     @error('date_of_birth')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-
                 </div>
-
 
                 {{-- Joining Date --}}
 
                 <div class="form-group">
-
                     <label>Joining Date</label>
 
                     <input
@@ -641,21 +590,17 @@
                     @error('joining_date')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-
                 </div>
-
 
                 {{-- Status --}}
 
                 <div class="form-group">
-
                     <label>Status</label>
 
                     <select
                         name="status"
                         class="form-control @error('status') is-invalid @enderror"
                     >
-
                         <option value="Active"
                             {{ old('status', 'Active') == 'Active' ? 'selected' : '' }}>
                             Active
@@ -665,20 +610,16 @@
                             {{ old('status') == 'Inactive' ? 'selected' : '' }}>
                             Inactive
                         </option>
-
                     </select>
 
                     @error('status')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-
                 </div>
-
 
                 {{-- Notes --}}
 
                 <div class="form-group full">
-
                     <label>Notes</label>
 
                     <textarea
@@ -689,18 +630,14 @@
                     @error('notes')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-
                 </div>
 
             </div>
 
-
             <div class="form-actions">
-
                 <button type="submit" class="save-btn">
                     Save Driver
                 </button>
-
             </div>
 
         </form>

@@ -206,12 +206,15 @@ class DriverController extends Controller
                     'required',
                     'boolean',
                 ],
-
+                
                 'visa_type' => [
-                    'nullable',
-                    'string',
-                    'max:255',
-                ],
+    'nullable',
+    Rule::in([
+        'Temporary',
+        'Permanent',
+        'Other',
+    ]),
+],
 
                 'visa_provided_by' => [
                     'nullable',
@@ -259,9 +262,10 @@ class DriverController extends Controller
                 ],
 
                 'date_of_birth' => [
-                    'nullable',
-                    'date',
-                ],
+    'nullable',
+    'date',
+    'before_or_equal:' . now()->subYears(18)->toDateString(),
+],
 
                 'joining_date' => [
                     'nullable',
@@ -313,10 +317,11 @@ class DriverController extends Controller
 
                 'visa_type.string' => 'Visa Type must be a valid text value.',
                 'visa_type.max' => 'Visa Type may not be longer than 255 characters.',
-
+                'visa_type.in' => 'Please select a valid Visa Type from the dropdown.', 
+                
                 'visa_provided_by.string' => 'Visa Provided By must be a valid value.',
                 'visa_provided_by.max' => 'Visa Provided By may not be longer than 255 characters.',
-
+                 
                 'visa_expiry.date' => 'Visa Expiry must be a valid date.',
 
                 'emirates_id.unique' => 'Emirates ID has already been taken. Please enter a different Emirates ID.',
@@ -333,6 +338,7 @@ class DriverController extends Controller
                 'employment_status.required' => 'Employment Status is required. Please select an option.',
                 'employment_status.in' => 'Please select a valid Employment Status.',
 
+                'date_of_birth.before_or_equal' => 'Driver must be at least 18 years old.',
                 'date_of_birth.date' => 'Date of Birth must be a valid date.',
                 'joining_date.date' => 'Joining Date must be a valid date.',
 
@@ -435,10 +441,13 @@ class DriverController extends Controller
                 ],
 
                 'visa_type' => [
-                    'nullable',
-                    'string',
-                    'max:255',
-                ],
+    'nullable',
+    Rule::in([
+        'Temporary',
+        'Permanent',
+        'Other',
+    ]),
+],
 
                 'visa_provided_by' => [
                     'nullable',
@@ -485,10 +494,11 @@ class DriverController extends Controller
                     'string',
                 ],
 
-                'date_of_birth' => [
-                    'nullable',
-                    'date',
-                ],
+               'date_of_birth' => [
+    'nullable',
+    'date',
+    'before_or_equal:' . now()->subYears(18)->toDateString(),
+],
 
                 'joining_date' => [
                     'nullable',
@@ -540,6 +550,7 @@ class DriverController extends Controller
 
                 'visa_type.string' => 'Visa Type must be a valid text value.',
                 'visa_type.max' => 'Visa Type may not be longer than 255 characters.',
+                'visa_type.in' => 'Please select a valid Visa Type from the dropdown.',
 
                 'visa_provided_by.string' => 'Visa Provided By must be a valid value.',
                 'visa_provided_by.max' => 'Visa Provided By may not be longer than 255 characters.',
@@ -560,6 +571,7 @@ class DriverController extends Controller
                 'employment_status.required' => 'Employment Status is required. Please select an option.',
                 'employment_status.in' => 'Please select a valid Employment Status.',
 
+               'date_of_birth.before_or_equal' => 'Driver must be at least 18 years old.',
                 'date_of_birth.date' => 'Date of Birth must be a valid date.',
                 'joining_date.date' => 'Joining Date must be a valid date.',
 

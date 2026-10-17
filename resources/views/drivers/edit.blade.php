@@ -330,23 +330,37 @@
 
                 {{-- Visa Type --}}
 
-                <div class="form-group">
+<div class="form-group">
 
-                    <label>Visa Type</label>
+    <label>Visa Type</label>
 
-                    <input
-                        type="text"
-                        name="visa_type"
-                        value="{{ old('visa_type', $driver->visa_type) }}"
-                        class="form-control @error('visa_type') is-invalid @enderror"
-                    >
+    <select
+        name="visa_type"
+        class="form-control @error('visa_type') is-invalid @enderror"
+    >
+        <option value="">Select Visa Type</option>
 
-                    @error('visa_type')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+        <option value="Temporary"
+            {{ old('visa_type', $driver->visa_type) == 'Temporary' ? 'selected' : '' }}>
+            Temporary
+        </option>
 
-                </div>
+        <option value="Permanent"
+            {{ old('visa_type', $driver->visa_type) == 'Permanent' ? 'selected' : '' }}>
+            Permanent
+        </option>
 
+        <option value="Other"
+            {{ old('visa_type', $driver->visa_type) == 'Other' ? 'selected' : '' }}>
+            Other
+        </option>
+    </select>
+
+    @error('visa_type')
+        <div class="field-error">{{ $message }}</div>
+    @enderror
+
+</div>
 
                 {{-- Visa Provided By --}}
 
