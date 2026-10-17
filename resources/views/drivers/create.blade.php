@@ -161,7 +161,7 @@
             </div>
         @endif
 
-        <form action="{{ route('drivers.store') }}" method="POST">
+       <form action="{{ route('drivers.store') }}" method="POST" novalidate>
             @csrf
 
             <div class="form-grid">

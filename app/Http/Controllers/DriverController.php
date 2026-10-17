@@ -301,6 +301,7 @@ class DriverController extends Controller
                 'license_number.string' => 'Licence Number must be a valid text value.',
                 'license_number.max' => 'Licence Number may not be longer than 255 characters.',
                 'license_expiry.date' => 'Licence Expiry must be a valid date.',
+                'license_expiry.required' => 'Licence Expiry is required. Please select an expiry date.',
 
                 'phone.string' => 'Mobile number must be a valid text value.',
                 'phone.max' => 'Mobile number may not be longer than 255 characters.',
@@ -534,6 +535,7 @@ class DriverController extends Controller
                 'license_number.string' => 'Licence Number must be a valid text value.',
                 'license_number.max' => 'Licence Number may not be longer than 255 characters.',
                 'license_expiry.date' => 'Licence Expiry must be a valid date.',
+                'license_expiry.required' => 'Licence Expiry is required. Please select an expiry date.',
 
                 'phone.string' => 'Mobile number must be a valid text value.',
                 'phone.max' => 'Mobile number may not be longer than 255 characters.',

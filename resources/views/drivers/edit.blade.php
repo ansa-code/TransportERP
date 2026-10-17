@@ -178,8 +178,7 @@
         @endif
 
 
-        <form action="{{ route('drivers.update', $driver->id) }}" method="POST">
-
+       <form action="{{ route('drivers.update', $driver->id) }}" method="POST" novalidate>
             @csrf
             @method('PUT')
 

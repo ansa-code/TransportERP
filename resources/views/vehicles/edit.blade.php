@@ -181,9 +181,10 @@
 
 
         <form
-            action="{{ route('vehicles.update', $vehicle->id) }}"
-            method="POST"
-        >
+    action="{{ route('vehicles.update', $vehicle->id) }}"
+    method="POST"
+    novalidate
+>
 
             @csrf
             @method('PUT')
