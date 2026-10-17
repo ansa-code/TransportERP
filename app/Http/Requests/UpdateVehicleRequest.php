@@ -16,8 +16,12 @@ class UpdateVehicleRequest extends FormRequest
     {
         $vehicleId = $this->route('vehicle');
 
-        return [
+        // Fallback in case the route parameter is named differently.
+        if ($vehicleId === null) {
+            $vehicleId = $this->route('id');
+        }
 
+        return [
             'vehicle_code' => [
                 'required',
                 'string',
@@ -38,7 +42,6 @@ class UpdateVehicleRequest extends FormRequest
             ],
 
             'brand' => 'nullable|string|max:100',
-
             'model' => 'nullable|string|max:100',
 
             'plate_number' => [
@@ -49,9 +52,7 @@ class UpdateVehicleRequest extends FormRequest
             ],
 
             'category' => 'nullable|string|max:255',
-
             'load_capacity' => 'nullable|numeric|min:0',
-
             'load_capacity_unit' => 'nullable|string|max:50',
 
             'ownership_type' => [
@@ -65,19 +66,12 @@ class UpdateVehicleRequest extends FormRequest
             ],
 
             'vendor_owner' => 'nullable|string|max:255',
-
             'registered_company_name' => 'nullable|string|max:255',
-
             'bank_instalment_amount' => 'nullable|numeric|min:0',
-
             'instalment_duration' => 'nullable|integer|min:1',
-
             'instalment_duration_unit' => 'nullable|string|max:50',
-
             'registration_expiry' => 'nullable|date',
-
             'insurance_expiry' => 'nullable|date',
-
             'current_odometer' => 'nullable|integer|min:0',
 
             'status' => [
@@ -93,7 +87,23 @@ class UpdateVehicleRequest extends FormRequest
             ],
 
             'remarks' => 'nullable|string',
+        ];
+    }
 
+    public function messages(): array
+    {
+        return [
+            'vehicle_code.unique' =>
+                'This Vehicle ID / Code already exists. Please enter a different code.',
+
+            'plate_number.unique' =>
+                'This plate number is already registered. Please enter a different plate number.',
+
+            'vehicle_code.required' =>
+                'Vehicle ID / Code is required.',
+
+            'plate_number.required' =>
+                'Plate number is required.',
         ];
     }
 }
