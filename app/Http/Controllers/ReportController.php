@@ -130,244 +130,6 @@ class ReportController extends Controller
                 'status',
             ]);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Fleet KPIs
-        |--------------------------------------------------------------------------
-        */
-
-        $totalVehicles = Vehicle::count();
-
-        $vehicleStatusCounts = Vehicle::query()
-            ->selectRaw('status, COUNT(*) as total')
-            ->whereNotNull('status')
-            ->groupBy('status')
-            ->pluck('total', 'status');
-
-        $activeVehicles = (int) (
-            $vehicleStatusCounts['Active']
-            ?? $vehicleStatusCounts['active']
-            ?? 0
-        );
-
-        $inactiveVehicles = (int) (
-            $vehicleStatusCounts['Inactive']
-            ?? $vehicleStatusCounts['inactive']
-            ?? 0
-        );
-
-        $maintenanceVehicles = (int) (
-            $vehicleStatusCounts['Under Maintenance']
-            ?? $vehicleStatusCounts['Maintenance']
-            ?? $vehicleStatusCounts['maintenance']
-            ?? 0
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Active Assignments
-        |--------------------------------------------------------------------------
-        */
-
-        $activeAssignmentStatuses = [
-            'Active',
-            'Assigned',
-            'In Progress',
-        ];
-
-        $activeAssignments = Assignment::query()
-            ->whereIn('status', $activeAssignmentStatuses)
-            ->count();
-
-        $assignedVehicles = Vehicle::query()
-            ->whereHas('assignments', function ($query) use (
-                $activeAssignmentStatuses
-            ) {
-                $query->whereIn(
-                    'status',
-                    $activeAssignmentStatuses
-                );
-            })
-            ->count();
-
-        $idleVehicles = max(
-            0,
-            $activeVehicles
-            - $assignedVehicles
-            - $maintenanceVehicles
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Driver KPIs
-        |--------------------------------------------------------------------------
-        */
-
-                  $totalDrivers = Driver::count();
-
-$activeDrivers = Driver::query()
-    ->where(function ($query) {
-        $query->where('status', 'Active')
-            ->orWhere('employment_status', 'Active');
-    })
-    ->count();
-
-$onLeaveDrivers = Leave::query()
-    ->whereDate(
-        'start_date',
-        '<=',
-        Carbon::today()->toDateString()
-    )
-    ->whereDate(
-        'end_date',
-        '>=',
-        Carbon::today()->toDateString()
-    )
-    ->distinct('driver_id')
-    ->count('driver_id');
-
-/*
-|--------------------------------------------------------------------------
-| Revenue
-|--------------------------------------------------------------------------
-*/
-
-$revenue = (float) Invoice::query()
-    ->whereBetween('invoice_date', [
-        $startDate->toDateString(),
-        $endDate->toDateString(),
-    ])
-    ->whereNotIn('status', ['Cancelled'])
-    ->sum('total_amount');
-
-/*
-|--------------------------------------------------------------------------
-| Expenses
-|--------------------------------------------------------------------------
-*/
-
-$expenseTotal = (float) Expense::query()
-    ->whereBetween('expense_date', [
-        $startDate->toDateString(),
-        $endDate->toDateString(),
-    ])
-    ->sum('amount');
-
-        /*
-        |--------------------------------------------------------------------------
-        | Payroll
-        |--------------------------------------------------------------------------
-        */
-
-        $payrollTotal = (float) Payroll::query()
-            ->whereBetween('salary_month', [
-                $startDate->toDateString(),
-                $endDate->toDateString(),
-            ])
-            ->sum('net_salary');
-
-        /*
-        |--------------------------------------------------------------------------
-        | Fuel
-        |--------------------------------------------------------------------------
-        */
-
-        $fuelTotal = (float) Fuel::query()
-            ->whereBetween('fuel_date', [
-                $startDate->copy()->startOfDay(),
-                $endDate->copy()->endOfDay(),
-            ])
-            ->sum('total_amount');
-
-        $reimbursableFuel = (float) Fuel::query()
-            ->whereBetween('fuel_date', [
-                $startDate->copy()->startOfDay(),
-                $endDate->copy()->endOfDay(),
-            ])
-            ->where('reimbursable', true)
-            ->sum('reimbursement_amount');
-
-        /*
-        |--------------------------------------------------------------------------
-        | Maintenance
-        |--------------------------------------------------------------------------
-        */
-
-        $maintenanceTotal = (float) Maintenance::query()
-            ->whereBetween('maintenance_date', [
-                $startDate->toDateString(),
-                $endDate->toDateString(),
-            ])
-            ->sum('total_cost');
-
-        /*
-        |--------------------------------------------------------------------------
-        | Traffic Fines
-        |--------------------------------------------------------------------------
-        */
-
-        $trafficFineTotal = (float) TrafficFine::query()
-            ->whereBetween('fine_date', [
-                $startDate->toDateString(),
-                $endDate->toDateString(),
-            ])
-            ->sum('amount');
-
-        /*
-        |--------------------------------------------------------------------------
-        | Invoice Outstanding
-        |--------------------------------------------------------------------------
-        */
-
-        $outstandingInvoices = (float) Invoice::query()
-            ->where('balance', '>', 0)
-            ->sum('balance');
-
-        $overdueBalance = (float) Invoice::query()
-            ->where('balance', '>', 0)
-            ->whereDate(
-                'due_date',
-                '<',
-                Carbon::today()->toDateString()
-            )
-            ->sum('balance');
-
-        /*
-        |--------------------------------------------------------------------------
-        | Payment / Recovery
-        |--------------------------------------------------------------------------
-        */
-
-        $paymentsReceived = (float) Payment::query()
-            ->whereBetween('payment_date', [
-                $startDate->toDateString(),
-                $endDate->toDateString(),
-            ])
-            ->sum('amount');
-
-        $allocatedPayments = (float) Payment::query()
-            ->whereBetween('payment_date', [
-                $startDate->toDateString(),
-                $endDate->toDateString(),
-            ])
-            ->sum(
-                \DB::raw(
-                    'amount - COALESCE(unallocated_amount, 0)'
-                )
-            );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Net Management Result
-        |--------------------------------------------------------------------------
-        */
-
-        $netProfit = $revenue
-            - $expenseTotal
-            - $payrollTotal
-            - $fuelTotal
-            - $maintenanceTotal
-            - $trafficFineTotal;
 
         /*
         |--------------------------------------------------------------------------
@@ -383,17 +145,6 @@ $expenseTotal = (float) Expense::query()
             'end_label' => $endDate->format('d M Y'),
         ];
 
-        /*
-        |--------------------------------------------------------------------------
-        | Complete Report Dataset
-        |--------------------------------------------------------------------------
-        */
-
-        $reportData = $this->buildReportData(
-            $startDate,
-            $endDate,
-            $filters
-        );
 
         /*
         |--------------------------------------------------------------------------
@@ -402,17 +153,12 @@ $expenseTotal = (float) Expense::query()
         */
 
         return view('reports.index', [
-            /*
-            | Period
-            */
             'period' => $period,
             'startDate' => $startDate,
             'endDate' => $endDate,
             'periodData' => $periodData,
 
-            /*
-            | Master Filters
-            */
+            // Master data for the filter dropdowns.
             'vehicles' => $vehicles,
             'drivers' => $drivers,
             'clients' => $clients,
@@ -420,49 +166,74 @@ $expenseTotal = (float) Expense::query()
             'assignments' => $assignments,
             'filters' => $filters,
 
-            /*
-            | Fleet
-            */
-            'totalVehicles' => $totalVehicles,
-            'activeVehicles' => $activeVehicles,
-            'inactiveVehicles' => $inactiveVehicles,
-            'assignedVehicles' => $assignedVehicles,
-            'maintenanceVehicles' => $maintenanceVehicles,
-            'idleVehicles' => $idleVehicles,
-
-            /*
-            | Drivers / Operations
-            */
-            'totalDrivers' => $totalDrivers,
-            'activeDrivers' => $activeDrivers,
-            'onLeaveDrivers' => $onLeaveDrivers,
-            'activeAssignments' => $activeAssignments,
-
-            /*
-            | Finance
-            */
-            'revenue' => $revenue,
-            'expenses' => $expenseTotal,
-            'payroll' => $payrollTotal,
-            'netProfit' => $netProfit,
-            'outstandingInvoices' => $outstandingInvoices,
-            'overdueBalance' => $overdueBalance,
-            'paymentsReceived' => $paymentsReceived,
-            'allocatedPayments' => $allocatedPayments,
-
-            /*
-            | Fuel / Maintenance / Compliance
-            */
-            'fuelCost' => $fuelTotal,
-            'reimbursableFuel' => $reimbursableFuel,
-            'maintenanceCost' => $maintenanceTotal,
-            'trafficFines' => $trafficFineTotal,
-
-            /*
-            | Full Report Data
-            */
-            'reportData' => $reportData,
+            // Report data is loaded on demand through reports.data.
+            'reportData' => [],
         ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Single Report Data (loaded on demand by the Reports Center)
+    |--------------------------------------------------------------------------
+    */
+
+    public function data(Request $request)
+    {
+        $key = (string) $request->input('key', '');
+
+        $period = $request->input('period', 'monthly');
+
+        if (!in_array($period, [
+            'daily',
+            'weekly',
+            'monthly',
+            'quarterly',
+            'yearly',
+            'custom',
+        ], true)) {
+            $period = 'monthly';
+        }
+
+        [$startDate, $endDate] = $this->resolveDateRange(
+            $period,
+            $request->input('start_date'),
+            $request->input('end_date')
+        );
+
+        $filters = [
+            'vehicle_id' => $request->filled('vehicle_id') ? (int) $request->input('vehicle_id') : null,
+            'driver_id' => $request->filled('driver_id') ? (int) $request->input('driver_id') : null,
+            'client_id' => $request->filled('client_id') ? (int) $request->input('client_id') : null,
+            'vendor_id' => $request->filled('vendor_id') ? (int) $request->input('vendor_id') : null,
+            'assignment_id' => $request->filled('assignment_id') ? (int) $request->input('assignment_id') : null,
+            'status' => $request->filled('status') ? $request->input('status') : null,
+        ];
+
+        $builders = $this->reportBuilders($startDate, $endDate, $filters);
+
+        if (!isset($builders[$key])) {
+            return response()->json(['message' => 'Unknown report.'], 404);
+        }
+
+        $payload = [
+            'key' => $key,
+            'data' => $builders[$key](),
+        ];
+
+        if ($key === 'executive_kpi') {
+            $trend = $this->revenueExpenseTrend($startDate, $endDate);
+
+            $payload['kpi'] = [
+                'vehicles' => Vehicle::count(),
+                'drivers' => Driver::count(),
+                'active_assignments' => Assignment::query()
+                    ->whereIn('status', ['Active', 'Assigned', 'In Progress'])
+                    ->count(),
+                'net_profit' => (float) collect($trend)->sum('profit'),
+            ];
+        }
+
+        return response()->json($payload);
     }
 
     /*
@@ -533,131 +304,145 @@ $expenseTotal = (float) Expense::query()
     |--------------------------------------------------------------------------
     */
 
-    private function buildReportData(
+    private function reportBuilders(
         Carbon $startDate,
         Carbon $endDate,
         array $filters = []
     ): array {
         return [
             // RPT-001 — RPT-008 Executive / Management
-            'executive_kpi' => $this->executiveKpi($startDate, $endDate, $filters),
-            'revenue_expense_trend' => $this->revenueExpenseTrend($startDate, $endDate, $filters),
-            'profit_trend' => $this->profitTrend($startDate, $endDate, $filters),
-            'cash_receivable_summary' => $this->cashReceivableSummary($startDate, $endDate, $filters),
-            'outstanding_reimbursement' => $this->outstandingReimbursementSummary($startDate, $endDate, $filters),
-            'top_low_profit_vehicles' => $this->topLowProfitVehicles($startDate, $endDate, $filters),
-            'top_clients' => $this->topClients($startDate, $endDate, $filters),
-            'risk_expiry_summary' => $this->documentExpiryCenter(),
+            'executive_kpi' => fn () => $this->executiveKpi($startDate, $endDate, $filters),
+            'revenue_expense_trend' => fn () => $this->revenueExpenseTrend($startDate, $endDate, $filters),
+            'profit_trend' => fn () => $this->profitTrend($startDate, $endDate, $filters),
+            'cash_receivable_summary' => fn () => $this->cashReceivableSummary($startDate, $endDate, $filters),
+            'outstanding_reimbursement' => fn () => $this->outstandingReimbursementSummary($startDate, $endDate, $filters),
+            'top_low_profit_vehicles' => fn () => $this->topLowProfitVehicles($startDate, $endDate, $filters),
+            'top_clients' => fn () => $this->topClients($startDate, $endDate, $filters),
+            'risk_expiry_summary' => fn () => $this->documentExpiryCenter(),
 
             // RPT-009 — RPT-020 Fleet
-            'vehicles' => $this->vehicleMaster($filters),
-            'vehicle_master' => $this->vehicleMaster($filters),
-            'fleet_status_summary' => $this->fleetStatusSummary($filters),
-            'fleet_type_summary' => $this->fleetTypeSummary($filters),
-            'vehicle_utilisation' => $this->vehicleUtilisation($startDate, $endDate, $filters),
-            'idle_vehicle' => $this->idleVehicle($startDate, $endDate, $filters),
-            'vehicle_revenue' => $this->vehicleRevenue($startDate, $endDate, $filters),
-            'vehicle_expense' => $this->vehicleExpense($startDate, $endDate, $filters),
-            'vehicle_profitability' => $this->vehicleProfitability($startDate, $endDate, $filters),
-            'fuel_by_vehicle' => $this->fuelByVehicle($startDate, $endDate, $filters),
-            'maintenance_by_vehicle' => $this->maintenanceByVehicle($startDate, $endDate, $filters),
-            'fine_history_by_vehicle' => $this->fineHistoryByVehicle($startDate, $endDate, $filters),
-            'fleet_health' => $this->fleetHealth($startDate, $endDate, $filters),
+            'vehicles' => fn () => $this->vehicleMaster($filters),
+            'vehicle_master' => fn () => $this->vehicleMaster($filters),
+            'fleet_status_summary' => fn () => $this->fleetStatusSummary($filters),
+            'fleet_type_summary' => fn () => $this->fleetTypeSummary($filters),
+            'vehicle_utilisation' => fn () => $this->vehicleUtilisation($startDate, $endDate, $filters),
+            'idle_vehicle' => fn () => $this->idleVehicle($startDate, $endDate, $filters),
+            'vehicle_revenue' => fn () => $this->vehicleRevenue($startDate, $endDate, $filters),
+            'vehicle_expense' => fn () => $this->vehicleExpense($startDate, $endDate, $filters),
+            'vehicle_profitability' => fn () => $this->vehicleProfitability($startDate, $endDate, $filters),
+            'fuel_by_vehicle' => fn () => $this->fuelByVehicle($startDate, $endDate, $filters),
+            'maintenance_by_vehicle' => fn () => $this->maintenanceByVehicle($startDate, $endDate, $filters),
+            'fine_history_by_vehicle' => fn () => $this->fineHistoryByVehicle($startDate, $endDate, $filters),
+            'fleet_health' => fn () => $this->fleetHealth($startDate, $endDate, $filters),
 
             // RPT-021 — RPT-030 Drivers / HR
-            'drivers' => $this->driverMaster($filters),
-            'driver_master' => $this->driverMaster($filters),
-            'driver_status_summary' => $this->driverStatusSummary($filters),
-            'assignment_trip_history' => $this->assignmentSummary($startDate, $endDate, $filters),
-            'leave_summary' => $this->leaveSummary($startDate, $endDate, $filters),
-            'salary_report' => $this->payrollSummary($startDate, $endDate, $filters),
-            'advance_summary' => $this->advanceSummary($startDate, $endDate, $filters),
-            'outstanding_advance' => $this->outstandingAdvance($filters),
-            'driver_fine_deduction' => $this->driverFineDeduction($startDate, $endDate, $filters),
-            'driver_expiry_summary' => $this->driverExpirySummary(),
+            'drivers' => fn () => $this->driverMaster($filters),
+            'driver_master' => fn () => $this->driverMaster($filters),
+            'driver_status_summary' => fn () => $this->driverStatusSummary($filters),
+            'assignment_trip_history' => fn () => $this->assignmentSummary($startDate, $endDate, $filters),
+            'leave_summary' => fn () => $this->leaveSummary($startDate, $endDate, $filters),
+            'salary_report' => fn () => $this->payrollSummary($startDate, $endDate, $filters),
+            'advance_summary' => fn () => $this->advanceSummary($startDate, $endDate, $filters),
+            'outstanding_advance' => fn () => $this->outstandingAdvance($filters),
+            'driver_fine_deduction' => fn () => $this->driverFineDeduction($startDate, $endDate, $filters),
+            'driver_expiry_summary' => fn () => $this->driverExpirySummary(),
 
             // RPT-031 — RPT-039 Clients
-            'clients' => $this->clientMaster($filters),
-            'client_master' => $this->clientMaster($filters),
-            'client_contract_expiry' => $this->clientExpirySummary(),
-            'client_revenue_summary' => $this->clientRevenueSummary($startDate, $endDate, $filters),
-            'client_expense' => $this->clientExpense($startDate, $endDate, $filters),
-            'client_profitability' => $this->clientProfitability($startDate, $endDate, $filters),
-            'client_outstanding' => $this->clientOutstanding($filters),
-            'client_ledger' => $this->paymentSummary($startDate, $endDate, $filters),
-            'client_fuel_reimbursement' => $this->clientFuelReimbursement($startDate, $endDate, $filters),
-            'top_low_margin_clients' => $this->topClients($startDate, $endDate, $filters),
+            'clients' => fn () => $this->clientMaster($filters),
+            'client_master' => fn () => $this->clientMaster($filters),
+            'client_contract_expiry' => fn () => $this->clientExpirySummary(),
+            'client_revenue_summary' => fn () => $this->clientRevenueSummary($startDate, $endDate, $filters),
+            'client_expense' => fn () => $this->clientExpense($startDate, $endDate, $filters),
+            'client_profitability' => fn () => $this->clientProfitability($startDate, $endDate, $filters),
+            'client_outstanding' => fn () => $this->clientOutstanding($filters),
+            'client_ledger' => fn () => $this->paymentSummary($startDate, $endDate, $filters),
+            'client_fuel_reimbursement' => fn () => $this->clientFuelReimbursement($startDate, $endDate, $filters),
+            'top_low_margin_clients' => fn () => $this->topClients($startDate, $endDate, $filters),
 
             // RPT-040 — RPT-045 Vendors
-            'vendors' => $this->vendorSummary(),
-            'vendor_master' => $this->vendorSummary(),
-            'vendor_vehicle' => $this->vendorVehicleReport($startDate, $endDate, $filters),
-            'vendor_rate' => $this->vendorRateReport($filters),
-            'vendor_payable' => $this->vendorPayableReport($startDate, $endDate, $filters),
-            'vendor_ledger' => $this->vendorLedgerReport($startDate, $endDate, $filters),
-            'workshop_spend' => $this->workshopSpend($startDate, $endDate, $filters),
+            'vendors' => fn () => $this->vendorSummary(),
+            'vendor_master' => fn () => $this->vendorSummary(),
+            'vendor_vehicle' => fn () => $this->vendorVehicleReport($startDate, $endDate, $filters),
+            'vendor_rate' => fn () => $this->vendorRateReport($filters),
+            'vendor_payable' => fn () => $this->vendorPayableReport($startDate, $endDate, $filters),
+            'vendor_ledger' => fn () => $this->vendorLedgerReport($startDate, $endDate, $filters),
+            'workshop_spend' => fn () => $this->workshopSpend($startDate, $endDate, $filters),
 
             // RPT-046 — RPT-054 Operations
-            'assignment_summary' => $this->assignmentSummary($startDate, $endDate, $filters),
-            'active_assignments' => $this->assignmentStatusReport($startDate, $endDate, $filters, ['Active','Assigned','In Progress']),
-            'completed_assignments' => $this->assignmentStatusReport($startDate, $endDate, $filters, ['Completed']),
-            'trip_summary' => $this->tripSummary($startDate, $endDate, $filters),
-            'trip_status' => $this->tripStatusSummary($startDate, $endDate, $filters),
-            'trip_profitability' => $this->tripProfitability($startDate, $endDate, $filters),
-            'route_profitability' => $this->routeProfitability($startDate, $endDate, $filters),
-            'vehicle_driver_history' => $this->vehicleDriverHistory($startDate, $endDate, $filters),
-            'operational_performance' => $this->operationalPerformance($startDate, $endDate, $filters),
-            'cancelled_trips' => $this->cancelledTrips($startDate, $endDate, $filters),
+            'assignment_summary' => fn () => $this->assignmentSummary($startDate, $endDate, $filters),
+            'active_assignments' => fn () => $this->assignmentStatusReport($startDate, $endDate, $filters, ['Active','Assigned','In Progress']),
+            'completed_assignments' => fn () => $this->assignmentStatusReport($startDate, $endDate, $filters, ['Completed']),
+            'trip_summary' => fn () => $this->tripSummary($startDate, $endDate, $filters),
+            'trip_status' => fn () => $this->tripStatusSummary($startDate, $endDate, $filters),
+            'trip_profitability' => fn () => $this->tripProfitability($startDate, $endDate, $filters),
+            'route_profitability' => fn () => $this->routeProfitability($startDate, $endDate, $filters),
+            'vehicle_driver_history' => fn () => $this->vehicleDriverHistory($startDate, $endDate, $filters),
+            'operational_performance' => fn () => $this->operationalPerformance($startDate, $endDate, $filters),
+            'cancelled_trips' => fn () => $this->cancelledTrips($startDate, $endDate, $filters),
 
             // RPT-055 — RPT-063 Fuel / Maintenance
-            'fuel_summary' => $this->fuelSummary($startDate, $endDate, $filters),
-            'fuel_consumption' => $this->fuelConsumption($startDate, $endDate, $filters),
-            'fuel_trend' => $this->fuelTrend($startDate, $endDate, $filters),
-            'reimbursable_fuel' => $this->reimbursableFuelReport($startDate, $endDate, $filters),
-            'fuel_recovery_ageing' => $this->fuelRecoveryAgeingReport($startDate, $endDate, $filters),
-            'maintenance_summary' => $this->maintenanceSummary($startDate, $endDate, $filters),
-            'maintenance_cost_trend' => $this->maintenanceTrend($startDate, $endDate, $filters),
-            'vehicle_downtime' => $this->vehicleDowntime($startDate, $endDate, $filters),
-            'preventive_maintenance_due' => $this->preventiveMaintenanceDue(),
+            'fuel_summary' => fn () => $this->fuelSummary($startDate, $endDate, $filters),
+            'fuel_consumption' => fn () => $this->fuelConsumption($startDate, $endDate, $filters),
+            'fuel_trend' => fn () => $this->fuelTrend($startDate, $endDate, $filters),
+            'reimbursable_fuel' => fn () => $this->reimbursableFuelReport($startDate, $endDate, $filters),
+            'fuel_recovery_ageing' => fn () => $this->fuelRecoveryAgeingReport($startDate, $endDate, $filters),
+            'maintenance_summary' => fn () => $this->maintenanceSummary($startDate, $endDate, $filters),
+            'maintenance_cost_trend' => fn () => $this->maintenanceTrend($startDate, $endDate, $filters),
+            'vehicle_downtime' => fn () => $this->vehicleDowntime($startDate, $endDate, $filters),
+            'preventive_maintenance_due' => fn () => $this->preventiveMaintenanceDue(),
 
             // RPT-064 — RPT-075 Finance
-            'invoice_summary' => $this->invoiceSummary($startDate, $endDate, $filters),
-            'invoice_ageing' => $this->invoiceAgeing($filters),
-            'outstanding_invoices' => $this->outstandingInvoiceReport($filters),
-            'payment_summary' => $this->paymentSummary($startDate, $endDate, $filters),
-            'payment_allocation' => $this->paymentAllocationReport($startDate, $endDate, $filters),
-            'expense_summary' => $this->expenseSummary($startDate, $endDate, $filters),
-            'expense_by_category' => $this->expenseByCategory($startDate, $endDate, $filters),
-            'payroll_summary' => $this->payrollSummary($startDate, $endDate, $filters),
-            'payroll_deduction' => $this->payrollDeductionReport($startDate, $endDate, $filters),
-            'revenue_report' => $this->invoiceSummary($startDate, $endDate, $filters),
-            'monthly_pnl' => $this->profitTrend($startDate, $endDate, $filters),
-            'client_vehicle_profitability' => $this->clientVehicleProfitability($startDate, $endDate, $filters),
-            'vat_summary' => $this->vatSummary($startDate, $endDate, $filters),
+            'invoice_summary' => fn () => $this->invoiceSummary($startDate, $endDate, $filters),
+            'invoice_ageing' => fn () => $this->invoiceAgeing($filters),
+            'outstanding_invoices' => fn () => $this->outstandingInvoiceReport($filters),
+            'payment_summary' => fn () => $this->paymentSummary($startDate, $endDate, $filters),
+            'payment_allocation' => fn () => $this->paymentAllocationReport($startDate, $endDate, $filters),
+            'expense_summary' => fn () => $this->expenseSummary($startDate, $endDate, $filters),
+            'expense_by_category' => fn () => $this->expenseByCategory($startDate, $endDate, $filters),
+            'payroll_summary' => fn () => $this->payrollSummary($startDate, $endDate, $filters),
+            'payroll_deduction' => fn () => $this->payrollDeductionReport($startDate, $endDate, $filters),
+            'revenue_report' => fn () => $this->invoiceSummary($startDate, $endDate, $filters),
+            'monthly_pnl' => fn () => $this->profitTrend($startDate, $endDate, $filters),
+            'client_vehicle_profitability' => fn () => $this->clientVehicleProfitability($startDate, $endDate, $filters),
+            'vat_summary' => fn () => $this->vatSummary($startDate, $endDate, $filters),
 
             // RPT-076 — RPT-082 Compliance / Documents
-            'documents' => $this->allDocumentsReport($filters),
-            'document_expiry' => $this->documentExpiryCenter(),
-            'expiry_7_days' => $this->expiryWindow(7),
-            'expiry_15_days' => $this->expiryWindow(15),
-            'expiry_30_days' => $this->expiryWindow(30),
-            'expired_documents' => $this->expiredDocuments(),
-            'missing_documents' => $this->missingDocuments(),
-            'expiry_by_type' => $this->documentExpiryCenter(),
-            'vehicle_expiry_summary' => $this->vehicleExpirySummary(),
-            'client_expiry_summary' => $this->clientExpirySummary(),
+            'documents' => fn () => $this->allDocumentsReport($filters),
+            'document_expiry' => fn () => $this->documentExpiryCenter(),
+            'expiry_7_days' => fn () => $this->expiryWindow(7),
+            'expiry_15_days' => fn () => $this->expiryWindow(15),
+            'expiry_30_days' => fn () => $this->expiryWindow(30),
+            'expired_documents' => fn () => $this->expiredDocuments(),
+            'missing_documents' => fn () => $this->missingDocuments(),
+            'expiry_by_type' => fn () => $this->documentExpiryCenter(),
+            'vehicle_expiry_summary' => fn () => $this->vehicleExpirySummary(),
+            'client_expiry_summary' => fn () => $this->clientExpirySummary(),
 
             // RPT-083 — RPT-087 Audit
-            'user_activity' => $this->userActivity($startDate, $endDate),
-            'record_change_history' => $this->recordChangeHistory($startDate, $endDate),
-            'archived_records' => $this->archivedRecords($startDate, $endDate),
-            'payment_activity' => $this->paymentActivity($startDate, $endDate, $filters),
-            'permission_login_activity' => $this->permissionLoginActivity($startDate, $endDate),
-            'record_counts' => $this->recordCounts(),
+            'user_activity' => fn () => $this->userActivity($startDate, $endDate),
+            'record_change_history' => fn () => $this->recordChangeHistory($startDate, $endDate),
+            'archived_records' => fn () => $this->archivedRecords($startDate, $endDate),
+            'payment_activity' => fn () => $this->paymentActivity($startDate, $endDate, $filters),
+            'permission_login_activity' => fn () => $this->permissionLoginActivity($startDate, $endDate),
+            'record_counts' => fn () => $this->recordCounts(),
 
             // Compatibility keys used by the existing Reports View.
-            'expiry_center' => $this->documentExpiryCenter(),
+            'expiry_center' => fn () => $this->documentExpiryCenter(),
         ];
+    }
+
+    /*
+    | Kept for compatibility: evaluates every report (slow, avoid).
+    */
+    private function buildReportData(
+        Carbon $startDate,
+        Carbon $endDate,
+        array $filters = []
+    ): array {
+        return array_map(
+            fn ($builder) => $builder(),
+            $this->reportBuilders($startDate, $endDate, $filters)
+        );
     }
 
     /*
@@ -1078,27 +863,25 @@ $expenseTotal = (float) Expense::query()
                 'status',
             ]);
 
-        return $clients
-            ->map(function ($client) use (
-                $startDate,
-                $endDate
-            ) {
-                $revenue = (float) Invoice::query()
-                    ->where('client_id', $client->id)
-                    ->whereBetween('invoice_date', [
-                        $startDate->toDateString(),
-                        $endDate->toDateString(),
-                    ])
-                    ->whereNotIn('status', ['Cancelled'])
-                    ->sum('total_amount');
+        $revenues = Invoice::query()
+            ->whereBetween('invoice_date', [
+                $startDate->toDateString(),
+                $endDate->toDateString(),
+            ])
+            ->whereNotIn('status', ['Cancelled'])
+            ->selectRaw('client_id, SUM(total_amount) as total')
+            ->groupBy('client_id')
+            ->pluck('total', 'client_id');
 
+        return $clients
+            ->map(function ($client) use ($revenues) {
                 return [
                     'client_id' => $client->id,
                     'client_name' => $client->client_name,
                     'company_name' => $client->company_name,
-                    'revenue' => $revenue,
+                    'revenue' => (float) ($revenues[$client->id] ?? 0),
                 ];
-                   })
+            })
             ->values()
             ->all();
     }
@@ -1118,34 +901,35 @@ private function clientProfitability(
         ->orderBy('client_name')
         ->get();
 
-    return $clients->map(function ($client) use (
-        $startDate,
-        $endDate
-    ) {
-        $revenue = (float) Invoice::query()
-            ->where('client_id', $client->id)
-            ->whereBetween('invoice_date', [
-                $startDate->toDateString(),
-                $endDate->toDateString(),
-            ])
-            ->whereNotIn('status', ['Cancelled'])
-            ->sum('total_amount');
+    $revenues = Invoice::query()
+        ->whereBetween('invoice_date', [
+            $startDate->toDateString(),
+            $endDate->toDateString(),
+        ])
+        ->whereNotIn('status', ['Cancelled'])
+        ->selectRaw('client_id, SUM(total_amount) as total')
+        ->groupBy('client_id')
+        ->pluck('total', 'client_id');
 
-        $fuelCost = (float) Fuel::query()
-            ->where('client_id', $client->id)
-            ->whereBetween('fuel_date', [
-                $startDate,
-                $endDate,
-            ])
-            ->sum('total_amount');
+    $fuels = Fuel::query()
+        ->whereBetween('fuel_date', [$startDate, $endDate])
+        ->selectRaw('client_id, SUM(total_amount) as total')
+        ->groupBy('client_id')
+        ->pluck('total', 'client_id');
 
-        $expenseCost = (float) Expense::query()
-            ->where('client_id', $client->id)
-            ->whereBetween('expense_date', [
-                $startDate->toDateString(),
-                $endDate->toDateString(),
-            ])
-            ->sum('amount');
+    $expenses = Expense::query()
+        ->whereBetween('expense_date', [
+            $startDate->toDateString(),
+            $endDate->toDateString(),
+        ])
+        ->selectRaw('client_id, SUM(amount) as total')
+        ->groupBy('client_id')
+        ->pluck('total', 'client_id');
+
+    return $clients->map(function ($client) use ($revenues, $fuels, $expenses) {
+        $revenue = (float) ($revenues[$client->id] ?? 0);
+        $fuelCost = (float) ($fuels[$client->id] ?? 0);
+        $expenseCost = (float) ($expenses[$client->id] ?? 0);
 
         $profit = $revenue - $fuelCost - $expenseCost;
 
@@ -1168,7 +952,7 @@ private function clientProfitability(
     ->values()
     ->all();
 }
-                        
+
                 /*
     |--------------------------------------------------------------------------
     | Operations - Assignment Summary
@@ -2044,76 +1828,54 @@ private function clientProfitability(
                 'category',
             ]);
 
+        $dateStart = $startDate->toDateString();
+        $dateEnd = $endDate->toDateString();
+        $dayStart = $startDate->copy()->startOfDay();
+        $dayEnd = $endDate->copy()->endOfDay();
+
+        // One grouped query per table instead of one query per vehicle.
+        $revenues = Assignment::query()
+            ->whereBetween('start_date', [$dateStart, $dateEnd])
+            ->selectRaw('vehicle_id, SUM(freight_amount) as total')
+            ->groupBy('vehicle_id')
+            ->pluck('total', 'vehicle_id');
+
+        $fuels = Fuel::query()
+            ->whereBetween('fuel_date', [$dayStart, $dayEnd])
+            ->selectRaw('vehicle_id, SUM(total_amount) as total')
+            ->groupBy('vehicle_id')
+            ->pluck('total', 'vehicle_id');
+
+        $maintenances = Maintenance::query()
+            ->whereBetween('maintenance_date', [$dateStart, $dateEnd])
+            ->selectRaw('vehicle_id, SUM(total_cost) as total')
+            ->groupBy('vehicle_id')
+            ->pluck('total', 'vehicle_id');
+
+        $fineTotals = TrafficFine::query()
+            ->whereBetween('fine_date', [$dateStart, $dateEnd])
+            ->selectRaw('vehicle_id, SUM(amount) as total')
+            ->groupBy('vehicle_id')
+            ->pluck('total', 'vehicle_id');
+
+        $expenseTotals = Expense::query()
+            ->whereBetween('expense_date', [$dateStart, $dateEnd])
+            ->selectRaw('vehicle_id, SUM(amount) as total')
+            ->groupBy('vehicle_id')
+            ->pluck('total', 'vehicle_id');
+
         $results = [];
 
         foreach ($vehicles as $vehicle) {
-            /*
-            |--------------------------------------------------------------------------
-            | Direct Vehicle Revenue
-            |--------------------------------------------------------------------------
-            */
+            $revenue = (float) ($revenues[$vehicle->id] ?? 0);
+            $fuel = (float) ($fuels[$vehicle->id] ?? 0);
+            $maintenance = (float) ($maintenances[$vehicle->id] ?? 0);
+            $fines = (float) ($fineTotals[$vehicle->id] ?? 0);
+            $expenses = (float) ($expenseTotals[$vehicle->id] ?? 0);
 
-            $revenue = (float) Assignment::query()
-                ->where('vehicle_id', $vehicle->id)
-                ->whereBetween('start_date', [
-                    $startDate->toDateString(),
-                    $endDate->toDateString(),
-                ])
-                ->sum('freight_amount');
-
-            /*
-            |--------------------------------------------------------------------------
-            | Direct Vehicle Costs
-            |--------------------------------------------------------------------------
-            */
-
-            $fuel = (float) Fuel::query()
-                ->where('vehicle_id', $vehicle->id)
-                ->whereBetween('fuel_date', [
-                    $startDate->copy()->startOfDay(),
-                    $endDate->copy()->endOfDay(),
-                ])
-                ->sum('total_amount');
-
-            $maintenance = (float) Maintenance::query()
-                ->where('vehicle_id', $vehicle->id)
-                ->whereBetween('maintenance_date', [
-                    $startDate->toDateString(),
-                    $endDate->toDateString(),
-                ])
-                ->sum('total_cost');
-
-            $fines = (float) TrafficFine::query()
-                ->where('vehicle_id', $vehicle->id)
-                ->whereBetween('fine_date', [
-                    $startDate->toDateString(),
-                    $endDate->toDateString(),
-                ])
-                ->sum('amount');
-
-            $expenses = (float) Expense::query()
-                ->where('vehicle_id', $vehicle->id)
-                ->whereBetween('expense_date', [
-                    $startDate->toDateString(),
-                    $endDate->toDateString(),
-                ])
-                ->sum('amount');
-
-            $directCost = $fuel
-                + $maintenance
-                + $fines
-                + $expenses;
-
-            /*
-            |--------------------------------------------------------------------------
-            | Allocation Governance
-            |--------------------------------------------------------------------------
-            |
-            | Driver salary, insurance, registration, instalments and
-            | shared overheads are NOT allocated automatically because
-            | the FRD requires final finance sign-off for these rules.
-            |
-            */
+            // Driver salary, insurance, registration, instalments and shared
+            // overheads are NOT allocated automatically (Finance sign-off).
+            $directCost = $fuel + $maintenance + $fines + $expenses;
 
             $profit = $revenue - $directCost;
 

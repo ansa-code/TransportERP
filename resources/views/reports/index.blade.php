@@ -2548,7 +2548,10 @@ document.addEventListener('DOMContentLoaded', function () {
        LIVE REPORT DATA
     ========================================================= */
 
-    const liveReportData = @json($reportData ?? []);
+    const liveReportData = {};
+    const reportDataUrl = @json(route('reports.data'));
+    const reportCache = {};
+    let renderToken = 0;
     const masterData = {
         vehicles: @json($vehicles ?? []),
         drivers: @json($drivers ?? []),
@@ -2776,31 +2779,78 @@ document.addEventListener('DOMContentLoaded', function () {
         return html;
     }
 
+    function buildReportQuery(sourceKey) {
+        const params = new URLSearchParams({ key: sourceKey });
+
+        ['period', 'start_date', 'end_date', 'status', 'client_id', 'vehicle_id', 'driver_id', 'vendor_id', 'assignment_id'].forEach(function (name) {
+            const el = document.getElementById(name);
+            if (el && el.value) params.set(name, el.value);
+        });
+
+        return params.toString();
+    }
+
+    function fetchReportData(sourceKey) {
+        const query = buildReportQuery(sourceKey);
+
+        if (reportCache[query]) return Promise.resolve(reportCache[query]);
+
+        return fetch(reportDataUrl + '?' + query, {
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(function (response) {
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return response.json();
+            })
+            .then(function (payload) {
+                reportCache[query] = payload;
+                return payload;
+            });
+    }
+
     function renderReport(reportKey, reportName, reportCode) {
         if (!reportContent) return;
 
-        let sourceKey = reportDataMap[reportKey];
-        let data = sourceKey === 'vehicles' || sourceKey === 'drivers' || sourceKey === 'clients' || sourceKey === 'vendors' || sourceKey === 'assignments'
-            ? masterData[sourceKey]
-            : liveReportData[sourceKey];
+        const sourceKey = reportDataMap[reportKey];
+        const token = ++renderToken;
 
-        if (Array.isArray(data)) data = applyClientStatusFilters(data);
+        const head = '<div class="report-results-head"><div><h4 class="report-results-title">' + escapeHtml(reportName) + '</h4><div class="report-results-meta">' + escapeHtml(reportCode || '') + ' · Live ERP data</div></div></div>';
 
-        let html = '<div class="report-results-head"><div><h4 class="report-results-title">' + escapeHtml(reportName) + '</h4><div class="report-results-meta">' + escapeHtml(reportCode || '') + ' · Live ERP data</div></div></div>';
-
-        if (reportKey === 'executive-kpi') {
-            html += '<div class="report-kpi-grid">' + [
-                ['Vehicles', '{{ $totalVehicles ?? 0 }}'],
-                ['Drivers', '{{ $totalDrivers ?? 0 }}'],
-                ['Active Assignments', '{{ $activeAssignments ?? 0 }}'],
-                ['Net Profit', 'AED {{ number_format((float) ($netProfit ?? 0), 2) }}']
-            ].map(function (item) { return '<div class="report-kpi"><span>' + item[0] + '</span><strong>' + item[1] + '</strong></div>'; }).join('') + '</div>';
-        } else {
-            html += renderKpis(data);
+        if (!sourceKey) {
+            reportContent.innerHTML = head + renderTable([]);
+            return;
         }
 
-        html += renderTable(Array.isArray(data) ? data : []);
-        reportContent.innerHTML = html;
+        reportContent.innerHTML = head + '<div class="report-empty-data">Loading report…</div>';
+
+        fetchReportData(sourceKey)
+            .then(function (payload) {
+                if (token !== renderToken) return;
+
+                let data = payload.data;
+                if (Array.isArray(data)) data = applyClientStatusFilters(data);
+
+                let html = head;
+
+                if (reportKey === 'executive-kpi' && payload.kpi) {
+                    html += '<div class="report-kpi-grid">' + [
+                        ['Vehicles', Number(payload.kpi.vehicles || 0).toLocaleString()],
+                        ['Drivers', Number(payload.kpi.drivers || 0).toLocaleString()],
+                        ['Active Assignments', Number(payload.kpi.active_assignments || 0).toLocaleString()],
+                        ['Net Profit', 'AED ' + Number(payload.kpi.net_profit || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })]
+                    ].map(function (item) { return '<div class="report-kpi"><span>' + item[0] + '</span><strong>' + item[1] + '</strong></div>'; }).join('') + '</div>';
+                } else {
+                    html += renderKpis(data);
+                }
+
+                html += renderTable(Array.isArray(data) ? data : []);
+                reportContent.innerHTML = html;
+            })
+            .catch(function () {
+                if (token !== renderToken) return;
+                reportContent.innerHTML = head + '<div class="report-empty-data">Could not load this report. Please try again.</div>';
+            });
     }
 
     /* =========================================================
