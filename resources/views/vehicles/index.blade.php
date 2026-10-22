@@ -490,7 +490,7 @@
             </div>
 
             <div class="stat-value">
-                {{ \App\Models\Vehicle::where('ownership_type', 'Company Owned')->count() }}
+                {{ $vehicleStats->company_trucks ?? 0 }}
             </div>
 
             <div class="stat-subtext stat-subtext-green">
@@ -509,7 +509,7 @@
             </div>
 
             <div class="stat-value">
-                {{ \App\Models\Vehicle::where('ownership_type', 'Hired')->count() }}
+               {{ $vehicleStats->vendor_trucks ?? 0 }}
             </div>
 
             <div class="stat-subtext stat-subtext-green">
@@ -528,7 +528,7 @@
             </div>
 
             <div class="stat-value">
-                {{ \App\Models\Vehicle::where('status', 'Idle')->count() }}
+                {{ $vehicleStats->available ?? 0 }}
             </div>
 
             <div class="stat-subtext stat-subtext-green">
@@ -547,7 +547,7 @@
             </div>
 
             <div class="stat-value">
-                {{ \App\Models\Vehicle::where('status', 'Maintenance')->count() }}
+              {{ $vehicleStats->under_repair ?? 0 }}
             </div>
 
             <div class="stat-subtext stat-subtext-red">
@@ -858,12 +858,9 @@
 
                             <td>
 
-                                @php
-                                    $assignment = $vehicle->assignments
-                                        ->sortByDesc('loading_date')
-                                        ->first();
-                                @endphp
-
+                               @php
+    $assignment = $vehicle->latestAssignment;
+@endphp
                                 {{ $assignment?->driver?->driver_name ?? '-' }}
 
                             </td>

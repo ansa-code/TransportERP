@@ -2,40 +2,50 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Assignment;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Vehicle extends Model
 {
-    protected $fillable = [
-        'vehicle_code',
-        'vehicle_number',
-        'plate_number',
-        'vehicle_type',
-        'brand',
-        'model',
-        'category',
-        'load_capacity',
-        'load_capacity_unit',
-        'ownership_type',
-        'vendor_owner',
-        'registered_company_name',
-        'bank_instalment_amount',
-        'instalment_duration',
-        'instalment_duration_unit',
-        'manufacture_year',
-        'capacity',
-        'refrigerated',
-        'status',
-        'insurance_expiry',
-        'registration_expiry',
-        'current_odometer',
-        'remarks',
-        'notes',
-    ];
+    use HasFactory;
 
+   protected $fillable = [
+    'vehicle_code',
+    'vehicle_number',
+    'plate_number',
+    'vehicle_type',
+    'brand',
+    'model',
+    'category',
+    'load_capacity',
+    'load_capacity_unit',
+    'ownership_type',
+    'vendor_owner',
+    'registered_company_name',
+    'bank_instalment_amount',
+    'instalment_duration',
+    'instalment_duration_unit',
+    'manufacture_year',
+    'capacity',
+    'refrigerated',
+    'status',
+    'insurance_expiry',
+    'registration_expiry',
+    'current_odometer',
+    'remarks',
+    'notes',
+    'registration_date',
+    'fitness_expiry',
+];
     public function assignments()
     {
         return $this->hasMany(Assignment::class);
+    }
+
+    public function latestAssignment(): HasOne
+    {
+        return $this->hasOne(Assignment::class)
+            ->ofMany('loading_date', 'max');
     }
 }

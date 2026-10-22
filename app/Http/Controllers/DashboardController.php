@@ -9,7 +9,7 @@ use App\Models\Expense;
 use App\Models\Fuel;
 use App\Models\Invoice;
 use App\Models\Payroll;
-use use\App\Models\Trip;
+use \App\Models\Trip;
 use App\Models\Vehicle;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;

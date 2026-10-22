@@ -24,77 +24,54 @@ class VehicleController extends Controller
     {
         $search = $request->search;
 
-        $vehicles = Vehicle::with('assignments.driver')
+        // Fetch vehicle statistics in one query.
+        $vehicleStats = Vehicle::query()
+            ->selectRaw("
+                SUM(CASE WHEN ownership_type = 'Company Owned' THEN 1 ELSE 0 END) as company_trucks,
+                SUM(CASE WHEN ownership_type = 'Hired' THEN 1 ELSE 0 END) as vendor_trucks,
+                SUM(CASE WHEN status = 'Idle' THEN 1 ELSE 0 END) as available,
+                SUM(CASE WHEN status = 'Maintenance' THEN 1 ELSE 0 END) as under_repair
+            ")
+            ->first();
+
+        $vehicles = Vehicle::with('latestAssignment.driver')
 
             // Search
             ->when($search, function ($query) use ($search) {
-
                 $query->where(function ($q) use ($search) {
-
                     $q->where('vehicle_number', 'like', "%{$search}%")
                         ->orWhere('vehicle_code', 'like', "%{$search}%")
                         ->orWhere('plate_number', 'like', "%{$search}%")
                         ->orWhere('brand', 'like', "%{$search}%")
                         ->orWhere('model', 'like', "%{$search}%")
                         ->orWhere('category', 'like', "%{$search}%");
-
                 });
-
             })
 
             // Truck Type filter
             ->when($request->vehicle_type, function ($query) use ($request) {
-
-                $query->where(
-                    'vehicle_type',
-                    $request->vehicle_type
-                );
-
+                $query->where('vehicle_type', $request->vehicle_type);
             })
 
             // Ownership filter
             ->when($request->ownership_type, function ($query) use ($request) {
-
-                $query->where(
-                    'ownership_type',
-                    $request->ownership_type
-                );
-
+                $query->where('ownership_type', $request->ownership_type);
             })
 
             // Status filter
             ->when($request->status, function ($query) use ($request) {
-
-                $query->where(
-                    'status',
-                    $request->status
-                );
-
+                $query->where('status', $request->status);
             })
 
             // Capacity filter
             ->when($request->capacity, function ($query) use ($request) {
-
                 if ($request->capacity === 'small') {
-
                     $query->where('load_capacity', '<', 5);
-
                 } elseif ($request->capacity === 'medium') {
-
-                    $query->whereBetween(
-                        'load_capacity',
-                        [5, 15]
-                    );
-
+                    $query->whereBetween('load_capacity', [5, 15]);
                 } elseif ($request->capacity === 'large') {
-
-                    $query->where(
-                        'load_capacity',
-                        '>',
-                        15
-                    );
+                    $query->where('load_capacity', '>', 15);
                 }
-
             })
 
             ->latest()
@@ -102,7 +79,7 @@ class VehicleController extends Controller
 
         return view(
             'vehicles.index',
-            compact('vehicles', 'search')
+            compact('vehicles', 'search', 'vehicleStats')
         );
     }
 
@@ -130,10 +107,7 @@ class VehicleController extends Controller
         );
 
         return redirect('/vehicles')
-            ->with(
-                'success',
-                'Vehicle Added Successfully!'
-            );
+            ->with('success', 'Vehicle Added Successfully!');
     }
 
     /**
@@ -188,10 +162,7 @@ class VehicleController extends Controller
         );
 
         return redirect('/vehicles')
-            ->with(
-                'success',
-                'Vehicle Updated Successfully!'
-            );
+            ->with('success', 'Vehicle Updated Successfully!');
     }
 
     /**
@@ -219,9 +190,6 @@ class VehicleController extends Controller
         $vehicle->delete();
 
         return redirect('/vehicles')
-            ->with(
-                'success',
-                'Vehicle Deleted Successfully!'
-            );
+            ->with('success', 'Vehicle Deleted Successfully!');
     }
 }
