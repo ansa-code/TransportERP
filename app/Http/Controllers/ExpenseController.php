@@ -31,7 +31,6 @@ class ExpenseController extends Controller
                 'Petrol',
                 'Other',
             ],
-
             'Maintenance' => [
                 'Tyre',
                 'Battery',
@@ -43,38 +42,32 @@ class ExpenseController extends Controller
                 'Spare Parts',
                 'Other',
             ],
-
             'Visa' => [
                 'Visa Fee',
                 'Medical',
                 'Emirates ID',
                 'Other',
             ],
-
             'Fine' => [
                 'Traffic Fine',
                 'Other',
             ],
-
             'Registration' => [
                 'Registration Fee',
                 'Renewal',
                 'Inspection',
                 'Other',
             ],
-
             'Insurance' => [
                 'Insurance Premium',
                 'Renewal',
                 'Other',
             ],
-
             'Admin' => [
                 'Office',
                 'Stationery',
                 'Other',
             ],
-
             'Other' => [
                 'Other',
             ],
@@ -97,64 +90,46 @@ class ExpenseController extends Controller
             'trip',
         ])
             ->when($search, function ($query) use ($search) {
-
                 $query->where(function ($q) use ($search) {
-
                     $q->where('expense_no', 'like', "%{$search}%")
-                        ->orWhere('category', 'like', "%{$search}%");
-
-                    $q->orWhereJsonContains(
-                        'expense_type',
-                        $search
-                    );
-
-                    $q->orWhereHas('vehicle', function ($vehicleQuery) use ($search) {
-                        $vehicleQuery->where(
-                            'plate_number',
-                            'like',
-                            "%{$search}%"
-                        );
-                    });
-
-                    $q->orWhereHas('driver', function ($driverQuery) use ($search) {
-                        $driverQuery->where(
-                            'driver_name',
-                            'like',
-                            "%{$search}%"
-                        );
-                    });
-
-                    $q->orWhereHas('client', function ($clientQuery) use ($search) {
-                        $clientQuery->where(
-                            'client_name',
-                            'like',
-                            "%{$search}%"
-                        );
-                    });
+                        ->orWhere('category', 'like', "%{$search}%")
+                        ->orWhereJsonContains('expense_type', $search)
+                        ->orWhereHas('vehicle', function ($vehicleQuery) use ($search) {
+                            $vehicleQuery->where(
+                                'plate_number',
+                                'like',
+                                "%{$search}%"
+                            );
+                        })
+                        ->orWhereHas('driver', function ($driverQuery) use ($search) {
+                            $driverQuery->where(
+                                'driver_name',
+                                'like',
+                                "%{$search}%"
+                            );
+                        })
+                        ->orWhereHas('client', function ($clientQuery) use ($search) {
+                            $clientQuery->where(
+                                'client_name',
+                                'like',
+                                "%{$search}%"
+                            );
+                        });
                 });
             })
             ->when($category, function ($query) use ($category) {
                 $query->where('category', $category);
             })
             ->when($expenseType, function ($query) use ($expenseType) {
-                $query->whereJsonContains(
-                    'expense_type',
-                    $expenseType
-                );
+                $query->whereJsonContains('expense_type', $expenseType);
             })
             ->when($paymentStatus, function ($query) use ($paymentStatus) {
-                $query->where(
-                    'payment_status',
-                    $paymentStatus
-                );
+                $query->where('payment_status', $paymentStatus);
             })
             ->when(
                 $reimbursable !== null && $reimbursable !== '',
                 function ($query) use ($reimbursable) {
-                    $query->where(
-                        'reimbursable',
-                        (bool) $reimbursable
-                    );
+                    $query->where('reimbursable', (bool) $reimbursable);
                 }
             )
             ->latest('expense_date')
@@ -180,9 +155,7 @@ class ExpenseController extends Controller
             ->get();
 
         $clients = Client::orderBy('id')->get();
-
         $assignments = Assignment::latest('id')->get();
-
         $trips = Trip::latest('id')->get();
 
         return view('expenses.create', compact(
@@ -199,7 +172,6 @@ class ExpenseController extends Controller
         $expenseTypes = $this->expenseTypes();
 
         $validated = $request->validate([
-
             'category' => [
                 'required',
                 Rule::in(array_keys($expenseTypes)),
@@ -247,31 +219,39 @@ class ExpenseController extends Controller
                 'exists:trips,id',
             ],
 
+            'insurance_for' => [
+                'nullable',
+                'required_if:category,Insurance',
+                Rule::in(['Vehicle', 'Driver/Staff']),
+            ],
+
             'parts_cost' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+                'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'labour_cost' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+                'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'other_cost' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+                'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'payment_status' => [
                 'required',
-                Rule::in([
-                    'Pending',
-                    'Paid',
-                    'Cancelled',
-                ]),
+                Rule::in(['Pending', 'Paid', 'Cancelled']),
             ],
 
             'payment_method_reference' => [
@@ -299,14 +279,11 @@ class ExpenseController extends Controller
         ]);
 
         foreach ($validated['expense_type'] as $type) {
-
-            if (
-                !in_array(
-                    $type,
-                    $expenseTypes[$validated['category']],
-                    true
-                )
-            ) {
+            if (!in_array(
+                $type,
+                $expenseTypes[$validated['category']],
+                true
+            )) {
                 return back()
                     ->withInput()
                     ->withErrors([
@@ -316,32 +293,72 @@ class ExpenseController extends Controller
             }
         }
 
+        // Category-based Vehicle / Driver validation.
+        $category = $validated['category'];
+        $insuranceFor = $validated['insurance_for'] ?? null;
+
+        $vehicleRequired = in_array(
+            $category,
+            ['Fuel', 'Maintenance', 'Registration'],
+            true
+        );
+
+        $driverRequired = $category === 'Visa';
+
+        if ($category === 'Insurance') {
+            $vehicleRequired = $insuranceFor === 'Vehicle';
+            $driverRequired = $insuranceFor === 'Driver/Staff';
+        }
+
+        if ($vehicleRequired && empty($validated['vehicle_id'])) {
+            return back()->withInput()->withErrors([
+                'vehicle_id' => 'Vehicle is required for this expense.',
+            ]);
+        }
+
+        if ($driverRequired && empty($validated['driver_id'])) {
+            return back()->withInput()->withErrors([
+                'driver_id' => 'Driver is required for this expense.',
+            ]);
+        }
+
+        // Clear relationships that do not apply to the selected category.
+        if (
+            in_array($category, ['Visa', 'Admin'], true)
+            || ($category === 'Insurance' && $insuranceFor === 'Driver/Staff')
+        ) {
+            $validated['vehicle_id'] = null;
+        }
+
+        if (
+            in_array($category, ['Maintenance', 'Registration', 'Admin'], true)
+            || ($category === 'Insurance' && $insuranceFor === 'Vehicle')
+        ) {
+            $validated['driver_id'] = null;
+        }
+
+        if ($category !== 'Insurance') {
+            $validated['insurance_for'] = null;
+        }
+
+        // Calculate total from the three validated cost fields.
         $partsCost = (float) ($validated['parts_cost'] ?? 0);
         $labourCost = (float) ($validated['labour_cost'] ?? 0);
         $otherCost = (float) ($validated['other_cost'] ?? 0);
 
-        $totalAmount =
-            $partsCost +
-            $labourCost +
-            $otherCost;
+        $totalAmount = $partsCost + $labourCost + $otherCost;
 
         if ($totalAmount <= 0) {
-
             return back()
                 ->withInput()
                 ->withErrors([
-                    'parts_cost' =>
-                        'Total Amount must be greater than 0.',
+                    'parts_cost' => 'Total Amount must be greater than 0.',
                 ]);
         }
 
         if (
             $validated['payment_status'] === 'Paid'
-            && empty(
-                trim(
-                    $validated['payment_method_reference'] ?? ''
-                )
-            )
+            && empty(trim($validated['payment_method_reference'] ?? ''))
         ) {
             return back()
                 ->withInput()
@@ -355,27 +372,15 @@ class ExpenseController extends Controller
         $validated['labour_cost'] = $labourCost;
         $validated['other_cost'] = $otherCost;
         $validated['amount'] = $totalAmount;
-
-        $validated['expense_no'] =
-            $this->generateExpenseNumber();
+        $validated['expense_no'] = $this->generateExpenseNumber();
 
         if ($request->hasFile('receipt')) {
-
             $validated['receipt'] = $request
                 ->file('receipt')
-                ->store(
-                    'expenses/receipts',
-                    'public'
-                );
+                ->store('expenses/receipts', 'public');
         }
 
         $expense = Expense::create($validated);
-
-        /*
-        |--------------------------------------------------------------------------
-        | Audit Trail
-        |--------------------------------------------------------------------------
-        */
 
         $this->activityLogService->created(
             module: 'Expense',
@@ -386,42 +391,33 @@ class ExpenseController extends Controller
 
         return redirect()
             ->route('expenses.index')
-            ->with(
-                'success',
-                'Expense Added Successfully!'
-            );
+            ->with('success', 'Expense Added Successfully!');
+    }
+    public function show($id)
+    {
+        $expense = Expense::with([
+            'vehicle',
+            'driver',
+            'client',
+            'assignment',
+            'trip',
+        ])->findOrFail($id);
+
+        return view('expenses.show', compact('expense'));
     }
 
-    public function show($id)
-{
-    $expense = Expense::with([
-        'vehicle',
-        'driver',
-        'client',
-        'assignment',
-        'trip',
-    ])->findOrFail($id);
+    public function receipt($id)
+    {
+        $expense = Expense::findOrFail($id);
 
-    return view(
-        'expenses.show',
-        compact('expense')
-    );
-}
+        abort_unless($expense->receipt, 404);
 
-public function receipt($id)
-{
-    $expense = Expense::findOrFail($id);
+        $disk = Storage::disk('public');
 
-    abort_unless($expense->receipt, 404);
+        abort_unless($disk->exists($expense->receipt), 404);
 
-    $disk = Storage::disk('public');
-
-    abort_unless($disk->exists($expense->receipt), 404);
-
-    return $disk->response($expense->receipt);
-}
-
-
+        return $disk->response($expense->receipt);
+    }
 
     public function edit($id)
     {
@@ -434,9 +430,7 @@ public function receipt($id)
             ->get();
 
         $clients = Client::orderBy('id')->get();
-
         $assignments = Assignment::latest('id')->get();
-
         $trips = Trip::latest('id')->get();
 
         return view('expenses.edit', compact(
@@ -453,18 +447,11 @@ public function receipt($id)
     {
         $expense = Expense::findOrFail($id);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Capture Old Values For Audit Trail
-        |--------------------------------------------------------------------------
-        */
-
         $oldValues = $expense->getAttributes();
 
         $expenseTypes = $this->expenseTypes();
 
         $validated = $request->validate([
-
             'category' => [
                 'required',
                 Rule::in(array_keys($expenseTypes)),
@@ -512,31 +499,39 @@ public function receipt($id)
                 'exists:trips,id',
             ],
 
+            'insurance_for' => [
+                'nullable',
+                'required_if:category,Insurance',
+                Rule::in(['Vehicle', 'Driver/Staff']),
+            ],
+
             'parts_cost' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+                'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'labour_cost' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+                'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'other_cost' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+                'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'payment_status' => [
                 'required',
-                Rule::in([
-                    'Pending',
-                    'Paid',
-                    'Cancelled',
-                ]),
+                Rule::in(['Pending', 'Paid', 'Cancelled']),
             ],
 
             'payment_method_reference' => [
@@ -564,14 +559,11 @@ public function receipt($id)
         ]);
 
         foreach ($validated['expense_type'] as $type) {
-
-            if (
-                !in_array(
-                    $type,
-                    $expenseTypes[$validated['category']],
-                    true
-                )
-            ) {
+            if (!in_array(
+                $type,
+                $expenseTypes[$validated['category']],
+                true
+            )) {
                 return back()
                     ->withInput()
                     ->withErrors([
@@ -581,32 +573,72 @@ public function receipt($id)
             }
         }
 
+        // Category-based Vehicle / Driver validation.
+        $category = $validated['category'];
+        $insuranceFor = $validated['insurance_for'] ?? null;
+
+        $vehicleRequired = in_array(
+            $category,
+            ['Fuel', 'Maintenance', 'Registration'],
+            true
+        );
+
+        $driverRequired = $category === 'Visa';
+
+        if ($category === 'Insurance') {
+            $vehicleRequired = $insuranceFor === 'Vehicle';
+            $driverRequired = $insuranceFor === 'Driver/Staff';
+        }
+
+        if ($vehicleRequired && empty($validated['vehicle_id'])) {
+            return back()->withInput()->withErrors([
+                'vehicle_id' => 'Vehicle is required for this expense.',
+            ]);
+        }
+
+        if ($driverRequired && empty($validated['driver_id'])) {
+            return back()->withInput()->withErrors([
+                'driver_id' => 'Driver is required for this expense.',
+            ]);
+        }
+
+        // Clear relationships that do not apply to the selected category.
+        if (
+            in_array($category, ['Visa', 'Admin'], true)
+            || ($category === 'Insurance' && $insuranceFor === 'Driver/Staff')
+        ) {
+            $validated['vehicle_id'] = null;
+        }
+
+        if (
+            in_array($category, ['Maintenance', 'Registration', 'Admin'], true)
+            || ($category === 'Insurance' && $insuranceFor === 'Vehicle')
+        ) {
+            $validated['driver_id'] = null;
+        }
+
+        if ($category !== 'Insurance') {
+            $validated['insurance_for'] = null;
+        }
+
+        // Calculate total from the three validated cost fields.
         $partsCost = (float) ($validated['parts_cost'] ?? 0);
         $labourCost = (float) ($validated['labour_cost'] ?? 0);
         $otherCost = (float) ($validated['other_cost'] ?? 0);
 
-        $totalAmount =
-            $partsCost +
-            $labourCost +
-            $otherCost;
+        $totalAmount = $partsCost + $labourCost + $otherCost;
 
         if ($totalAmount <= 0) {
-
             return back()
                 ->withInput()
                 ->withErrors([
-                    'parts_cost' =>
-                        'Total Amount must be greater than 0.',
+                    'parts_cost' => 'Total Amount must be greater than 0.',
                 ]);
         }
 
         if (
             $validated['payment_status'] === 'Paid'
-            && empty(
-                trim(
-                    $validated['payment_method_reference'] ?? ''
-                )
-            )
+            && empty(trim($validated['payment_method_reference'] ?? ''))
         ) {
             return back()
                 ->withInput()
@@ -622,32 +654,19 @@ public function receipt($id)
         $validated['amount'] = $totalAmount;
 
         if ($request->hasFile('receipt')) {
-
             if (
                 $expense->receipt
-                && Storage::disk('public')
-                    ->exists($expense->receipt)
+                && Storage::disk('public')->exists($expense->receipt)
             ) {
-                Storage::disk('public')->delete(
-                    $expense->receipt
-                );
+                Storage::disk('public')->delete($expense->receipt);
             }
 
             $validated['receipt'] = $request
                 ->file('receipt')
-                ->store(
-                    'expenses/receipts',
-                    'public'
-                );
+                ->store('expenses/receipts', 'public');
         }
 
         $expense->update($validated);
-
-        /*
-        |--------------------------------------------------------------------------
-        | Audit Trail
-        |--------------------------------------------------------------------------
-        */
 
         $this->activityLogService->updated(
             module: 'Expense',
@@ -659,40 +678,22 @@ public function receipt($id)
 
         return redirect()
             ->route('expenses.index')
-            ->with(
-                'success',
-                'Expense Updated Successfully!'
-            );
+            ->with('success', 'Expense Updated Successfully!');
     }
 
     public function destroy($id)
     {
         $expense = Expense::findOrFail($id);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Capture Values Before Delete
-        |--------------------------------------------------------------------------
-        */
-
         $oldValues = $expense->getAttributes();
         $expenseNo = $expense->expense_no;
 
         if (
             $expense->receipt
-            && Storage::disk('public')
-                ->exists($expense->receipt)
+            && Storage::disk('public')->exists($expense->receipt)
         ) {
-            Storage::disk('public')->delete(
-                $expense->receipt
-            );
+            Storage::disk('public')->delete($expense->receipt);
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Audit Trail
-        |--------------------------------------------------------------------------
-        */
 
         $this->activityLogService->deleted(
             module: 'Expense',
@@ -705,36 +706,26 @@ public function receipt($id)
 
         return redirect()
             ->route('expenses.index')
-            ->with(
-                'success',
-                'Expense Deleted Successfully!'
-            );
+            ->with('success', 'Expense Deleted Successfully!');
     }
 
     private function generateExpenseNumber()
     {
         $year = date('Y');
 
-        $lastExpense = Expense::whereYear(
-            'created_at',
-            $year
-        )
+        $lastExpense = Expense::whereYear('created_at', $year)
             ->orderByDesc('id')
             ->first();
 
         $nextNumber = $lastExpense
-            ? ((int) substr(
-                $lastExpense->expense_no,
-                -5
-            )) + 1
+            ? ((int) substr($lastExpense->expense_no, -5)) + 1
             : 1;
 
-        return 'AST-EXP-' . $year . '-' .
-            str_pad(
-                $nextNumber,
-                5,
-                '0',
-                STR_PAD_LEFT
-            );
+        return 'AST-EXP-' . $year . '-' . str_pad(
+            $nextNumber,
+            5,
+            '0',
+            STR_PAD_LEFT
+        );
     }
 }

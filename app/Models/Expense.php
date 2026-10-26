@@ -13,6 +13,7 @@ class Expense extends Model
         'expense_no',
         'category',
         'expense_type',
+        'insurance_for',
         'expense_date',
         'vehicle_id',
         'driver_id',

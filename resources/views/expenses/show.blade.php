@@ -1,5 +1,4 @@
 @extends('layouts.app')
-
 @section('content')
 
 @php
@@ -707,8 +706,21 @@
                     <div class="info-value">
                         {{ $expense->category }}
                     </div>
-
+                 
                 </div>
+                 @if($expense->category === 'Insurance')
+    <div class="info-item">
+
+        <span class="info-label">
+            Insurance For
+        </span>
+
+        <div class="info-value">
+            {{ $expense->insurance_for ?: 'Not Set' }}
+        </div>
+
+    </div>
+@endif
 
                 <div class="info-item">
 

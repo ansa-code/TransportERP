@@ -1,51 +1,29 @@
 @extends('layouts.app')
-
 @section('content')
 
 @php
     $expenseTypes = [
         'Fuel' => [
-            'Fuel Purchase',
-            'Diesel',
-            'Petrol',
-            'Other',
+            'Fuel Purchase', 'Diesel', 'Petrol', 'Other',
         ],
         'Maintenance' => [
-            'Tyre',
-            'Battery',
-            'Washing',
-            'Oil Change',
-            'AC Repair',
-            'Brake',
-            'Electrical',
-            'Spare Parts',
-            'Other',
+            'Tyre', 'Battery', 'Washing', 'Oil Change',
+            'AC Repair', 'Brake', 'Electrical', 'Spare Parts', 'Other',
         ],
         'Visa' => [
-            'Visa Fee',
-            'Medical',
-            'Emirates ID',
-            'Other',
+            'Visa Fee', 'Medical', 'Emirates ID', 'Other',
         ],
         'Fine' => [
-            'Traffic Fine',
-            'Other',
+            'Traffic Fine', 'Other',
         ],
         'Registration' => [
-            'Registration Fee',
-            'Renewal',
-            'Inspection',
-            'Other',
+            'Registration Fee', 'Renewal', 'Inspection', 'Other',
         ],
         'Insurance' => [
-            'Insurance Premium',
-            'Renewal',
-            'Other',
+            'Insurance Premium', 'Renewal', 'Other',
         ],
         'Admin' => [
-            'Office',
-            'Stationery',
-            'Other',
+            'Office', 'Stationery', 'Other',
         ],
         'Other' => [
             'Other',
@@ -58,6 +36,12 @@
             ? $expense->expense_type
             : ($expense->expense_type ? [$expense->expense_type] : [])
     );
+
+    if (!is_array($selectedExpenseTypes)) {
+        $selectedExpenseTypes = [];
+    }
+
+    $insuranceForValue = old('insurance_for', $expense->insurance_for);
 @endphp
 
 <style>
@@ -455,7 +439,6 @@
     @if($errors->any())
         <div class="error-box">
             <strong>Please fix the following errors:</strong>
-
             <ul>
                 @foreach($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -472,14 +455,11 @@
             enctype="multipart/form-data"
             id="expenseEditForm"
         >
-
             @csrf
             @method('PUT')
 
             <div class="form-section">
-
                 <h2 class="section-title">Expense Information</h2>
-
                 <p class="section-subtitle">
                     Update the basic expense record and operational references.
                 </p>
@@ -488,14 +468,12 @@
 
                     <div class="form-group">
                         <label class="form-label">Expense No.</label>
-
                         <input
                             type="text"
                             class="form-control"
                             value="{{ $expense->expense_no }}"
                             readonly
                         >
-
                         <div class="help-text">
                             Expense number is system generated and cannot be changed.
                         </div>
@@ -505,7 +483,6 @@
                         <label class="form-label">
                             Expense Date <span class="required">*</span>
                         </label>
-
                         <input
                             type="date"
                             name="expense_date"
@@ -528,12 +505,12 @@
                         >
                             <option value="">Select Category</option>
 
-                            @foreach(array_keys($expenseTypes) as $category)
+                            @foreach(array_keys($expenseTypes) as $categoryOption)
                                 <option
-                                    value="{{ $category }}"
-                                    {{ old('category', $expense->category) === $category ? 'selected' : '' }}
+                                    value="{{ $categoryOption }}"
+                                    {{ old('category', $expense->category) === $categoryOption ? 'selected' : '' }}
                                 >
-                                    {{ $category }}
+                                    {{ $categoryOption }}
                                 </option>
                             @endforeach
                         </select>
@@ -545,7 +522,6 @@
                         </label>
 
                         <div class="expense-type-box">
-
                             <div
                                 class="expense-type-select"
                                 id="expenseTypeSelect"
@@ -560,7 +536,6 @@
                                 class="expense-type-options"
                                 id="expenseTypeOptions"
                             ></div>
-
                         </div>
 
                         <div class="help-text">
@@ -568,11 +543,53 @@
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Vehicle</label>
+                    {{-- INSURANCE FOR --}}
+                    <div
+                        class="form-group"
+                        id="insuranceForGroup"
+                        style="display: none;"
+                    >
+                        <label class="form-label" for="insurance_for">
+                            Insurance For <span class="required">*</span>
+                        </label>
+
+                        <select
+                            name="insurance_for"
+                            id="insurance_for"
+                            class="form-control"
+                        >
+                            <option value="">Select Insurance For</option>
+
+                            <option
+                                value="Vehicle"
+                                {{ $insuranceForValue === 'Vehicle' ? 'selected' : '' }}
+                            >
+                                Vehicle
+                            </option>
+
+                            <option
+                                value="Driver/Staff"
+                                {{ $insuranceForValue === 'Driver/Staff' ? 'selected' : '' }}
+                            >
+                                Driver/Staff
+                            </option>
+                        </select>
+                    </div>
+
+                    {{-- VEHICLE --}}
+                    <div class="form-group" id="vehicleGroup">
+                        <label class="form-label" for="vehicle_id">
+                            Vehicle
+                            <span
+                                class="required"
+                                id="vehicleRequiredStar"
+                                style="display: none;"
+                            >*</span>
+                        </label>
 
                         <select
                             name="vehicle_id"
+                            id="vehicle_id"
                             class="form-control"
                         >
                             <option value="">Select Vehicle</option>
@@ -588,15 +605,24 @@
                         </select>
 
                         <div class="help-text">
-                            Optional vehicle reference.
+                            Vehicle is required for Fuel, Maintenance, Registration and vehicle insurance.
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Driver</label>
+                    {{-- DRIVER --}}
+                    <div class="form-group" id="driverGroup">
+                        <label class="form-label" for="driver_id">
+                            Driver
+                            <span
+                                class="required"
+                                id="driverRequiredStar"
+                                style="display: none;"
+                            >*</span>
+                        </label>
 
                         <select
                             name="driver_id"
+                            id="driver_id"
                             class="form-control"
                         >
                             <option value="">Select Driver</option>
@@ -612,17 +638,14 @@
                         </select>
 
                         <div class="help-text">
-                            Optional driver reference.
+                            Driver is required for Visa and driver/staff insurance.
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Client</label>
+                        <label class="form-label" for="client_id">Client</label>
 
-                        <select
-                            name="client_id"
-                            class="form-control"
-                        >
+                        <select name="client_id" id="client_id" class="form-control">
                             <option value="">Select Client</option>
 
                             @foreach($clients as $client)
@@ -641,12 +664,9 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Assignment</label>
+                        <label class="form-label" for="assignment_id">Assignment</label>
 
-                        <select
-                            name="assignment_id"
-                            class="form-control"
-                        >
+                        <select name="assignment_id" id="assignment_id" class="form-control">
                             <option value="">Select Assignment</option>
 
                             @foreach($assignments as $assignment)
@@ -665,12 +685,9 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Trip</label>
+                        <label class="form-label" for="trip_id">Trip</label>
 
-                        <select
-                            name="trip_id"
-                            class="form-control"
-                        >
+                        <select name="trip_id" id="trip_id" class="form-control">
                             <option value="">Select Trip</option>
 
                             @foreach($trips as $trip)
@@ -681,21 +698,17 @@
                                     Trip #{{ $trip->id }}
                                 </option>
                             @endforeach
-                        </select>
+                            </select>
 
-                        <div class="help-text">
-                            Optional trip reference for operational reporting.
-                        </div>
-                    </div>
+<div class="help-text">
+Optional trip reference for operational reporting.
+</div>
+</div>
 
-                </div>
-
-            </div>
-
-            <div class="form-section">
-
+</div>
+</div>
+<div class="form-section">
                 <h2 class="section-title">Cost Breakdown</h2>
-
                 <p class="section-subtitle">
                     Enter individual costs. Total Amount is calculated automatically.
                 </p>
@@ -703,50 +716,49 @@
                 <div class="cost-grid">
 
                     <div class="cost-box">
-                        <label class="cost-label">Parts Cost</label>
-
+                        <label class="cost-label" for="parts_cost">Parts Cost</label>
                         <input
                             type="number"
                             name="parts_cost"
                             id="parts_cost"
                             class="cost-input"
                             min="0"
+                            max="99999999.99"
                             step="0.01"
                             value="{{ old('parts_cost', $expense->parts_cost ?? 0) }}"
                         >
                     </div>
 
                     <div class="cost-box">
-                        <label class="cost-label">Labour Cost</label>
-
+                        <label class="cost-label" for="labour_cost">Labour Cost</label>
                         <input
                             type="number"
                             name="labour_cost"
                             id="labour_cost"
                             class="cost-input"
                             min="0"
+                            max="99999999.99"
                             step="0.01"
                             value="{{ old('labour_cost', $expense->labour_cost ?? 0) }}"
                         >
                     </div>
 
                     <div class="cost-box">
-                        <label class="cost-label">Other Cost</label>
-
+                        <label class="cost-label" for="other_cost">Other Cost</label>
                         <input
                             type="number"
                             name="other_cost"
                             id="other_cost"
                             class="cost-input"
                             min="0"
+                            max="99999999.99"
                             step="0.01"
                             value="{{ old('other_cost', $expense->other_cost ?? 0) }}"
                         >
                     </div>
 
                     <div class="cost-box total-box">
-                        <label class="cost-label">Total Amount</label>
-
+                        <label class="cost-label" for="amount">Total Amount</label>
                         <input
                             type="number"
                             name="amount"
@@ -755,19 +767,14 @@
                             value="{{ old('amount', $expense->amount ?? 0) }}"
                             readonly
                         >
-
-                        <div class="help-text">
-                            Automatically calculated.
-                        </div>
+                        <div class="help-text">Automatically calculated.</div>
                     </div>
 
                 </div>
-
             </div>
+
             <div class="form-section">
-
                 <h2 class="section-title">Payment Information</h2>
-
                 <p class="section-subtitle">
                     Update payment status and reimbursement information.
                 </p>
@@ -775,7 +782,7 @@
                 <div class="form-grid">
 
                     <div class="form-group">
-                        <label class="form-label">
+                        <label class="form-label" for="payment_status">
                             Payment Status <span class="required">*</span>
                         </label>
 
@@ -809,11 +816,12 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">
+                        <label class="form-label" for="payment_method_reference">
                             Payment Method / Reference
                             <span
                                 class="required"
                                 id="paymentReferenceRequired"
+                                style="display: none;"
                             >*</span>
                         </label>
 
@@ -832,12 +840,12 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">
+                        <label class="form-label" for="reimbursable">
                             Reimbursable <span class="required">*</span>
                         </label>
 
                         @php
-                            $reimbursableValue = old(
+                            $reimbursableValue = (string) old(
                                 'reimbursable',
                                 $expense->reimbursable ? '1' : '0'
                             );
@@ -845,6 +853,7 @@
 
                         <select
                             name="reimbursable"
+                            id="reimbursable"
                             class="form-control"
                             required
                         >
@@ -869,11 +878,12 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Replace Receipt</label>
+                        <label class="form-label" for="receipt">Replace Receipt</label>
 
                         <input
                             type="file"
                             name="receipt"
+                            id="receipt"
                             class="form-control"
                             accept=".jpg,.jpeg,.png,.pdf"
                         >
@@ -890,53 +900,55 @@
                     </div>
 
                     <div class="form-group full-width">
-                        <label class="form-label">Remarks</label>
+                        <label class="form-label" for="remarks">Remarks</label>
 
                         <textarea
                             name="remarks"
+                            id="remarks"
                             class="form-control"
                             placeholder="Enter any additional remarks or audit notes..."
                         >{{ old('remarks', $expense->remarks) }}</textarea>
                     </div>
 
                 </div>
-
             </div>
 
             <div class="action-row">
-
-                <a
-                    href="{{ route('expenses.index') }}"
-                    class="cancel-btn"
-                >
+                <a href="{{ route('expenses.index') }}" class="cancel-btn">
                     Cancel
                 </a>
 
-                <button
-                    type="submit"
-                    class="save-btn"
-                >
+                <button type="submit" class="save-btn">
                     Update Expense
                 </button>
-
             </div>
 
         </form>
-
     </div>
-
 </div>
-
-<script>
+   <script>
 document.addEventListener('DOMContentLoaded', function () {
 
     const expenseTypes = @json($expenseTypes);
-    const oldExpenseTypes = @json(array_values($selectedExpenseTypes));
+    const initialExpenseTypes = @json(array_values($selectedExpenseTypes));
 
     const categorySelect = document.getElementById('category');
+
     const expenseTypeSelect = document.getElementById('expenseTypeSelect');
     const expenseTypeOptions = document.getElementById('expenseTypeOptions');
     const selectedTypes = document.getElementById('selectedTypes');
+
+    const insuranceForGroup = document.getElementById('insuranceForGroup');
+    const insuranceForSelect = document.getElementById('insurance_for');
+
+    const vehicleGroup = document.getElementById('vehicleGroup');
+    const driverGroup = document.getElementById('driverGroup');
+
+    const vehicleSelect = document.getElementById('vehicle_id');
+    const driverSelect = document.getElementById('driver_id');
+
+    const vehicleRequiredStar = document.getElementById('vehicleRequiredStar');
+    const driverRequiredStar = document.getElementById('driverRequiredStar');
 
     const partsCost = document.getElementById('parts_cost');
     const labourCost = document.getElementById('labour_cost');
@@ -947,6 +959,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const paymentReference = document.getElementById('payment_method_reference');
     const paymentReferenceRequired = document.getElementById('paymentReferenceRequired');
 
+    const expenseEditForm = document.getElementById('expenseEditForm');
+
+    let selectedTypesOnLoad = initialExpenseTypes.slice();
+
+    /*
+     * Render selected Expense Type chips.
+     */
     function renderSelectedTypes() {
 
         selectedTypes.innerHTML = '';
@@ -962,7 +981,6 @@ document.addEventListener('DOMContentLoaded', function () {
             placeholder.textContent = 'Select Expense Type';
 
             selectedTypes.appendChild(placeholder);
-
             return;
         }
 
@@ -977,7 +995,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function renderExpenseTypes(preserveSelection = true) {
+    /*
+     * Build Expense Type checkboxes for the selected category.
+     */
+    function renderExpenseTypes(typesToSelect = []) {
 
         const category = categorySelect.value;
 
@@ -988,28 +1009,9 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        const currentChecked = [];
-
-        if (preserveSelection) {
-            expenseTypeOptions
-                .querySelectorAll('input[name="expense_type[]"]:checked')
-                .forEach(function (checkbox) {
-                    currentChecked.push(checkbox.value);
-                });
-        }
-
-        let valuesToSelect = [];
-
-        if (preserveSelection && currentChecked.length > 0) {
-            valuesToSelect = currentChecked;
-        } else {
-            valuesToSelect = oldExpenseTypes;
-        }
-
         expenseTypes[category].forEach(function (type) {
 
             const label = document.createElement('label');
-
             label.className = 'type-option';
 
             const checkbox = document.createElement('input');
@@ -1017,17 +1019,11 @@ document.addEventListener('DOMContentLoaded', function () {
             checkbox.type = 'checkbox';
             checkbox.name = 'expense_type[]';
             checkbox.value = type;
+            checkbox.checked = typesToSelect.includes(type);
 
-            if (valuesToSelect.includes(type)) {
-                checkbox.checked = true;
-            }
-
-            checkbox.addEventListener('change', function () {
-                renderSelectedTypes();
-            });
+            checkbox.addEventListener('change', renderSelectedTypes);
 
             const text = document.createElement('span');
-
             text.textContent = type;
 
             label.appendChild(checkbox);
@@ -1039,17 +1035,115 @@ document.addEventListener('DOMContentLoaded', function () {
         renderSelectedTypes();
     }
 
+    /*
+     * Category-specific Vehicle, Driver and Insurance rules.
+     */
+    function updateCategoryFields() {
+
+        const category = categorySelect.value;
+        const insuranceFor = insuranceForSelect.value;
+
+        // Reset required indicators and requirements.
+        vehicleSelect.required = false;
+        driverSelect.required = false;
+        insuranceForSelect.required = false;
+
+        vehicleRequiredStar.style.display = 'none';
+        driverRequiredStar.style.display = 'none';
+
+        // Default: optional Vehicle and Driver fields remain visible.
+        vehicleGroup.style.display = '';
+        driverGroup.style.display = '';
+        insuranceForGroup.style.display = 'none';
+
+        if (category === 'Fuel') {
+
+            vehicleSelect.required = true;
+            vehicleRequiredStar.style.display = '';
+
+            // Driver remains optional.
+
+        } else if (
+            category === 'Maintenance' ||
+            category === 'Registration'
+        ) {
+
+            vehicleSelect.required = true;
+            vehicleRequiredStar.style.display = '';
+
+            driverGroup.style.display = 'none';
+            driverSelect.value = '';
+
+        } else if (category === 'Visa') {
+
+            driverSelect.required = true;
+            driverRequiredStar.style.display = '';
+
+            vehicleGroup.style.display = 'none';
+            vehicleSelect.value = '';
+
+        } else if (category === 'Insurance') {
+
+            insuranceForGroup.style.display = '';
+            insuranceForSelect.required = true;
+
+            if (insuranceFor === 'Vehicle') {
+
+                vehicleGroup.style.display = '';
+                vehicleSelect.required = true;
+                vehicleRequiredStar.style.display = '';
+
+                driverGroup.style.display = 'none';
+                driverSelect.value = '';
+
+            } else if (insuranceFor === 'Driver/Staff') {
+
+                driverGroup.style.display = '';
+                driverSelect.required = true;
+                driverRequiredStar.style.display = '';
+
+                vehicleGroup.style.display = 'none';
+                vehicleSelect.value = '';
+
+            } else {
+
+                // Select insurance target before choosing its record.
+                vehicleGroup.style.display = 'none';
+                driverGroup.style.display = 'none';
+
+                vehicleSelect.value = '';
+                driverSelect.value = '';
+            }
+
+        } else if (category === 'Admin') {
+
+            vehicleGroup.style.display = 'none';
+            driverGroup.style.display = 'none';
+
+            vehicleSelect.value = '';
+            driverSelect.value = '';
+
+        } else {
+
+            // Fine and Other retain their existing optional relationship behavior.
+        }
+    }
+
+    /*
+     * Calculate total cost.
+     */
     function calculateTotal() {
 
         const parts = parseFloat(partsCost.value) || 0;
         const labour = parseFloat(labourCost.value) || 0;
         const other = parseFloat(otherCost.value) || 0;
 
-        const total = parts + labour + other;
-
-        amount.value = total.toFixed(2);
+        amount.value = (parts + labour + other).toFixed(2);
     }
 
+    /*
+     * Paid status requires payment reference.
+     */
     function updatePaymentReference() {
 
         if (paymentStatus.value === 'Paid') {
@@ -1064,10 +1158,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    /*
+     * Open/close Expense Type dropdown.
+     */
     expenseTypeSelect.addEventListener('click', function (event) {
 
         event.stopPropagation();
-
         expenseTypeOptions.classList.toggle('open');
     });
 
@@ -1079,12 +1175,41 @@ document.addEventListener('DOMContentLoaded', function () {
         expenseTypeOptions.classList.remove('open');
     });
 
+    /*
+     * When the category changes, clear the previous category's
+     * selected types and reset category-specific associations.
+     */
     categorySelect.addEventListener('change', function () {
 
-        oldExpenseTypes.length = 0;
+        selectedTypesOnLoad = [];
 
-        renderExpenseTypes(false);
+        insuranceForSelect.value = '';
+        vehicleSelect.value = '';
+        driverSelect.value = '';
+
+        renderExpenseTypes([]);
+        updateCategoryFields();
     });
+
+    /*
+     * Update fields when Insurance For changes.
+     */
+    insuranceForSelect.addEventListener('change', function () {
+
+        // The previous target is no longer applicable.
+        vehicleSelect.value = '';
+        driverSelect.value = '';
+
+        updateCategoryFields();
+    });
+
+    /*
+     * Initial page load: preserve saved/old values.
+     */
+    renderExpenseTypes(selectedTypesOnLoad);
+    updateCategoryFields();
+    calculateTotal();
+    updatePaymentReference();
 
     partsCost.addEventListener('input', calculateTotal);
     labourCost.addEventListener('input', calculateTotal);
@@ -1092,34 +1217,76 @@ document.addEventListener('DOMContentLoaded', function () {
 
     paymentStatus.addEventListener('change', updatePaymentReference);
 
-    const initialCategory = categorySelect.value;
+    /*
+     * Client-side validation.
+     * Controller validation remains the final authority.
+     */
+    expenseEditForm.addEventListener('submit', function (event) {
 
-    if (initialCategory) {
-        renderExpenseTypes(true);
-    } else {
-        renderSelectedTypes();
-    }
+        const category = categorySelect.value;
+        const insuranceFor = insuranceForSelect.value;
 
-    calculateTotal();
-    updatePaymentReference();
-
-    document.getElementById('expenseEditForm').addEventListener('submit', function (event) {
-
-        const selected = expenseTypeOptions.querySelectorAll(
+        const checkedTypes = expenseTypeOptions.querySelectorAll(
             'input[name="expense_type[]"]:checked'
         );
 
-        if (selected.length === 0) {
-
+        if (!category) {
             event.preventDefault();
+            alert('Please select an Expense Category.');
+            categorySelect.focus();
+            return;
+        }
 
+        if (checkedTypes.length === 0) {
+            event.preventDefault();
             alert('Please select at least one Expense Type.');
+            expenseTypeSelect.focus();
+            return;
+        }
 
-            expenseTypeSelect.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-            });
+        if (category === 'Insurance' && !insuranceFor) {
+            event.preventDefault();
+            alert('Please select whether this insurance is for a Vehicle or Driver/Staff.');
+            insuranceForSelect.focus();
+            return;
+        }
 
+        if (
+            ['Fuel', 'Maintenance', 'Registration'].includes(category) &&
+            !vehicleSelect.value
+        ) {
+            event.preventDefault();
+            alert('Please select a Vehicle for this expense.');
+            vehicleSelect.focus();
+            return;
+        }
+
+        if (category === 'Visa' && !driverSelect.value) {
+            event.preventDefault();
+            alert('Please select a Driver for this Visa expense.');
+            driverSelect.focus();
+            return;
+        }
+
+        if (
+            category === 'Insurance' &&
+            insuranceFor === 'Vehicle' &&
+            !vehicleSelect.value
+        ) {
+            event.preventDefault();
+            alert('Please select a Vehicle for this insurance expense.');
+            vehicleSelect.focus();
+            return;
+        }
+
+        if (
+            category === 'Insurance' &&
+            insuranceFor === 'Driver/Staff' &&
+            !driverSelect.value
+        ) {
+            event.preventDefault();
+            alert('Please select a Driver for this insurance expense.');
+            driverSelect.focus();
             return;
         }
 
@@ -1128,26 +1295,19 @@ document.addEventListener('DOMContentLoaded', function () {
         const total = parseFloat(amount.value) || 0;
 
         if (total <= 0) {
-
             event.preventDefault();
-
             alert('Total Amount must be greater than 0.');
-
+            partsCost.focus();
             return;
         }
 
         if (
             paymentStatus.value === 'Paid' &&
-            paymentReference.value.trim() === ''
+            !paymentReference.value.trim()
         ) {
-
             event.preventDefault();
-
             alert('Payment Method / Reference is required when Payment Status is Paid.');
-
             paymentReference.focus();
-
-            return;
         }
     });
 

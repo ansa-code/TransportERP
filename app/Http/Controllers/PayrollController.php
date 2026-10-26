@@ -76,19 +76,27 @@ class PayrollController extends Controller
             'basic_salary' => [
                 'required',
                 'numeric',
-                'min:0',
+                'gt:0',
+                'max:99999999.99',
+'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'allowance' => [
                 'required',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+'regex:/^\d{1,8}(\.\d{1,2})?$/',
+                
+
             ],
 
             'overtime' => [
                 'required',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             /*
@@ -101,24 +109,32 @@ class PayrollController extends Controller
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'fine_deduction' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'advance_deduction' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'other_deduction' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'other_deduction_reason' => [
@@ -357,19 +373,25 @@ class PayrollController extends Controller
             'basic_salary' => [
                 'required',
                 'numeric',
-                'min:0',
+                'gt:0',
+                'max:99999999.99',
+'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'allowance' => [
                 'required',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'overtime' => [
                 'required',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             /*
@@ -382,24 +404,32 @@ class PayrollController extends Controller
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'fine_deduction' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'advance_deduction' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'other_deduction' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'other_deduction_reason' => [
