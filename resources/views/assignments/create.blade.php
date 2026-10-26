@@ -3,13 +3,10 @@
 @section('content')
 
 <style>
-
     .assignment-create-page {
         max-width: 1100px;
         margin: 0 auto;
     }
-
-    /* ================= HEADER ================= */
 
     .assignment-form-header {
         margin-bottom: 22px;
@@ -27,9 +24,6 @@
         color: #6c757d;
         font-size: 13px;
     }
-
-
-    /* ================= FORM CARD ================= */
 
     .assignment-form-card {
         background: #ffffff;
@@ -55,9 +49,6 @@
         font-weight: 800;
     }
 
-
-    /* ================= GRID ================= */
-
     .assignment-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -72,9 +63,6 @@
         grid-column: 1 / -1;
     }
 
-
-    /* ================= LABELS ================= */
-
     .assignment-field label {
         display: block;
         margin-bottom: 7px;
@@ -86,9 +74,6 @@
     .required-mark {
         color: #dc3545;
     }
-
-
-    /* ================= INPUTS ================= */
 
     .assignment-input,
     .assignment-select,
@@ -123,26 +108,17 @@
         box-shadow: 0 0 0 3px rgba(13,110,253,.10);
     }
 
-
-    /* ================= READ ONLY ================= */
-
     .assignment-readonly {
         background: #f8f9fa;
         color: #6c757d;
         cursor: not-allowed;
     }
 
-
-    /* ================= HELP TEXT ================= */
-
     .assignment-help {
         margin-top: 6px;
         color: #8a94a0;
         font-size: 11px;
     }
-
-
-    /* ================= ERRORS ================= */
 
     .assignment-error {
         margin-top: 5px;
@@ -151,8 +127,20 @@
         font-weight: 600;
     }
 
+    .assignment-validation-summary {
+        margin-bottom: 18px;
+        padding: 14px 16px;
+        border: 1px solid #f1aeb5;
+        border-radius: 8px;
+        background: #f8d7da;
+        color: #842029;
+        font-size: 13px;
+    }
 
-    /* ================= BUTTONS ================= */
+    .assignment-validation-summary ul {
+        margin: 5px 0 0;
+        padding-left: 20px;
+    }
 
     .assignment-form-actions {
         display: flex;
@@ -198,11 +186,7 @@
         background: #0b5ed7;
     }
 
-
-    /* ================= RESPONSIVE ================= */
-
     @media (max-width: 700px) {
-
         .assignment-grid {
             grid-template-columns: 1fr;
         }
@@ -224,277 +208,128 @@
         .assignment-save-btn {
             width: 100%;
         }
-
     }
-
 </style>
-
 
 <div class="assignment-create-page">
 
-
-    {{-- ================= HEADER ================= --}}
-
+    {{-- PAGE HEADER --}}
     <div class="assignment-form-header">
-
-        <h1>
-            Create Assignment
-        </h1>
-
-        <p>
-            Create a long-running client allocation for a vehicle and driver
-        </p>
-
+        <h1>Create Assignment</h1>
+        <p>Create a long-running client allocation for a vehicle and driver</p>
     </div>
 
+    {{-- VALIDATION SUMMARY --}}
+    @if ($errors->any())
+        <div class="assignment-validation-summary" role="alert">
+            <strong>Please fix the following errors:</strong>
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-    {{-- ================= FORM ================= --}}
-
+    {{-- FORM CARD --}}
     <div class="assignment-form-card">
-
-        <form
-            action="{{ route('assignments.store') }}"
-            method="POST"
-        >
-
+        <form action="{{ route('assignments.store') }}" method="POST">
             @csrf
 
-
-            {{-- =================================================
-                 ASSIGNMENT INFORMATION
-            ================================================== --}}
-
+            {{-- ASSIGNMENT INFORMATION --}}
             <div class="assignment-section">
-
-                <h2 class="assignment-section-title">
-                    Assignment Information
-                </h2>
-
+                <h2 class="assignment-section-title">Assignment Information</h2>
 
                 <div class="assignment-grid">
 
-
                     {{-- Assignment Number --}}
-
                     <div class="assignment-field">
-
-                        <label>
-                            Assignment No.
-                        </label>
-
+                        <label for="assignment_no_display">Assignment No.</label>
                         <input
                             type="text"
+                            id="assignment_no_display"
                             class="assignment-input assignment-readonly"
                             value="Auto Generated"
                             readonly
                         >
-
-                        <div class="assignment-help">
-                            Format: AST-ASG-YYYY-#####
-                        </div>
-
+                        <div class="assignment-help">Format: AST-ASG-YYYY-#####</div>
                     </div>
-
 
                     {{-- Status --}}
-
                     <div class="assignment-field">
-
-                        <label for="status">
-                            Status <span class="required-mark">*</span>
-                        </label>
-
-                        <select
-                            id="status"
-                            name="status"
-                            class="assignment-select"
-                        >
-
-                            <option value="Planned"
-                                {{ old('status', 'Planned') === 'Planned' ? 'selected' : '' }}>
-                                Planned
-                            </option>
-
-                            <option value="Active"
-                                {{ old('status') === 'Active' ? 'selected' : '' }}>
-                                Active
-                            </option>
-
-                            <option value="Suspended"
-                                {{ old('status') === 'Suspended' ? 'selected' : '' }}>
-                                Suspended
-                            </option>
-
-                            <option value="Completed"
-                                {{ old('status') === 'Completed' ? 'selected' : '' }}>
-                                Completed
-                            </option>
-
-                            <option value="Cancelled"
-                                {{ old('status') === 'Cancelled' ? 'selected' : '' }}>
-                                Cancelled
-                            </option>
-
+                        <label for="status">Status <span class="required-mark">*</span></label>
+                        <select id="status" name="status" class="assignment-select">
+                            <option value="Planned" {{ old('status', 'Planned') === 'Planned' ? 'selected' : '' }}>Planned</option>
+                            <option value="Active" {{ old('status') === 'Active' ? 'selected' : '' }}>Active</option>
+                            <option value="Suspended" {{ old('status') === 'Suspended' ? 'selected' : '' }}>Suspended</option>
+                            <option value="Completed" {{ old('status') === 'Completed' ? 'selected' : '' }}>Completed</option>
+                            <option value="Cancelled" {{ old('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
                         </select>
-
                         @error('status')
-                            <div class="assignment-error">
-                                {{ $message }}
-                            </div>
+                            <div class="assignment-error">{{ $message }}</div>
                         @enderror
-
                     </div>
-
 
                     {{-- Client --}}
-
                     <div class="assignment-field">
-
-                        <label for="client_id">
-                            Client <span class="required-mark">*</span>
-                        </label>
-
-                        <select
-                            id="client_id"
-                            name="client_id"
-                            class="assignment-select"
-                            required
-                        >
-
-                            <option value="">
-                                Select Client
-                            </option>
-
+                        <label for="client_id">Client <span class="required-mark">*</span></label>
+                        <select id="client_id" name="client_id" class="assignment-select" required>
+                            <option value="">Select Client</option>
                             @foreach($clients as $client)
-
-                                <option
-                                    value="{{ $client->id }}"
-                                    {{ old('client_id') == $client->id ? 'selected' : '' }}
-                                >
+                                <option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>
                                     {{ $client->client_name }}
                                 </option>
-
                             @endforeach
-
                         </select>
-
                         @error('client_id')
-                            <div class="assignment-error">
-                                {{ $message }}
-                            </div>
+                            <div class="assignment-error">{{ $message }}</div>
                         @enderror
-
                     </div>
-
 
                     {{-- Vehicle --}}
-
                     <div class="assignment-field">
-
-                        <label for="vehicle_id">
-                            Vehicle <span class="required-mark">*</span>
-                        </label>
-
-                        <select
-                            id="vehicle_id"
-                            name="vehicle_id"
-                            class="assignment-select"
-                            required
-                        >
-
-                            <option value="">
-                                Select Vehicle
-                            </option>
-                @foreach($vehicles as $vehicle)
-
-    <option
-        value="{{ $vehicle->id }}"
-        {{ old('vehicle_id') == $vehicle->id ? 'selected' : '' }}
-    >
-        {{ $vehicle->plate_number ?? 'No Plate' }}
-    </option>
-
-               @endforeach
-
+                        <label for="vehicle_id">Vehicle <span class="required-mark">*</span></label>
+                        <select id="vehicle_id" name="vehicle_id" class="assignment-select" required>
+                            <option value="">Select Vehicle</option>
+                            @foreach($vehicles as $vehicle)
+                                <option value="{{ $vehicle->id }}" {{ old('vehicle_id') == $vehicle->id ? 'selected' : '' }}>
+                                    {{ $vehicle->plate_number ?? 'No Plate' }}
+                                </option>
+                            @endforeach
                         </select>
-
                         @error('vehicle_id')
-                            <div class="assignment-error">
-                                {{ $message }}
-                            </div>
+                            <div class="assignment-error">{{ $message }}</div>
                         @enderror
-
                     </div>
-
 
                     {{-- Driver --}}
-
                     <div class="assignment-field">
-
-                        <label for="driver_id">
-                            Driver <span class="required-mark">*</span>
-                        </label>
-
-                        <select
-                            id="driver_id"
-                            name="driver_id"
-                            class="assignment-select"
-                            required
-                        >
-
-                            <option value="">
-                                Select Driver
-                            </option>
-
+                        <label for="driver_id">Driver <span class="required-mark">*</span></label>
+                        <select id="driver_id" name="driver_id" class="assignment-select" required>
+                            <option value="">Select Driver</option>
                             @foreach($drivers as $driver)
-
-                                <option
-                                    value="{{ $driver->id }}"
-                                    {{ old('driver_id') == $driver->id ? 'selected' : '' }}
-                                >
+                                <option value="{{ $driver->id }}" {{ old('driver_id') == $driver->id ? 'selected' : '' }}>
                                     {{ $driver->driver_name }}
                                 </option>
-
                             @endforeach
-
                         </select>
-
                         @error('driver_id')
-                            <div class="assignment-error">
-                                {{ $message }}
-                            </div>
+                            <div class="assignment-error">{{ $message }}</div>
                         @enderror
-
                     </div>
 
-
                 </div>
-
             </div>
 
-
-            {{-- =================================================
-                 DATE RANGE & RATE
-            ================================================== --}}
-
+            {{-- CONTRACT AND RATE --}}
             <div class="assignment-section">
-
-                <h2 class="assignment-section-title">
-                    Contract & Rate
-                </h2>
-
+                <h2 class="assignment-section-title">Contract &amp; Rate</h2>
 
                 <div class="assignment-grid">
 
-
                     {{-- Start Date --}}
-
                     <div class="assignment-field">
-
-                        <label for="start_date">
-                            Start Date <span class="required-mark">*</span>
-                        </label>
-
+                        <label for="start_date">Start Date <span class="required-mark">*</span></label>
                         <input
                             type="date"
                             id="start_date"
@@ -503,24 +338,14 @@
                             class="assignment-input"
                             required
                         >
-
                         @error('start_date')
-                            <div class="assignment-error">
-                                {{ $message }}
-                            </div>
+                            <div class="assignment-error">{{ $message }}</div>
                         @enderror
-
                     </div>
 
-
                     {{-- End Date --}}
-
                     <div class="assignment-field">
-
-                        <label for="end_date">
-                            End Date <span class="required-mark">*</span>
-                        </label>
-
+                        <label for="end_date">End Date <span class="required-mark">*</span></label>
                         <input
                             type="date"
                             id="end_date"
@@ -529,28 +354,19 @@
                             class="assignment-input"
                             required
                         >
-
                         @error('end_date')
-                            <div class="assignment-error">
-                                {{ $message }}
-                            </div>
+                            <div class="assignment-error">{{ $message }}</div>
                         @enderror
-
                     </div>
 
-
                     {{-- Rate --}}
-
                     <div class="assignment-field">
-
-                        <label for="rate">
-                            Rate <span class="required-mark">*</span>
-                        </label>
-
+                        <label for="rate">Rate <span class="required-mark">*</span></label>
                         <input
                             type="number"
                             step="0.01"
                             min="0"
+                            max="99999999.99"
                             id="rate"
                             name="rate"
                             value="{{ old('rate') }}"
@@ -558,172 +374,73 @@
                             placeholder="0.00"
                             required
                         >
-
                         @error('rate')
-                            <div class="assignment-error">
-                                {{ $message }}
-                            </div>
+                            <div class="assignment-error">{{ $message }}</div>
                         @enderror
-
                     </div>
-
 
                     {{-- Rate Basis --}}
-
                     <div class="assignment-field">
-
-                        <label for="rate_basis">
-                            Rate Basis <span class="required-mark">*</span>
-                        </label>
-
-                        <select
-                            id="rate_basis"
-                            name="rate_basis"
-                            class="assignment-select"
-                            required
-                        >
-
-                            <option value="">
-                                Select Rate Basis
-                            </option>
-
-                            <option value="Per Day"
-                                {{ old('rate_basis') === 'Per Day' ? 'selected' : '' }}>
-                                Per Day
-                            </option>
-
-                            <option value="Per Month"
-                                {{ old('rate_basis', 'Monthly') === 'Monthly' || old('rate_basis') === 'Per Month' ? 'selected' : '' }}>
-                                Per Month
-                            </option>
-
-                            <option value="Per Trip"
-                                {{ old('rate_basis') === 'Per Trip' ? 'selected' : '' }}>
-                                Per Trip
-                            </option>
-
-                            <option value="Fixed"
-                                {{ old('rate_basis') === 'Fixed' ? 'selected' : '' }}>
-                                Fixed
-                            </option>
-
-                            <option value="Custom"
-                                {{ old('rate_basis') === 'Custom' ? 'selected' : '' }}>
-                                Custom
-                            </option>
-
+                        <label for="rate_basis">Rate Basis <span class="required-mark">*</span></label>
+                        <select id="rate_basis" name="rate_basis" class="assignment-select" required>
+                            <option value="">Select Rate Basis</option>
+                            <option value="Per Day" {{ old('rate_basis') === 'Per Day' ? 'selected' : '' }}>Per Day</option>
+                            <option value="Per Month" {{ old('rate_basis', 'Per Month') === 'Per Month' ? 'selected' : '' }}>Per Month</option>
+                            <option value="Per Trip" {{ old('rate_basis') === 'Per Trip' ? 'selected' : '' }}>Per Trip</option>
+                            <option value="Fixed" {{ old('rate_basis') === 'Fixed' ? 'selected' : '' }}>Fixed</option>
+                            <option value="Custom" {{ old('rate_basis') === 'Custom' ? 'selected' : '' }}>Custom</option>
                         </select>
-
                         @error('rate_basis')
-                            <div class="assignment-error">
-                                {{ $message }}
-                            </div>
+                            <div class="assignment-error">{{ $message }}</div>
                         @enderror
-
                     </div>
-
 
                     {{-- Fuel Rule --}}
-
                     <div class="assignment-field full-width">
-
-                        <label for="fuel_rule">
-                            Fuel Rule
-                        </label>
-
-                        <select
-                            id="fuel_rule"
-                            name="fuel_rule"
-                            class="assignment-select"
-                        >
-
-                            <option value="">
-                                Select Fuel Rule
-                            </option>
-
-                            <option value="Included"
-                                {{ old('fuel_rule') === 'Included' ? 'selected' : '' }}>
-                                Included
-                            </option>
-
-                            <option value="AL SHAQRA Cost"
-                                {{ old('fuel_rule') === 'AL SHAQRA Cost' ? 'selected' : '' }}>
-                                AL SHAQRA Cost
-                            </option>
-
-                            <option value="Client Reimbursable"
-                                {{ old('fuel_rule') === 'Client Reimbursable' ? 'selected' : '' }}>
-                                Client Reimbursable
-                            </option>
-
-                            <option value="Client Direct"
-                                {{ old('fuel_rule') === 'Client Direct' ? 'selected' : '' }}>
-                                Client Direct
-                            </option>
-
+                        <label for="fuel_rule">Fuel Rule</label>
+                        <select id="fuel_rule" name="fuel_rule" class="assignment-select">
+                            <option value="">Select Fuel Rule</option>
+                            <option value="Included" {{ old('fuel_rule') === 'Included' ? 'selected' : '' }}>Included</option>
+                            <option value="AL SHAQRA Cost" {{ old('fuel_rule') === 'AL SHAQRA Cost' ? 'selected' : '' }}>AL SHAQRA Cost</option>
+                            <option value="Client Reimbursable" {{ old('fuel_rule') === 'Client Reimbursable' ? 'selected' : '' }}>Client Reimbursable</option>
+                            <option value="Client Direct" {{ old('fuel_rule') === 'Client Direct' ? 'selected' : '' }}>Client Direct</option>
                         </select>
-
                         @error('fuel_rule')
-                            <div class="assignment-error">
-                                {{ $message }}
-                            </div>
+                            <div class="assignment-error">{{ $message }}</div>
                         @enderror
-
                     </div>
 
-
                 </div>
-
             </div>
-
-
-            {{-- =================================================
-                 REMARKS
-            ================================================== --}}
-
+            {{-- REMARKS --}}
             <div class="assignment-section">
-
-                <h2 class="assignment-section-title">
-                    Remarks
-                </h2>
-
+                <h2 class="assignment-section-title">Remarks</h2>
 
                 <div class="assignment-grid">
-
                     <div class="assignment-field full-width">
-
-                        <label for="remarks">
-                            Remarks
-                        </label>
-
+                        <label for="remarks">Remarks</label>
                         <textarea
                             id="remarks"
                             name="remarks"
                             class="assignment-textarea"
                             placeholder="Add assignment remarks..."
                         >{{ old('remarks') }}</textarea>
-
                         @error('remarks')
-                            <div class="assignment-error">
-                                {{ $message }}
-                            </div>
+                            <div class="assignment-error">{{ $message }}</div>
                         @enderror
-
                     </div>
-
                 </div>
-
             </div>
-        
+
+            {{-- LOADING, DELIVERY AND FREIGHT --}}
+            <div class="assignment-section">
+                <h2 class="assignment-section-title">Loading &amp; Delivery</h2>
+
+                <div class="assignment-grid">
 
                     {{-- Loading Date --}}
-
                     <div class="assignment-field">
-
-                        <label for="loading_date">
-                            Loading Date
-                        </label>
-
+                        <label for="loading_date">Loading Date</label>
                         <input
                             type="date"
                             id="loading_date"
@@ -731,18 +448,14 @@
                             value="{{ old('loading_date') }}"
                             class="assignment-input"
                         >
-
+                        @error('loading_date')
+                            <div class="assignment-error">{{ $message }}</div>
+                        @enderror
                     </div>
 
-
                     {{-- Delivery Date --}}
-
                     <div class="assignment-field">
-
-                        <label for="delivery_date">
-                            Delivery Date
-                        </label>
-
+                        <label for="delivery_date">Delivery Date</label>
                         <input
                             type="date"
                             id="delivery_date"
@@ -750,40 +463,33 @@
                             value="{{ old('delivery_date') }}"
                             class="assignment-input"
                         >
-
+                        @error('delivery_date')
+                            <div class="assignment-error">{{ $message }}</div>
+                        @enderror
                     </div>
 
-
-                    {{-- Existing Freight --}}
-
+                    {{-- Freight Amount --}}
                     <div class="assignment-field">
-
-                        <label for="freight_amount">
-                            Freight Amount
-                        </label>
-
+                        <label for="freight_amount">Freight Amount</label>
                         <input
-                        type="number"
+                            type="number"
                             step="0.01"
                             min="0"
+                            max="99999999.99"
                             id="freight_amount"
                             name="freight_amount"
                             value="{{ old('freight_amount') }}"
                             class="assignment-input"
                             placeholder="0.00"
                         >
-
+                        @error('freight_amount')
+                            <div class="assignment-error">{{ $message }}</div>
+                        @enderror
                     </div>
 
-
-                    {{-- Existing Notes --}}
-
+                    {{-- Notes --}}
                     <div class="assignment-field">
-
-                        <label for="notes">
-                            Notes
-                        </label>
-
+                        <label for="notes">Notes</label>
                         <input
                             type="text"
                             id="notes"
@@ -792,19 +498,16 @@
                             class="assignment-input"
                             placeholder="Additional notes"
                         >
-
+                        @error('notes')
+                            <div class="assignment-error">{{ $message }}</div>
+                        @enderror
                     </div>
-                    </div>
 
+                </div>
             </div>
 
-
-            {{-- =================================================
-                 ACTIONS
-            ================================================== --}}
-
+            {{-- FORM ACTIONS --}}
             <div class="assignment-form-actions">
-
                 <a
                     href="{{ route('assignments.index') }}"
                     class="assignment-back-btn"
@@ -812,21 +515,13 @@
                     ← Back
                 </a>
 
-
-                <button
-                    type="submit"
-                    class="assignment-save-btn"
-                >
+                <button type="submit" class="assignment-save-btn">
                     Save Assignment
                 </button>
-
             </div>
 
-
         </form>
-
     </div>
-
 </div>
 
 @endsection

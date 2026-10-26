@@ -68,6 +68,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->render(function (Throwable $e, Request $request) {
 
+        \Illuminate\Support\Facades\Log::error('DASHBOARD DEBUG: '.$e->getMessage(), [
+    'file' => $e->getFile(),
+    'line' => $e->getLine(),
+    'url' => $request->fullUrl(),
+]);
+
             // Validation errors should continue through Laravel's
             // normal validation flow.
             if ($e instanceof ValidationException) {

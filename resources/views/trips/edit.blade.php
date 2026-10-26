@@ -579,36 +579,37 @@
 
                     <div class="trip-form-group">
 
-                        <label class="trip-form-label">
-                            Loading Point *
-                        </label>
+    <label class="trip-form-label">
+        Loading Point
+    </label>
 
-                        <input
-                            type="text"
-                            name="loading_point"
-                            value="{{ old('loading_point', $trip->loading_point) }}"
-                            class="trip-form-input"
-                            required
-                        >
+    <input
+        type="text"
+        name="loading_point"
+        value="{{ old('loading_point', $trip->loading_point) }}"
+        class="trip-form-input"
+        placeholder="Enter loading location"
+        maxlength="255"
+    >
 
-                    </div>
+</div>
 
+<div class="trip-form-group">
 
-                    <div class="trip-form-group">
+    <label class="trip-form-label">
+        Unloading Point
+    </label>
 
-                        <label class="trip-form-label">
-                            Unloading Point *
-                        </label>
+    <input
+        type="text"
+        name="unloading_point"
+        value="{{ old('unloading_point', $trip->unloading_point) }}"
+        class="trip-form-input"
+        placeholder="Enter unloading location"
+        maxlength="255"
+    >
 
-                        <input
-                            type="text"
-                            name="unloading_point"
-                            value="{{ old('unloading_point', $trip->unloading_point) }}"
-                            class="trip-form-input"
-                            required
-                        >
-
-                    </div>
+</div>
 
                 </div>
 
@@ -634,15 +635,16 @@
                         </label>
 
                         <input
-                            type="number"
-                            name="rate"
-                            id="rate"
-                            value="{{ old('rate', $trip->rate) }}"
-                            class="trip-form-input"
-                            min="0"
-                            step="0.01"
-                            required
-                        >
+    type="number"
+    name="rate"
+    id="rate"
+    value="{{ old('rate', $trip->rate) }}"
+    class="trip-form-input"
+    min="0"
+    max="99999999.99"
+    step="0.01"
+    required
+>
 
                     </div>
 
@@ -655,16 +657,17 @@
                             Freight Amount *
                         </label>
 
-                        <input
-                            type="number"
-                            name="freight_amount"
-                            id="freight_amount"
-                            value="{{ old('freight_amount', $trip->freight_amount) }}"
-                            class="trip-form-input"
-                            min="0"
-                            step="0.01"
-                            required
-                        >
+                       <input
+    type="number"
+    name="freight_amount"
+    id="freight_amount"
+    value="{{ old('freight_amount', $trip->freight_amount) }}"
+    class="trip-form-input"
+    min="0"
+    max="99999999.99"
+    step="0.01"
+    required
+> 
 
                     </div>
 

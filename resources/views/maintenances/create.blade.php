@@ -1,5 +1,4 @@
 @extends('layouts.app')
-
 @section('content')
 
 <div class="maintenance-form-page">
@@ -414,6 +413,7 @@
                                class="maintenance-input"
                                value="{{ old('parts_cost', '0') }}"
                                min="0"
+                               max="99999.99"
                                step="0.01"
                                placeholder="0.00"
                                required>
@@ -450,7 +450,8 @@
                                class="maintenance-input"
                                value="{{ old('labour_cost', '0') }}"
                                min="0"
-                               step="0.01"
+max="99999.99"
+step="0.01"
                                placeholder="0.00"
                                required>
 
@@ -485,8 +486,9 @@
                                id="other_cost"
                                class="maintenance-input"
                                value="{{ old('other_cost', '0') }}"
-                               min="0"
-                               step="0.01"
+                              min="0"
+max="99999.99"
+step="0.01"
                                placeholder="0.00"
                                required>
 
@@ -573,6 +575,7 @@
                     <input type="date"
                            name="out_of_service_start"
                            id="out_of_service_start"
+                           min="{{ date('Y-m-d') }}"
                            class="maintenance-input"
                            value="{{ old('out_of_service_start') }}">
 
@@ -597,6 +600,7 @@
                     <input type="date"
                            name="out_of_service_end"
                            id="out_of_service_end"
+                           min="{{ date('Y-m-d') }}"
                            class="maintenance-input"
                            value="{{ old('out_of_service_end') }}">
 
@@ -621,6 +625,7 @@
                     <input type="date"
                            name="next_service_date"
                            id="next_service_date"
+                           min="{{ date('Y-m-d', strtotime('+1 day')) }}"
                            class="maintenance-input"
                            value="{{ old('next_service_date') }}">
 

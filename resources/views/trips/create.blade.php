@@ -1,5 +1,4 @@
 @extends('layouts.app')
-
 @section('content')
 
 <style>
@@ -527,40 +526,40 @@
                     </div>
 
 
+                 
                     <div class="trip-form-group">
 
-                        <label class="trip-form-label">
-                            Loading Point *
-                        </label>
+    <label class="trip-form-label">
+        Loading Point
+    </label>
 
-                        <input
-                            type="text"
-                            name="loading_point"
-                            value="{{ old('loading_point') }}"
-                            class="trip-form-input"
-                            placeholder="Enter loading location"
-                            required
-                        >
+    <input
+        type="text"
+        name="loading_point"
+        value="{{ old('loading_point') }}"
+        class="trip-form-input"
+        placeholder="Enter loading location"
+        maxlength="255"
+    >
 
-                    </div>
+</div>
 
+<div class="trip-form-group">
 
-                    <div class="trip-form-group">
+    <label class="trip-form-label">
+        Unloading Point
+    </label>
 
-                        <label class="trip-form-label">
-                            Unloading Point *
-                        </label>
+    <input
+        type="text"
+        name="unloading_point"
+        value="{{ old('unloading_point') }}"
+        class="trip-form-input"
+        placeholder="Enter unloading location"
+        maxlength="255"
+    >
 
-                        <input
-                            type="text"
-                            name="unloading_point"
-                            value="{{ old('unloading_point') }}"
-                            class="trip-form-input"
-                            placeholder="Enter unloading location"
-                            required
-                        >
-
-                    </div>
+</div>
 
                 </div>
 
@@ -587,17 +586,18 @@
                             Rate *
                         </label>
 
-                        <input
-                            type="number"
-                            name="rate"
-                            id="rate"
-                            value="{{ old('rate') }}"
-                            class="trip-form-input"
-                            min="0"
-                            step="0.01"
-                            placeholder="0.00"
-                            required
-                        >
+                      <input
+    type="number"
+    name="rate"
+    id="rate"
+    value="{{ old('rate') }}"
+    class="trip-form-input"
+    min="0"
+    max="99999999.99"
+    step="0.01"
+    placeholder="0.00"
+    required
+>
 
                     </div>
 
@@ -610,18 +610,18 @@
                             Freight Amount *
                         </label>
 
-                        <input
-                            type="number"
-                            name="freight_amount"
-                            id="freight_amount"
-                            value="{{ old('freight_amount') }}"
-                            class="trip-form-input"
-                            min="0"
-                            step="0.01"
-                            placeholder="0.00"
-                            required
-                        >
-
+                      <input
+    type="number"
+    name="freight_amount"
+    id="freight_amount"
+    value="{{ old('freight_amount') }}"
+    class="trip-form-input"
+    min="0"
+    max="99999999.99"
+    step="0.01"
+    placeholder="0.00"
+    required
+>
                     </div>
 
 

@@ -26,14 +26,7 @@ class DriverController extends Controller
         $passportCustody = $request->input('passport_custody');
         $status = $request->input('status');
 
-        /*
-        |--------------------------------------------------------------------------
-        | DRIVER RECORDS
-        |--------------------------------------------------------------------------
-        */
-
         $drivers = Driver::query()
-
             ->with([
                 'assignments' => function ($query) {
                     $query
@@ -47,8 +40,6 @@ class DriverController extends Controller
                         ->latest('start_date');
                 },
             ])
-
-            // Search
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('driver_name', 'like', "%{$search}%")
@@ -60,13 +51,9 @@ class DriverController extends Controller
                         ->orWhere('license_number', 'like', "%{$search}%");
                 });
             })
-
-            // Visa Type Filter
             ->when($visaType, function ($query, $visaType) {
                 $query->where('visa_type', $visaType);
             })
-
-            // Passport Custody Filter
             ->when(
                 $passportCustody !== null && $passportCustody !== '',
                 function ($query) use ($passportCustody) {
@@ -76,50 +63,23 @@ class DriverController extends Controller
                     );
                 }
             )
-
-            // Employment Status Filter
             ->when($status, function ($query, $status) {
                 $query->where('employment_status', $status);
             })
-
             ->latest()
             ->get();
 
-        /*
-        |--------------------------------------------------------------------------
-        | DRIVER DASHBOARD STATS
-        |--------------------------------------------------------------------------
-        */
-
         $totalDrivers = Driver::count();
-
-        /*
-        |--------------------------------------------------------------------------
-        | COMPANY VISA
-        |--------------------------------------------------------------------------
-        */
 
         $companyVisaDrivers = Driver::where(
             'visa_provided_by',
             'Company'
         )->count();
 
-        /*
-        |--------------------------------------------------------------------------
-        | OWN VISA
-        |--------------------------------------------------------------------------
-        */
-
         $ownVisaDrivers = Driver::where(
             'visa_type',
             'Own Visa'
         )->count();
-
-        /*
-        |--------------------------------------------------------------------------
-        | PASSPORT HELD
-        |--------------------------------------------------------------------------
-        */
 
         $passportHeldDrivers = Driver::where(
             'passport_held_by_company',
@@ -181,13 +141,27 @@ class DriverController extends Controller
                 'license_expiry' => [
                     'required',
                     'date',
+                    'after:today',
                 ],
 
                 'phone' => [
-                    'nullable',
-                    'string',
-                    'max:255',
-                ],
+    'nullable',
+    'string',
+    'max:30',
+    'regex:/^\+?[0-9\s().-]+$/',
+    'unique:drivers,phone',
+    function ($attribute, $value, $fail) {
+        if ($value === null || trim($value) === '') {
+            return;
+        }
+
+        $digits = preg_replace('/\D/', '', $value);
+
+        if (strlen($digits) < 7 || strlen($digits) > 15) {
+            $fail('Mobile number must contain between 7 and 15 digits, including the country code.');
+        }
+    },
+],
 
                 'nationality' => [
                     'nullable',
@@ -206,15 +180,15 @@ class DriverController extends Controller
                     'required',
                     'boolean',
                 ],
-                
+
                 'visa_type' => [
-    'nullable',
-    Rule::in([
-        'Temporary',
-        'Permanent',
-        'Other',
-    ]),
-],
+                    'nullable',
+                    Rule::in([
+                        'Temporary',
+                        'Permanent',
+                        'Other',
+                    ]),
+                ],
 
                 'visa_provided_by' => [
                     'nullable',
@@ -225,6 +199,7 @@ class DriverController extends Controller
                 'visa_expiry' => [
                     'nullable',
                     'date',
+                    'after:today',
                 ],
 
                 'emirates_id' => [
@@ -238,6 +213,7 @@ class DriverController extends Controller
                     'required',
                     'numeric',
                     'min:0',
+                    'max:99999999.99',
                 ],
 
                 'assigned_vehicle_id' => [
@@ -262,10 +238,10 @@ class DriverController extends Controller
                 ],
 
                 'date_of_birth' => [
-    'nullable',
-    'date',
-    'before_or_equal:' . now()->subYears(18)->toDateString(),
-],
+                    'nullable',
+                    'date',
+                    'before_or_equal:' . now()->subYears(18)->toDateString(),
+                ],
 
                 'joining_date' => [
                     'nullable',
@@ -302,9 +278,11 @@ class DriverController extends Controller
                 'license_number.max' => 'Licence Number may not be longer than 255 characters.',
                 'license_expiry.date' => 'Licence Expiry must be a valid date.',
                 'license_expiry.required' => 'Licence Expiry is required. Please select an expiry date.',
+                'license_expiry.after' => 'Licence expiry date must be in the future.',
 
                 'phone.string' => 'Mobile number must be a valid text value.',
-                'phone.max' => 'Mobile number may not be longer than 255 characters.',
+                'phone.max' => 'Mobile number is too long.',
+                'phone.regex' => 'Please enter a valid international mobile number.',
 
                 'nationality.string' => 'Nationality must be a valid text value.',
                 'nationality.max' => 'Nationality may not be longer than 255 characters.',
@@ -316,14 +294,13 @@ class DriverController extends Controller
                 'passport_held_by_company.required' => 'Passport Held by Company is required. Please select an option.',
                 'passport_held_by_company.boolean' => 'Passport Held by Company must be Yes or No.',
 
-                'visa_type.string' => 'Visa Type must be a valid text value.',
-                'visa_type.max' => 'Visa Type may not be longer than 255 characters.',
-                'visa_type.in' => 'Please select a valid Visa Type from the dropdown.', 
-                
+                'visa_type.in' => 'Please select a valid Visa Type from the dropdown.',
+
                 'visa_provided_by.string' => 'Visa Provided By must be a valid value.',
                 'visa_provided_by.max' => 'Visa Provided By may not be longer than 255 characters.',
-                 
+
                 'visa_expiry.date' => 'Visa Expiry must be a valid date.',
+                'visa_expiry.after' => 'Visa expiry date must be in the future.',
 
                 'emirates_id.unique' => 'Emirates ID has already been taken. Please enter a different Emirates ID.',
                 'emirates_id.string' => 'Emirates ID must be a valid text value.',
@@ -332,6 +309,7 @@ class DriverController extends Controller
                 'basic_salary.required' => 'Basic Salary is required. Please enter the basic salary.',
                 'basic_salary.numeric' => 'Basic Salary must be a valid number.',
                 'basic_salary.min' => 'Basic Salary cannot be less than 0.',
+                'basic_salary.max' => 'Basic Salary cannot exceed 99,999,999.99.',
 
                 'assigned_vehicle_id.integer' => 'Assigned Vehicle must be a valid vehicle.',
                 'assigned_vehicle_id.exists' => 'The selected Assigned Vehicle does not exist.',
@@ -347,6 +325,8 @@ class DriverController extends Controller
                 'remarks.string' => 'Remarks must be valid text.',
                 'address.string' => 'Address must be valid text.',
                 'notes.string' => 'Notes must be valid text.',
+
+                'phone.unique' => 'This mobile number has already been taken. Please enter a different mobile number.',
             ]
         );
 
@@ -362,6 +342,7 @@ class DriverController extends Controller
             ->with('success', 'Driver Added Successfully!');
     }
 
+    // PART 2 CONTINUES BELOW
     public function show(string $id)
     {
         $driver = Driver::findOrFail($id);
@@ -415,13 +396,27 @@ class DriverController extends Controller
                 'license_expiry' => [
                     'required',
                     'date',
+                    'after:today',
                 ],
 
                 'phone' => [
-                    'nullable',
-                    'string',
-                    'max:255',
-                ],
+    'nullable',
+    'string',
+    'max:30',
+    'regex:/^\+?[0-9\s().-]+$/',
+    Rule::unique('drivers', 'phone')->ignore($driver->id),
+    function ($attribute, $value, $fail) {
+        if ($value === null || trim($value) === '') {
+            return;
+        }
+
+        $digits = preg_replace('/\D/', '', $value);
+
+        if (strlen($digits) < 7 || strlen($digits) > 15) {
+            $fail('Mobile number must contain between 7 and 15 digits, including the country code.');
+        }
+    },
+],
 
                 'nationality' => [
                     'nullable',
@@ -442,13 +437,13 @@ class DriverController extends Controller
                 ],
 
                 'visa_type' => [
-    'nullable',
-    Rule::in([
-        'Temporary',
-        'Permanent',
-        'Other',
-    ]),
-],
+                    'nullable',
+                    Rule::in([
+                        'Temporary',
+                        'Permanent',
+                        'Other',
+                    ]),
+                ],
 
                 'visa_provided_by' => [
                     'nullable',
@@ -459,6 +454,7 @@ class DriverController extends Controller
                 'visa_expiry' => [
                     'nullable',
                     'date',
+                    'after:today',
                 ],
 
                 'emirates_id' => [
@@ -472,6 +468,7 @@ class DriverController extends Controller
                     'required',
                     'numeric',
                     'min:0',
+                    'max:99999999.99',
                 ],
 
                 'assigned_vehicle_id' => [
@@ -495,11 +492,11 @@ class DriverController extends Controller
                     'string',
                 ],
 
-               'date_of_birth' => [
-    'nullable',
-    'date',
-    'before_or_equal:' . now()->subYears(18)->toDateString(),
-],
+                'date_of_birth' => [
+                    'nullable',
+                    'date',
+                    'before_or_equal:' . now()->subYears(18)->toDateString(),
+                ],
 
                 'joining_date' => [
                     'nullable',
@@ -536,9 +533,11 @@ class DriverController extends Controller
                 'license_number.max' => 'Licence Number may not be longer than 255 characters.',
                 'license_expiry.date' => 'Licence Expiry must be a valid date.',
                 'license_expiry.required' => 'Licence Expiry is required. Please select an expiry date.',
+                'license_expiry.after' => 'Licence expiry date must be in the future.',
 
                 'phone.string' => 'Mobile number must be a valid text value.',
-                'phone.max' => 'Mobile number may not be longer than 255 characters.',
+                'phone.max' => 'Mobile number is too long.',
+                'phone.regex' => 'Please enter a valid international mobile number.',
 
                 'nationality.string' => 'Nationality must be a valid text value.',
                 'nationality.max' => 'Nationality may not be longer than 255 characters.',
@@ -550,14 +549,13 @@ class DriverController extends Controller
                 'passport_held_by_company.required' => 'Passport Held by Company is required. Please select an option.',
                 'passport_held_by_company.boolean' => 'Passport Held by Company must be Yes or No.',
 
-                'visa_type.string' => 'Visa Type must be a valid text value.',
-                'visa_type.max' => 'Visa Type may not be longer than 255 characters.',
                 'visa_type.in' => 'Please select a valid Visa Type from the dropdown.',
 
                 'visa_provided_by.string' => 'Visa Provided By must be a valid value.',
                 'visa_provided_by.max' => 'Visa Provided By may not be longer than 255 characters.',
 
                 'visa_expiry.date' => 'Visa Expiry must be a valid date.',
+                'visa_expiry.after' => 'Visa expiry date must be in the future.',
 
                 'emirates_id.unique' => 'Emirates ID has already been taken. Please enter a different Emirates ID.',
                 'emirates_id.string' => 'Emirates ID must be a valid text value.',
@@ -566,6 +564,7 @@ class DriverController extends Controller
                 'basic_salary.required' => 'Basic Salary is required. Please enter the basic salary.',
                 'basic_salary.numeric' => 'Basic Salary must be a valid number.',
                 'basic_salary.min' => 'Basic Salary cannot be less than 0.',
+                'basic_salary.max' => 'Basic Salary cannot exceed 99,999,999.99.',
 
                 'assigned_vehicle_id.integer' => 'Assigned Vehicle must be a valid vehicle.',
                 'assigned_vehicle_id.exists' => 'The selected Assigned Vehicle does not exist.',
@@ -573,7 +572,7 @@ class DriverController extends Controller
                 'employment_status.required' => 'Employment Status is required. Please select an option.',
                 'employment_status.in' => 'Please select a valid Employment Status.',
 
-               'date_of_birth.before_or_equal' => 'Driver must be at least 18 years old.',
+                'date_of_birth.before_or_equal' => 'Driver must be at least 18 years old.',
                 'date_of_birth.date' => 'Date of Birth must be a valid date.',
                 'joining_date.date' => 'Joining Date must be a valid date.',
 
@@ -581,6 +580,8 @@ class DriverController extends Controller
                 'remarks.string' => 'Remarks must be valid text.',
                 'address.string' => 'Address must be valid text.',
                 'notes.string' => 'Notes must be valid text.',
+
+                'phone.unique' => 'This mobile number has already been taken. Please enter a different mobile number.',
             ]
         );
 

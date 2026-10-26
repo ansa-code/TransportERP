@@ -373,17 +373,31 @@ class ClientController extends Controller
             ],
 
             'phone' => [
-                'nullable',
-                'string',
-                'max:50',
-            ],
+    'nullable',
+    'string',
+    'max:30',
+    'regex:/^\+?[0-9\s().-]+$/',
+    'unique:clients,phone',
+    function ($attribute, $value, $fail) {
+        if ($value === null || trim($value) === '') {
+            return;
+        }
 
-            'email' => [
-                'nullable',
-                'email',
-                'max:255',
-                'unique:clients,email',
-            ],
+        $digits = preg_replace('/\D/', '', $value);
+
+        if (strlen($digits) < 7 || strlen($digits) > 15) {
+            $fail('Mobile number must contain between 7 and 15 digits.');
+        }
+    },
+],
+
+        'email' => [
+    'nullable',
+    'string',
+    'email:rfc,dns',
+    'max:255',
+    'unique:clients,email',
+],
 
             'address' => [
                 'nullable',
@@ -402,33 +416,31 @@ class ClientController extends Controller
                 'max:255',
             ],
 
-            'trade_licence' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
+           'trade_licence' => [
+    'nullable',
+    'string',
+    'max:255',
+    'unique:clients,trade_licence',
+],
 
-            'trade_licence_expiry' => [
-                'nullable',
-                'date',
-            ],
-
+           
             'trn' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
+    'nullable',
+    'string',
+    'max:255',
+    'unique:clients,trn',
+],
 
             'contract_start' => [
-                'nullable',
-                'date',
-            ],
+    'required',
+    'date',
+],
 
-            'contract_end' => [
-                'nullable',
-                'date',
-                'after_or_equal:contract_start',
-            ],
+'contract_end' => [
+    'required',
+    'date',
+    'after:contract_start',
+],
 
             'billing_type' => [
                 'required',
@@ -577,20 +589,32 @@ class ClientController extends Controller
                 'max:255',
             ],
 
-            'phone' => [
-                'nullable',
-                'string',
-                'max:50',
-            ],
+           'phone' => [
+    'nullable',
+    'string',
+    'max:30',
+    'regex:/^\+?[0-9\s().-]+$/',
+    Rule::unique('clients', 'phone')->ignore($client->id),
+    function ($attribute, $value, $fail) {
+        if ($value === null || trim($value) === '') {
+            return;
+        }
+
+        $digits = preg_replace('/\D/', '', $value);
+
+        if (strlen($digits) < 7 || strlen($digits) > 15) {
+            $fail('Mobile number must contain between 7 and 15 digits.');
+        }
+    },
+],
 
             'email' => [
-                'nullable',
-                'email',
-                'max:255',
-                Rule::unique('clients', 'email')
-                    ->ignore($client->id),
-            ],
-
+    'nullable',
+    'string',
+    'email:rfc,dns',
+    'max:255',
+    Rule::unique('clients', 'email')->ignore($client->id),
+],
             'address' => [
                 'nullable',
                 'string',
@@ -608,33 +632,35 @@ class ClientController extends Controller
                 'max:255',
             ],
 
-            'trade_licence' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
-
+           'trade_licence' => [
+    'nullable',
+    'string',
+    'max:255',
+    Rule::unique('clients', 'trade_licence')->ignore($client->id),
+],
             'trade_licence_expiry' => [
-                'nullable',
-                'date',
-            ],
+    'nullable',
+    'date',
+    'after:today',
+],
 
-            'trn' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
+           'trn' => [
+    'nullable',
+    'string',
+    'max:255',
+    Rule::unique('clients', 'trn')->ignore($client->id),
+],
 
-            'contract_start' => [
-                'nullable',
-                'date',
-            ],
+           'contract_start' => [
+    'required',
+    'date',
+],
 
-            'contract_end' => [
-                'nullable',
-                'date',
-                'after_or_equal:contract_start',
-            ],
+'contract_end' => [
+    'required',
+    'date',
+    'after:contract_start',
+],
 
             'billing_type' => [
                 'required',

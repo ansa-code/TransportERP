@@ -2,9 +2,10 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
-use App\Services\AlertService;
+use Illuminate\Support\ServiceProvider;
+use App\Models\Alert;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,17 +22,29 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        View::composer('layouts.app', function ($view) {
+        if (config('app.debug')) {
+    \Illuminate\Support\Facades\DB::listen(
+        function ($query) {
+            \Illuminate\Support\Facades\Log::info(
+                sprintf('[%.1f ms] %s', $query->time, $query->sql)
+            );
+        }
+    );
+}
+        View::composer('*', function ($view) {
+            $unreadAlertsCount = 0;
 
-            $alertService = app(AlertService::class);
+            if (Auth::check()) {
+                $unreadAlertsCount = Alert::where(
+                    'status',
+                    'unread'
+                )->count();
+            }
 
-            // Generate latest alerts
-            $alertService->generateAlerts();
-
-            // Get unread alert count
-            $alertCount = $alertService->unreadCount();
-
-            $view->with('alertCount', $alertCount);
+            $view->with(
+                'unreadAlertsCount',
+                $unreadAlertsCount
+            );
         });
     }
 }

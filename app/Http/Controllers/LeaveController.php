@@ -26,7 +26,6 @@ class LeaveController extends Controller
         $leaves = Leave::with(['driver', 'replacementDriver'])
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
-
                     $q->where('leave_type', 'like', "%{$search}%")
                         ->orWhere('approval_status', 'like', "%{$search}%")
                         ->orWhereHas('driver', function ($driverQuery) use ($search) {
@@ -35,7 +34,6 @@ class LeaveController extends Controller
                         ->orWhereHas('replacementDriver', function ($replacementQuery) use ($search) {
                             $replacementQuery->where('driver_name', 'like', "%{$search}%");
                         });
-
                 });
             })
             ->when($approvalStatus, function ($query) use ($approvalStatus) {
@@ -90,11 +88,13 @@ class LeaveController extends Controller
             'start_date' => [
                 'required',
                 'date',
+                'after_or_equal:today',
             ],
 
             'end_date' => [
                 'required',
                 'date',
+                'after_or_equal:today',
                 'after_or_equal:start_date',
             ],
 
@@ -117,6 +117,14 @@ class LeaveController extends Controller
                 'nullable',
                 'string',
             ],
+        ], [
+            'start_date.required' => 'Leave start date is required.',
+            'start_date.date' => 'Please enter a valid leave start date.',
+            'start_date.after_or_equal' => 'Leave start date must be today or a future date.',
+
+            'end_date.required' => 'Leave end date is required.',
+            'end_date.date' => 'Please enter a valid leave end date.',
+            'end_date.after_or_equal' => 'Leave end date must be today or later than the start date.',
         ]);
 
         if (
@@ -144,7 +152,6 @@ class LeaveController extends Controller
         }
 
         if (!empty($validated['replacement_driver_id'])) {
-
             $replacementDriver = Driver::find($validated['replacement_driver_id']);
 
             if (!$replacementDriver || $replacementDriver->status !== 'Active') {
@@ -221,7 +228,6 @@ class LeaveController extends Controller
             })
             ->exists();
     }
-
     public function edit($id)
     {
         $leave = Leave::findOrFail($id);
@@ -271,11 +277,13 @@ class LeaveController extends Controller
             'start_date' => [
                 'required',
                 'date',
+                'after_or_equal:today',
             ],
 
             'end_date' => [
                 'required',
                 'date',
+                'after_or_equal:today',
                 'after_or_equal:start_date',
             ],
 
@@ -298,6 +306,14 @@ class LeaveController extends Controller
                 'nullable',
                 'string',
             ],
+        ], [
+            'start_date.required' => 'Leave start date is required.',
+            'start_date.date' => 'Please enter a valid leave start date.',
+            'start_date.after_or_equal' => 'Leave start date must be today or a future date.',
+
+            'end_date.required' => 'Leave end date is required.',
+            'end_date.date' => 'Please enter a valid leave end date.',
+            'end_date.after_or_equal' => 'Leave end date must be today or later than the start date.',
         ]);
 
         if (
@@ -325,7 +341,6 @@ class LeaveController extends Controller
         }
 
         if (!empty($validated['replacement_driver_id'])) {
-
             $replacementDriver = Driver::find(
                 $validated['replacement_driver_id']
             );

@@ -29,7 +29,6 @@ class VendorController extends Controller
         $vendorQuery = Vendor::query()
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
-
                     $q->where('vendor_name', 'like', "%{$search}%")
                         ->orWhere('company_name', 'like', "%{$search}%")
                         ->orWhere('phone', 'like', "%{$search}%")
@@ -41,7 +40,6 @@ class VendorController extends Controller
                             'like',
                             "%{$search}%"
                         );
-
                 });
             });
 
@@ -107,10 +105,11 @@ class VendorController extends Controller
                 'required',
                 'string',
                 'max:255',
+                'regex:/^[\pL\s&.,\'-]+$/u',
             ],
 
             'company_name' => [
-                'nullable',
+                'required',
                 'string',
                 'max:255',
             ],
@@ -129,8 +128,10 @@ class VendorController extends Controller
 
             'email' => [
                 'nullable',
+                'string',
                 'email',
                 'max:255',
+                'regex:/^[A-Za-z0-9._%+-]+@gmail\.com$/i',
             ],
 
             'address' => [
@@ -156,6 +157,8 @@ class VendorController extends Controller
             ],
 
             'supplied_vehicle_plates.*' => [
+                'required',
+                'string',
                 'exists:vehicles,plate_number',
             ],
 
@@ -163,24 +166,32 @@ class VendorController extends Controller
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:999999999.99',
+                'regex:/^\d{1,9}(\.\d{1,2})?$/',
             ],
 
             'rate_per_month' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:999999999.99',
+                'regex:/^\d{1,9}(\.\d{1,2})?$/',
             ],
 
             'rate_per_trip' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:999999999.99',
+                'regex:/^\d{1,9}(\.\d{1,2})?$/',
             ],
 
             'custom_rate' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:999999999.99',
+                'regex:/^\d{1,9}(\.\d{1,2})?$/',
             ],
 
             'custom_rate_label' => [
@@ -223,7 +234,7 @@ class VendorController extends Controller
         | Store Multiple Values
         |--------------------------------------------------------------------------
         */
-
+        $validated['address'] = $validated['address'] ?? '';
         $validated['service_type'] = implode(
             ', ',
             $validated['service_type']
@@ -242,8 +253,7 @@ class VendorController extends Controller
         $this->activityLogService->created(
             module: 'Vendors',
             subject: $vendor,
-            description:
-                "Created vendor record: {$vendor->vendor_name}."
+            description: "Created vendor record: {$vendor->vendor_name}."
         );
 
         return redirect()
@@ -297,10 +307,8 @@ class VendorController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function update(
-        Request $request,
-        string $id
-    ) {
+    public function update(Request $request, string $id)
+    {
         $vendor = Vendor::findOrFail($id);
 
         $validated = $request->validate([
@@ -309,10 +317,11 @@ class VendorController extends Controller
                 'required',
                 'string',
                 'max:255',
+                'regex:/^[\pL\s&.,\'-]+$/u',
             ],
 
             'company_name' => [
-                'nullable',
+                'required',
                 'string',
                 'max:255',
             ],
@@ -331,8 +340,10 @@ class VendorController extends Controller
 
             'email' => [
                 'nullable',
+                'string',
                 'email',
                 'max:255',
+                'regex:/^[A-Za-z0-9._%+-]+@gmail\.com$/i',
             ],
 
             'address' => [
@@ -358,6 +369,8 @@ class VendorController extends Controller
             ],
 
             'supplied_vehicle_plates.*' => [
+                'required',
+                'string',
                 'exists:vehicles,plate_number',
             ],
 
@@ -365,24 +378,32 @@ class VendorController extends Controller
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:999999999.99',
+                'regex:/^\d{1,9}(\.\d{1,2})?$/',
             ],
 
             'rate_per_month' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:999999999.99',
+                'regex:/^\d{1,9}(\.\d{1,2})?$/',
             ],
 
             'rate_per_trip' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:999999999.99',
+                'regex:/^\d{1,9}(\.\d{1,2})?$/',
             ],
 
             'custom_rate' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:999999999.99',
+                'regex:/^\d{1,9}(\.\d{1,2})?$/',
             ],
 
             'custom_rate_label' => [
@@ -448,8 +469,7 @@ class VendorController extends Controller
             subject: $vendor,
             oldValues: $oldValues,
             newValues: $vendor->getAttributes(),
-            description:
-                "Updated vendor record: {$vendor->vendor_name}."
+            description: "Updated vendor record: {$vendor->vendor_name}."
         );
 
         return redirect()
@@ -477,8 +497,7 @@ class VendorController extends Controller
             module: 'Vendors',
             subject: $vendor,
             oldValues: $oldValues,
-            description:
-                "Deleted vendor record: {$vendorName}."
+            description: "Deleted vendor record: {$vendorName}."
         );
 
         $vendor->delete();

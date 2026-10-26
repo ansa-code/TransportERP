@@ -32,43 +32,38 @@ class FuelController extends Controller
             'assignment',
             'trip',
         ])
-        ->when($search, function ($query) use ($search) {
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('fuel_entry_no', 'like', "%{$search}%")
+                        ->orWhere('paid_by', 'like', "%{$search}%")
+                        ->orWhereHas('vehicle', function ($vehicleQuery) use ($search) {
+                            $vehicleQuery->where(
+                                'plate_number',
+                                'like',
+                                "%{$search}%"
+                            );
+                        })
+                        ->orWhereHas('driver', function ($driverQuery) use ($search) {
+                            $driverQuery->where(
+                                'driver_name',
+                                'like',
+                                "%{$search}%"
+                            );
+                        })
+                        ->orWhereHas('client', function ($clientQuery) use ($search) {
+                            $clientQuery->where(
+                                'client_name',
+                                'like',
+                                "%{$search}%"
+                            );
+                        });
+                });
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
 
-            $query->where(function ($q) use ($search) {
-
-                $q->where('fuel_entry_no', 'like', "%{$search}%")
-                    ->orWhere('paid_by', 'like', "%{$search}%")
-                    ->orWhereHas('vehicle', function ($vehicleQuery) use ($search) {
-                        $vehicleQuery->where(
-                            'plate_number',
-                            'like',
-                            "%{$search}%"
-                        );
-                    })
-                    ->orWhereHas('driver', function ($driverQuery) use ($search) {
-                        $driverQuery->where(
-                            'driver_name',
-                            'like',
-                            "%{$search}%"
-                        );
-                    })
-                    ->orWhereHas('client', function ($clientQuery) use ($search) {
-                        $clientQuery->where(
-                            'client_name',
-                            'like',
-                            "%{$search}%"
-                        );
-                    });
-            });
-        })
-        ->latest()
-        ->paginate(10)
-        ->withQueryString();
-
-        return view('fuels.index', compact(
-            'fuels',
-            'search'
-        ));
+        return view('fuels.index', compact('fuels', 'search'));
     }
 
     public function create()
@@ -91,7 +86,6 @@ class FuelController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-
             'vehicle_id' => [
                 'required',
                 'exists:vehicles,id',
@@ -127,12 +121,16 @@ class FuelController extends Controller
                 'required',
                 'numeric',
                 'gt:0',
+                'max:99999999.99',
+                'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'price_per_liter' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+                'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'total_amount' => [
@@ -145,6 +143,7 @@ class FuelController extends Controller
                 'nullable',
                 'integer',
                 'min:0',
+                'max:9999999',
             ],
 
             'fuel_station' => [
@@ -191,10 +190,7 @@ class FuelController extends Controller
         $liters = (float) $validated['liters'];
         $pricePerLiter = (float) ($validated['price_per_liter'] ?? 0);
 
-        $calculatedTotal = round(
-            $liters * $pricePerLiter,
-            2
-        );
+        $calculatedTotal = round($liters * $pricePerLiter, 2);
 
         $validated['total_amount'] = $calculatedTotal;
 
@@ -205,7 +201,6 @@ class FuelController extends Controller
         */
 
         if ((bool) $validated['reimbursable']) {
-
             if (
                 !isset($validated['reimbursement_amount']) ||
                 $validated['reimbursement_amount'] <= 0
@@ -226,7 +221,6 @@ class FuelController extends Controller
                     ])
                     ->withInput();
             }
-
         } else {
             $validated['reimbursement_amount'] = null;
         }
@@ -237,8 +231,7 @@ class FuelController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $validated['fuel_entry_no'] =
-            $this->generateFuelEntryNumber();
+        $validated['fuel_entry_no'] = $this->generateFuelEntryNumber();
 
         /*
         |--------------------------------------------------------------------------
@@ -247,11 +240,10 @@ class FuelController extends Controller
         */
 
         if ($request->hasFile('receipt')) {
-            $validated['receipt'] =
-                $request->file('receipt')->store(
-                    'fuel-receipts',
-                    'public'
-                );
+            $validated['receipt'] = $request->file('receipt')->store(
+                'fuel-receipts',
+                'public'
+            );
         }
 
         /*
@@ -277,10 +269,7 @@ class FuelController extends Controller
 
         return redirect()
             ->route('fuels.index')
-            ->with(
-                'success',
-                'Fuel Record Added Successfully!'
-            );
+            ->with('success', 'Fuel Record Added Successfully!');
     }
 
     public function show($id)
@@ -342,7 +331,6 @@ class FuelController extends Controller
         $oldValues = $fuel->getAttributes();
 
         $validated = $request->validate([
-
             'vehicle_id' => [
                 'required',
                 'exists:vehicles,id',
@@ -378,12 +366,16 @@ class FuelController extends Controller
                 'required',
                 'numeric',
                 'gt:0',
+                'max:99999999.99',
+                'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'price_per_liter' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+                'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'total_amount' => [
@@ -396,6 +388,7 @@ class FuelController extends Controller
                 'nullable',
                 'integer',
                 'min:0',
+                'max:9999999',
             ],
 
             'fuel_station' => [
@@ -442,10 +435,7 @@ class FuelController extends Controller
         $liters = (float) $validated['liters'];
         $pricePerLiter = (float) ($validated['price_per_liter'] ?? 0);
 
-        $calculatedTotal = round(
-            $liters * $pricePerLiter,
-            2
-        );
+        $calculatedTotal = round($liters * $pricePerLiter, 2);
 
         $validated['total_amount'] = $calculatedTotal;
 
@@ -456,7 +446,6 @@ class FuelController extends Controller
         */
 
         if ((bool) $validated['reimbursable']) {
-
             if (
                 !isset($validated['reimbursement_amount']) ||
                 $validated['reimbursement_amount'] <= 0
@@ -477,7 +466,6 @@ class FuelController extends Controller
                     ])
                     ->withInput();
             }
-
         } else {
             $validated['reimbursement_amount'] = null;
         }
@@ -489,16 +477,14 @@ class FuelController extends Controller
         */
 
         if ($request->hasFile('receipt')) {
-
             if ($fuel->receipt) {
                 Storage::disk('public')->delete($fuel->receipt);
             }
 
-            $validated['receipt'] =
-                $request->file('receipt')->store(
-                    'fuel-receipts',
-                    'public'
-                );
+            $validated['receipt'] = $request->file('receipt')->store(
+                'fuel-receipts',
+                'public'
+            );
         } else {
             unset($validated['receipt']);
         }
@@ -527,12 +513,8 @@ class FuelController extends Controller
 
         return redirect()
             ->route('fuels.index')
-            ->with(
-                'success',
-                'Fuel Updated Successfully!'
-            );
+            ->with('success', 'Fuel Updated Successfully!');
     }
-
     public function destroy($id)
     {
         $fuel = Fuel::findOrFail($id);
@@ -579,10 +561,7 @@ class FuelController extends Controller
 
         return redirect()
             ->route('fuels.index')
-            ->with(
-                'success',
-                'Fuel Deleted Successfully!'
-            );
+            ->with('success', 'Fuel Deleted Successfully!');
     }
 
     private function generateFuelEntryNumber(): string
@@ -594,8 +573,8 @@ class FuelController extends Controller
             'like',
             "AST-FUL-{$year}-%"
         )
-        ->orderByDesc('id')
-        ->first();
+            ->orderByDesc('id')
+            ->first();
 
         if (!$lastFuel) {
             $number = 1;

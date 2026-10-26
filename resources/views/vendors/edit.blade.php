@@ -392,7 +392,6 @@
     }
 
     @media (max-width: 700px) {
-
         .page-header {
             align-items: flex-start;
             flex-direction: column;
@@ -424,7 +423,6 @@
 
     {{-- PAGE HEADER --}}
     <div class="page-header">
-
         <div>
             <h1>Edit Vendor</h1>
             <p>Update vendor information, rates and payment terms.</p>
@@ -433,15 +431,11 @@
         <a href="{{ route('vendors.index') }}" class="back-btn">
             ← Back
         </a>
-
     </div>
-
 
     {{-- VALIDATION ERRORS --}}
     @if ($errors->any())
-
         <div class="error-box">
-
             <strong>Please fix the following:</strong>
 
             <ul>
@@ -449,11 +443,8 @@
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
-
         </div>
-
     @endif
-
 
     @php
         $selectedServices = old('service_type');
@@ -477,38 +468,27 @@
         }
     @endphp
 
-
     <form
         action="{{ route('vendors.update', $vendor->id) }}"
         method="POST"
         class="vendor-form"
     >
-
         @csrf
         @method('PUT')
 
-
-        {{-- =========================
-             VENDOR INFORMATION
-        ========================== --}}
-
+        {{-- VENDOR INFORMATION --}}
         <div class="form-card">
-
             <div class="card-header">
-
                 <div>
                     <h2>Vendor Information</h2>
                     <p>Basic vendor and supplied service information.</p>
                 </div>
-
             </div>
-
 
             <div class="form-grid">
 
                 {{-- Vendor Name --}}
                 <div class="form-group">
-
                     <label for="vendor_name">
                         Vendor Name <span>*</span>
                     </label>
@@ -519,17 +499,21 @@
                         name="vendor_name"
                         value="{{ old('vendor_name', $vendor->vendor_name) }}"
                         placeholder="Enter vendor name"
+                        maxlength="255"
+                        pattern="[\p{L}\s&.,'-]+"
+                        title="Vendor name must contain letters only, without numbers."
                         required
                     >
 
+                    @error('vendor_name')
+                        <small style="color: #dc2626;">{{ $message }}</small>
+                    @enderror
                 </div>
-
 
                 {{-- Company Name --}}
                 <div class="form-group">
-
                     <label for="company_name">
-                        Company Name
+                        Company Name <span>*</span>
                     </label>
 
                     <input
@@ -537,17 +521,18 @@
                         id="company_name"
                         name="company_name"
                         value="{{ old('company_name', $vendor->company_name) }}"
+                        maxlength="255"
+                        required
                     >
 
+                    @error('company_name')
+                        <small style="color: #dc2626;">{{ $message }}</small>
+                    @enderror
                 </div>
-
 
                 {{-- Phone --}}
                 <div class="form-group">
-
-                    <label for="phone">
-                        Phone
-                    </label>
+                    <label for="phone">Phone</label>
 
                     <input
                         type="text"
@@ -555,17 +540,17 @@
                         name="phone"
                         value="{{ old('phone', $vendor->phone) }}"
                         placeholder="Enter phone number"
+                        maxlength="50"
                     >
 
+                    @error('phone')
+                        <small style="color: #dc2626;">{{ $message }}</small>
+                    @enderror
                 </div>
-
 
                 {{-- Contact --}}
                 <div class="form-group">
-
-                    <label for="contact">
-                        Contact
-                    </label>
+                    <label for="contact">Contact</label>
 
                     <input
                         type="text"
@@ -573,41 +558,41 @@
                         name="contact"
                         value="{{ old('contact', $vendor->contact) }}"
                         placeholder="Contact person / alternate phone"
+                        maxlength="255"
                     >
 
+                    @error('contact')
+                        <small style="color: #dc2626;">{{ $message }}</small>
+                    @enderror
                 </div>
-
 
                 {{-- Email --}}
                 <div class="form-group">
-
-                    <label for="email">
-                        Email
-                    </label>
+                    <label for="email">Email</label>
 
                     <input
                         type="email"
                         id="email"
                         name="email"
                         value="{{ old('email', $vendor->email) }}"
-                        placeholder="Enter email address"
+                        placeholder="Enter Gmail address (example@gmail.com)"
+                        maxlength="255"
+                        pattern="[A-Za-z0-9._%+-]+@gmail\.com"
+                        title="Enter a valid Gmail address ending in @gmail.com."
                     >
 
+                    @error('email')
+                        <small style="color: #dc2626;">{{ $message }}</small>
+                    @enderror
                 </div>
-
 
                 {{-- Service Type --}}
                 <div class="form-group">
-
                     <label>
                         Service Type <span>*</span>
                     </label>
 
-                    <div
-                        class="multi-dropdown"
-                        id="serviceDropdown"
-                    >
-
+                    <div class="multi-dropdown" id="serviceDropdown">
                         <button
                             type="button"
                             class="multi-dropdown-button"
@@ -623,11 +608,8 @@
                             <span class="dropdown-arrow"></span>
                         </button>
 
-
                         <div class="multi-dropdown-menu">
-
                             <div class="dropdown-options">
-
                                 @foreach ([
                                     'Vehicle Maintenance',
                                     'Tyre Services',
@@ -636,9 +618,7 @@
                                     'Fuel Supply',
                                     'Insurance Services'
                                 ] as $service)
-
                                     <label class="dropdown-option">
-
                                         <input
                                             type="checkbox"
                                             name="service_type[]"
@@ -646,33 +626,29 @@
                                             {{ in_array($service, $selectedServices, true) ? 'checked' : '' }}
                                         >
 
-                                        <span>
-                                            {{ $service }}
-                                        </span>
-
+                                        <span>{{ $service }}</span>
                                     </label>
-
                                 @endforeach
-
                             </div>
 
                             <div class="dropdown-footer">
                                 Multiple services can be selected.
                             </div>
-
                         </div>
-
                     </div>
 
-                </div>
+                    @error('service_type')
+                        <small style="color: #dc2626;">{{ $message }}</small>
+                    @enderror
 
+                    @error('service_type.*')
+                        <small style="color: #dc2626;">{{ $message }}</small>
+                    @enderror
+                </div>
 
                 {{-- Address --}}
                 <div class="form-group full-width">
-
-                    <label for="address">
-                        Address
-                    </label>
+                    <label for="address">Address</label>
 
                     <textarea
                         id="address"
@@ -681,21 +657,15 @@
                         placeholder="Enter vendor address"
                     >{{ old('address', $vendor->address) }}</textarea>
 
+                    @error('address')
+                        <small style="color: #dc2626;">{{ $message }}</small>
+                    @enderror
                 </div>
-
-
                 {{-- Supplied Vehicles --}}
                 <div class="form-group full-width">
+                    <label>Vehicle(s) Supplied</label>
 
-                    <label>
-                        Vehicle(s) Supplied
-                    </label>
-
-                    <div
-                        class="multi-dropdown"
-                        id="vehicleDropdown"
-                    >
-
+                    <div class="multi-dropdown" id="vehicleDropdown">
                         <button
                             type="button"
                             class="multi-dropdown-button"
@@ -711,11 +681,8 @@
                             <span class="dropdown-arrow"></span>
                         </button>
 
-
                         <div class="multi-dropdown-menu">
-
                             <div class="vehicle-search-wrap">
-
                                 <input
                                     type="text"
                                     id="vehicleSearch"
@@ -723,22 +690,17 @@
                                     placeholder="Search plate number..."
                                     autocomplete="off"
                                 >
-
                             </div>
-
 
                             <div
                                 class="dropdown-options"
                                 id="vehicleOptions"
                             >
-
                                 @forelse ($vehicles as $vehicle)
-
                                     <label
                                         class="dropdown-option vehicle-option"
                                         data-plate="{{ strtolower($vehicle->plate_number) }}"
                                     >
-
                                         <input
                                             type="checkbox"
                                             name="supplied_vehicle_plates[]"
@@ -746,22 +708,14 @@
                                             {{ in_array($vehicle->plate_number, $selectedVehicles, true) ? 'checked' : '' }}
                                         >
 
-                                        <span>
-                                            {{ $vehicle->plate_number }}
-                                        </span>
-
+                                        <span>{{ $vehicle->plate_number }}</span>
                                     </label>
-
                                 @empty
-
                                     <div class="vehicle-empty">
                                         No vehicles found in the database.
                                     </div>
-
                                 @endforelse
-
                             </div>
-
 
                             <div
                                 class="dropdown-footer"
@@ -769,44 +723,39 @@
                             >
                                 Multiple vehicles can be selected.
                             </div>
-
                         </div>
-
                     </div>
 
                     <small>
                         Search existing vehicle plate numbers and select one or more vehicles.
                     </small>
 
+                    @error('supplied_vehicle_plates')
+                        <small style="color: #dc2626;">{{ $message }}</small>
+                    @enderror
+
+                    @error('supplied_vehicle_plates.*')
+                        <small style="color: #dc2626;">{{ $message }}</small>
+                    @enderror
                 </div>
 
             </div>
-
         </div>
-        {{-- =========================
-             VENDOR RATES
-        ========================== --}}
 
+        {{-- VENDOR RATES --}}
         <div class="form-card">
-
             <div class="card-header">
-
                 <div>
                     <h2>Vendor Rates</h2>
                     <p>Configure applicable vendor contract rates.</p>
                 </div>
-
             </div>
-
 
             <div class="form-grid">
 
                 {{-- Rate Per Day --}}
                 <div class="form-group">
-
-                    <label for="rate_per_day">
-                        Rate Per Day
-                    </label>
+                    <label for="rate_per_day">Rate Per Day</label>
 
                     <input
                         type="number"
@@ -814,19 +763,19 @@
                         name="rate_per_day"
                         value="{{ old('rate_per_day', $vendor->rate_per_day) }}"
                         min="0"
+                        max="999999999.99"
                         step="0.01"
                         placeholder="0.00"
                     >
 
+                    @error('rate_per_day')
+                        <small style="color: #dc2626;">{{ $message }}</small>
+                    @enderror
                 </div>
-
 
                 {{-- Rate Per Month --}}
                 <div class="form-group">
-
-                    <label for="rate_per_month">
-                        Rate Per Month
-                    </label>
+                    <label for="rate_per_month">Rate Per Month</label>
 
                     <input
                         type="number"
@@ -834,19 +783,19 @@
                         name="rate_per_month"
                         value="{{ old('rate_per_month', $vendor->rate_per_month) }}"
                         min="0"
+                        max="999999999.99"
                         step="0.01"
                         placeholder="0.00"
                     >
 
+                    @error('rate_per_month')
+                        <small style="color: #dc2626;">{{ $message }}</small>
+                    @enderror
                 </div>
-
 
                 {{-- Rate Per Trip --}}
                 <div class="form-group">
-
-                    <label for="rate_per_trip">
-                        Rate Per Trip
-                    </label>
+                    <label for="rate_per_trip">Rate Per Trip</label>
 
                     <input
                         type="number"
@@ -854,19 +803,19 @@
                         name="rate_per_trip"
                         value="{{ old('rate_per_trip', $vendor->rate_per_trip) }}"
                         min="0"
+                        max="999999999.99"
                         step="0.01"
                         placeholder="0.00"
                     >
 
+                    @error('rate_per_trip')
+                        <small style="color: #dc2626;">{{ $message }}</small>
+                    @enderror
                 </div>
-
 
                 {{-- Custom Rate --}}
                 <div class="form-group">
-
-                    <label for="custom_rate">
-                        Custom Rate
-                    </label>
+                    <label for="custom_rate">Custom Rate</label>
 
                     <input
                         type="number"
@@ -874,19 +823,19 @@
                         name="custom_rate"
                         value="{{ old('custom_rate', $vendor->custom_rate) }}"
                         min="0"
+                        max="999999999.99"
                         step="0.01"
                         placeholder="0.00"
                     >
 
+                    @error('custom_rate')
+                        <small style="color: #dc2626;">{{ $message }}</small>
+                    @enderror
                 </div>
-
 
                 {{-- Custom Rate Label --}}
                 <div class="form-group full-width">
-
-                    <label for="custom_rate_label">
-                        Custom Rate Label
-                    </label>
+                    <label for="custom_rate_label">Custom Rate Label</label>
 
                     <input
                         type="text"
@@ -894,39 +843,31 @@
                         name="custom_rate_label"
                         value="{{ old('custom_rate_label', $vendor->custom_rate_label) }}"
                         placeholder="e.g. Per Hour / Per Service / Fixed Contract"
+                        maxlength="255"
                     >
 
+                    @error('custom_rate_label')
+                        <small style="color: #dc2626;">{{ $message }}</small>
+                    @enderror
                 </div>
 
             </div>
-
         </div>
 
-
-        {{-- =========================
-             PAYMENT & REGISTRATION
-        ========================== --}}
-
+        {{-- PAYMENT & REGISTRATION --}}
         <div class="form-card">
-
             <div class="card-header">
-
                 <div>
                     <h2>Payment Terms & Registration</h2>
                     <p>Update payment conditions and registration information.</p>
                 </div>
-
             </div>
-
 
             <div class="form-grid">
 
                 {{-- Payment Terms --}}
                 <div class="form-group">
-
-                    <label for="payment_terms">
-                        Payment Terms
-                    </label>
+                    <label for="payment_terms">Payment Terms</label>
 
                     <input
                         type="text"
@@ -934,17 +875,17 @@
                         name="payment_terms"
                         value="{{ old('payment_terms', $vendor->payment_terms) }}"
                         placeholder="e.g. Monthly / Net 30"
+                        maxlength="255"
                     >
 
+                    @error('payment_terms')
+                        <small style="color: #dc2626;">{{ $message }}</small>
+                    @enderror
                 </div>
-
 
                 {{-- Payment Terms Days --}}
                 <div class="form-group">
-
-                    <label for="payment_terms_days">
-                        Payment Terms (Days)
-                    </label>
+                    <label for="payment_terms_days">Payment Terms (Days)</label>
 
                     <input
                         type="number"
@@ -956,12 +897,13 @@
                         placeholder="e.g. 30"
                     >
 
+                    @error('payment_terms_days')
+                        <small style="color: #dc2626;">{{ $message }}</small>
+                    @enderror
                 </div>
-
 
                 {{-- Tax / Registration Data --}}
                 <div class="form-group full-width">
-
                     <label for="tax_registration_data">
                         Tax / Registration Data
                     </label>
@@ -973,22 +915,18 @@
                         placeholder="Enter tax number, registration details or related information"
                     >{{ old('tax_registration_data', $vendor->tax_registration_data) }}</textarea>
 
+                    @error('tax_registration_data')
+                        <small style="color: #dc2626;">{{ $message }}</small>
+                    @enderror
                 </div>
-
 
                 {{-- Status --}}
                 <div class="form-group">
-
                     <label for="status">
                         Status <span>*</span>
                     </label>
 
-                    <select
-                        id="status"
-                        name="status"
-                        required
-                    >
-
+                    <select id="status" name="status" required>
                         <option
                             value="Active"
                             {{ old('status', $vendor->status) === 'Active' ? 'selected' : '' }}
@@ -1009,18 +947,16 @@
                         >
                             Archived
                         </option>
-
                     </select>
 
+                    @error('status')
+                        <small style="color: #dc2626;">{{ $message }}</small>
+                    @enderror
                 </div>
-
 
                 {{-- Notes --}}
                 <div class="form-group full-width">
-
-                    <label for="notes">
-                        Notes
-                    </label>
+                    <label for="notes">Notes</label>
 
                     <textarea
                         id="notes"
@@ -1029,16 +965,16 @@
                         placeholder="Enter additional notes"
                     >{{ old('notes', $vendor->notes) }}</textarea>
 
+                    @error('notes')
+                        <small style="color: #dc2626;">{{ $message }}</small>
+                    @enderror
                 </div>
 
             </div>
-
         </div>
-
 
         {{-- FORM ACTIONS --}}
         <div class="form-actions">
-
             <a
                 href="{{ route('vendors.index') }}"
                 class="cancel-btn"
@@ -1046,20 +982,14 @@
                 Cancel
             </a>
 
-            <button
-                type="submit"
-                class="update-btn"
-            >
+            <button type="submit" class="update-btn">
                 Update Vendor
             </button>
-
         </div>
 
     </form>
 
 </div>
-
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
 
@@ -1071,7 +1001,6 @@
 
         const serviceText =
             document.getElementById('serviceDropdownText');
-
 
         const vehicleDropdown =
             document.getElementById('vehicleDropdown');
@@ -1100,18 +1029,12 @@
                 );
 
             if (checked.length === 0) {
-
-                serviceText.textContent =
-                    'Select service types';
-
+                serviceText.textContent = 'Select service types';
                 return;
             }
 
             if (checked.length === 1) {
-
-                serviceText.textContent =
-                    checked[0].value;
-
+                serviceText.textContent = checked[0].value;
                 return;
             }
 
@@ -1128,9 +1051,7 @@
                 );
 
             if (checked.length === 0) {
-
-                vehicleText.textContent =
-                    'Select vehicles';
+                vehicleText.textContent = 'Select vehicles';
 
                 vehicleFooter.textContent =
                     'Multiple vehicles can be selected.';
@@ -1139,12 +1060,8 @@
             }
 
             if (checked.length === 1) {
-
-                vehicleText.textContent =
-                    checked[0].value;
-
+                vehicleText.textContent = checked[0].value;
             } else {
-
                 vehicleText.textContent =
                     checked.length + ' vehicles selected';
             }
@@ -1154,53 +1071,42 @@
         }
 
 
-        serviceButton.addEventListener(
-            'click',
-            function (event) {
+        serviceButton.addEventListener('click', function (event) {
 
-                event.stopPropagation();
+            event.stopPropagation();
 
-                vehicleDropdown.classList.remove('open');
+            vehicleDropdown.classList.remove('open');
 
-                serviceDropdown.classList.toggle('open');
+            serviceDropdown.classList.toggle('open');
+        });
+
+
+        vehicleButton.addEventListener('click', function (event) {
+
+            event.stopPropagation();
+
+            serviceDropdown.classList.remove('open');
+
+            vehicleDropdown.classList.toggle('open');
+
+            if (
+                vehicleDropdown.classList.contains('open') &&
+                vehicleSearch
+            ) {
+                setTimeout(function () {
+                    vehicleSearch.focus();
+                }, 50);
             }
-        );
-
-
-        vehicleButton.addEventListener(
-            'click',
-            function (event) {
-
-                event.stopPropagation();
-
-                serviceDropdown.classList.remove('open');
-
-                vehicleDropdown.classList.toggle('open');
-
-                if (
-                    vehicleDropdown.classList.contains('open') &&
-                    vehicleSearch
-                ) {
-                    setTimeout(function () {
-                        vehicleSearch.focus();
-                    }, 50);
-                }
-            }
-        );
+        });
 
 
         serviceDropdown
-            .querySelectorAll(
-                'input[name="service_type[]"]'
-            )
+            .querySelectorAll('input[name="service_type[]"]')
             .forEach(function (checkbox) {
 
-                checkbox.addEventListener(
-                    'change',
-                    function () {
-                        updateServiceText();
-                    }
-                );
+                checkbox.addEventListener('change', function () {
+                    updateServiceText();
+                });
 
             });
 
@@ -1211,77 +1117,52 @@
             )
             .forEach(function (checkbox) {
 
-                checkbox.addEventListener(
-                    'change',
-                    function () {
-                        updateVehicleText();
-                    }
-                );
+                checkbox.addEventListener('change', function () {
+                    updateVehicleText();
+                });
 
             });
 
 
         if (vehicleSearch) {
 
-            vehicleSearch.addEventListener(
-                'input',
-                function () {
+            vehicleSearch.addEventListener('input', function () {
 
-                    const searchValue =
-                        this.value
-                            .trim()
-                            .toLowerCase();
+                const searchValue =
+                    this.value.trim().toLowerCase();
 
-                    vehicleOptions.forEach(
-                        function (option) {
+                vehicleOptions.forEach(function (option) {
 
-                            const plate =
-                                option.dataset.plate || '';
+                    const plate = option.dataset.plate || '';
 
-                            if (
-                                plate.includes(searchValue)
-                            ) {
-                                option.classList.remove(
-                                    'hidden'
-                                );
-                            } else {
-                                option.classList.add(
-                                    'hidden'
-                                );
-                            }
+                    if (plate.includes(searchValue)) {
+                        option.classList.remove('hidden');
+                    } else {
+                        option.classList.add('hidden');
+                    }
 
-                        }
-                    );
-                }
-            );
+                });
+
+            });
         }
 
 
-        document.addEventListener(
-            'click',
-            function () {
+        document.addEventListener('click', function () {
 
-                serviceDropdown.classList.remove('open');
+            serviceDropdown.classList.remove('open');
 
-                vehicleDropdown.classList.remove('open');
-            }
-        );
+            vehicleDropdown.classList.remove('open');
+        });
 
 
-        serviceDropdown.addEventListener(
-            'click',
-            function (event) {
-                event.stopPropagation();
-            }
-        );
+        serviceDropdown.addEventListener('click', function (event) {
+            event.stopPropagation();
+        });
 
 
-        vehicleDropdown.addEventListener(
-            'click',
-            function (event) {
-                event.stopPropagation();
-            }
-        );
+        vehicleDropdown.addEventListener('click', function (event) {
+            event.stopPropagation();
+        });
 
 
         updateServiceText();

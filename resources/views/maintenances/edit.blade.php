@@ -1,5 +1,4 @@
 @extends('layouts.app')
-
 @section('content')
 
 <div class="maintenance-form-page">
@@ -422,7 +421,8 @@
                         class="maintenance-input cost-input"
                         value="{{ old('parts_cost', $maintenance->parts_cost) }}"
                         min="0"
-                        step="0.01"
+max="99999.99"
+step="0.01"
                         placeholder="0.00"
                     >
 
@@ -450,8 +450,9 @@
                         id="labour_cost"
                         class="maintenance-input cost-input"
                         value="{{ old('labour_cost', $maintenance->labour_cost) }}"
-                        min="0"
-                        step="0.01"
+                       min="0"
+max="99999.99"
+step="0.01"
                         placeholder="0.00"
                     >
 
@@ -479,8 +480,9 @@
                         id="other_cost"
                         class="maintenance-input cost-input"
                         value="{{ old('other_cost', $maintenance->other_cost) }}"
-                        min="0"
-                        step="0.01"
+                       min="0"
+max="99999.99"
+step="0.01"
                         placeholder="0.00"
                     >
 
@@ -529,6 +531,7 @@
                         type="date"
                         name="out_of_service_start"
                         id="out_of_service_start"
+                        min="{{ date('Y-m-d') }}"
                         class="maintenance-input"
                         value="{{ old('out_of_service_start', optional($maintenance->out_of_service_start)->format('Y-m-d')) }}"
                     >
@@ -555,6 +558,7 @@
                         type="date"
                         name="out_of_service_end"
                         id="out_of_service_end"
+                        min="{{ date('Y-m-d') }}"
                         class="maintenance-input"
                         value="{{ old('out_of_service_end', optional($maintenance->out_of_service_end)->format('Y-m-d')) }}"
                     >
@@ -581,6 +585,7 @@
                         type="date"
                         name="next_service_date"
                         id="next_service_date"
+                        min="{{ date('Y-m-d') }}"
                         class="maintenance-input"
                         value="{{ old('next_service_date', optional($maintenance->next_service_date)->format('Y-m-d')) }}"
                     >
