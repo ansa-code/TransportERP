@@ -24,6 +24,7 @@ class StoreVehicleRequest extends FormRequest
 
             'vehicle_type' => [
                 'required',
+                'string',
                 Rule::in([
                     'Heavy Truck',
                     'Small Truck',
@@ -51,15 +52,18 @@ class StoreVehicleRequest extends FormRequest
                 'numeric',
                 'min:0',
                 'max:9999999999.99',
+                'regex:/^\d{1,10}(\.\d{1,2})?$/',
             ],
 
             'load_capacity_unit' => [
                 'nullable',
+                'string',
                 Rule::in(['KG', 'TON']),
             ],
 
             'ownership_type' => [
                 'required',
+                'string',
                 Rule::in([
                     'Company Owned',
                     'Hired',
@@ -87,6 +91,7 @@ class StoreVehicleRequest extends FormRequest
                 'numeric',
                 'min:0',
                 'max:9999999999.99',
+                'regex:/^\d{1,10}(\.\d{1,2})?$/',
             ],
 
             'instalment_duration' => [
@@ -100,29 +105,32 @@ class StoreVehicleRequest extends FormRequest
             'instalment_duration_unit' => [
                 'nullable',
                 'required_if:ownership_type,Financed',
+                'string',
                 Rule::in(['Months', 'Years']),
             ],
-             
-            'registration_expiry' => [
-    'nullable',
-    'date',
-    'after_or_equal:today',
-],
 
-'insurance_expiry' => [
-    'nullable',
-    'date',
-    'after_or_equal:today',
-],
+            'registration_expiry' => [
+                'required',
+                'date',
+                'after_or_equal:today',
+            ],
+
+            'insurance_expiry' => [
+                'required',
+                'date',
+                'after_or_equal:today',
+            ],
 
             'current_odometer' => [
                 'nullable',
                 'integer',
                 'min:0',
+                'max:18446744073709551615',
             ],
 
             'status' => [
                 'required',
+                'string',
                 Rule::in([
                     'Active',
                     'Assigned',
@@ -133,7 +141,7 @@ class StoreVehicleRequest extends FormRequest
                 ]),
             ],
 
-            'remarks' => ['nullable', 'string'],
+            'remarks' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -142,34 +150,60 @@ class StoreVehicleRequest extends FormRequest
         return [
             'vehicle_code.required' =>
                 'Please enter a Vehicle ID / Code.',
+            'vehicle_code.string' =>
+                'Vehicle ID / Code must be valid text.',
+            'vehicle_code.max' =>
+                'Vehicle ID / Code cannot exceed 255 characters.',
             'vehicle_code.unique' =>
                 'This Vehicle ID / Code already exists. Please enter a different code.',
 
             'vehicle_type.required' =>
                 'Please select a vehicle type.',
+            'vehicle_type.in' =>
+                'Please select a valid vehicle type.',
 
             'brand.required' =>
                 'Please enter the vehicle brand.',
+            'brand.max' =>
+                'Brand cannot exceed 100 characters.',
             'model.required' =>
                 'Please enter the vehicle model.',
+            'model.max' =>
+                'Model cannot exceed 100 characters.',
 
             'plate_number.required' =>
                 'Please enter a plate number.',
+            'plate_number.max' =>
+                'Plate number cannot exceed 255 characters.',
             'plate_number.unique' =>
                 'This plate number is already registered. Please enter a different plate number.',
+
+            'category.max' =>
+                'Category cannot exceed 255 characters.',
 
             'load_capacity.numeric' =>
                 'Load capacity must be a valid number.',
             'load_capacity.min' =>
                 'Load capacity cannot be negative.',
             'load_capacity.max' =>
-                'Load capacity is too large.',
+                'Load capacity cannot exceed 9,999,999,999.99.',
+            'load_capacity.regex' =>
+                'Load capacity can have up to 10 digits before and 2 digits after the decimal point.',
+            'load_capacity_unit.in' =>
+                'Please select KG or TON as the load capacity unit.',
 
             'ownership_type.required' =>
                 'Please select an ownership type.',
+            'ownership_type.in' =>
+                'Please select a valid ownership type.',
 
             'vendor_owner.required_if' =>
                 'Please enter the Vendor / Owner for a hired vehicle.',
+            'vendor_owner.max' =>
+                'Vendor / Owner cannot exceed 255 characters.',
+
+            'registered_company_name.max' =>
+                'Registered Company Name cannot exceed 255 characters.',
 
             'bank_instalment_amount.required_if' =>
                 'Please enter the instalment amount for a financed vehicle.',
@@ -178,7 +212,9 @@ class StoreVehicleRequest extends FormRequest
             'bank_instalment_amount.min' =>
                 'Instalment amount cannot be negative.',
             'bank_instalment_amount.max' =>
-                'Instalment amount is too large.',
+                'Instalment amount cannot exceed 9,999,999,999.99.',
+            'bank_instalment_amount.regex' =>
+                'Instalment amount can have up to 10 digits before and 2 digits after the decimal point.',
 
             'instalment_duration.required_if' =>
                 'Please enter the instalment duration for a financed vehicle.',
@@ -186,26 +222,44 @@ class StoreVehicleRequest extends FormRequest
                 'Instalment duration must be a whole number.',
             'instalment_duration.min' =>
                 'Instalment duration must be at least 1.',
+            'instalment_duration.max' =>
+                'Instalment duration exceeds the allowed maximum.',
 
             'instalment_duration_unit.required_if' =>
                 'Please select Months or Years for the instalment duration.',
+            'instalment_duration_unit.in' =>
+                'Instalment duration unit must be Months or Years.',
 
             'registration_expiry.date' =>
                 'Please enter a valid registration expiry date.',
+            'registration_expiry.after_or_equal' =>
+                'Registration expiry date cannot be earlier than today.',
             'insurance_expiry.date' =>
                 'Please enter a valid insurance expiry date.',
+            'insurance_expiry.after_or_equal' =>
+                'Insurance expiry date cannot be earlier than today.',
+            'registration_expiry.required' =>
+    'Registration expiry date is required.',
+
+'insurance_expiry.required' =>
+    'Insurance expiry date is required.',
 
             'current_odometer.integer' =>
                 'Current odometer must be a whole number.',
             'current_odometer.min' =>
                 'Current odometer cannot be negative.',
+            'current_odometer.max' =>
+                'Current odometer exceeds the allowed maximum.',
 
-            'registration_expiry.after_or_equal' =>
-    'Registration expiry date cannot be earlier than today.',
+            'status.required' =>
+                'Please select a vehicle status.',
+            'status.in' =>
+                'Please select a valid vehicle status.',
 
-'insurance_expiry.after_or_equal' =>
-    'Insurance expiry date cannot be earlier than today.',
-    
+            'remarks.string' =>
+                'Remarks must be valid text.',
+            'remarks.max' =>
+                'Remarks cannot exceed 255 characters.',
         ];
     }
 
@@ -217,14 +271,20 @@ class StoreVehicleRequest extends FormRequest
             'brand' => 'Brand',
             'model' => 'Model',
             'plate_number' => 'Plate Number',
+            'category' => 'Category',
             'load_capacity' => 'Load Capacity',
+            'load_capacity_unit' => 'Load Capacity Unit',
             'ownership_type' => 'Ownership Type',
             'vendor_owner' => 'Vendor / Owner',
+            'registered_company_name' => 'Registered Company Name',
             'bank_instalment_amount' => 'Bank Instalment Amount',
             'instalment_duration' => 'Instalment Duration',
+            'instalment_duration_unit' => 'Instalment Duration Unit',
             'registration_expiry' => 'Registration Expiry',
             'insurance_expiry' => 'Insurance Expiry',
             'current_odometer' => 'Current Odometer',
+            'status' => 'Status',
+            'remarks' => 'Remarks',
         ];
     }
 }

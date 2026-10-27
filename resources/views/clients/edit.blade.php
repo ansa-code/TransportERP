@@ -179,13 +179,14 @@
                         Company Name <span class="required">*</span>
                     </label>
 
-                    <input
-                        type="text"
-                        name="company_name"
-                        class="form-control"
-                        value="{{ old('company_name', $client->company_name) }}"
-                        required
-                    >
+                   <input
+    type="text"
+    name="company_name"
+    class="form-control"
+    value="{{ old('company_name') }}"
+    maxlength="255"
+    required
+>
                 </div>
 
                 {{-- 3. Client Name --}}

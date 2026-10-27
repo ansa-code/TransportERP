@@ -29,12 +29,6 @@ class ClientController extends Controller
     {
         $search = $request->search;
 
-        /*
-        |--------------------------------------------------------------------------
-        | Clients
-        |--------------------------------------------------------------------------
-        */
-
         $clients = Client::query()
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
@@ -60,270 +54,118 @@ class ClientController extends Controller
             ->latest()
             ->get();
 
-        /*
-        |--------------------------------------------------------------------------
-        | Current Date
-        |--------------------------------------------------------------------------
-        */
-
         $today = Carbon::today();
 
-        /*
-        |--------------------------------------------------------------------------
-        | KPI - Active Clients
-        |--------------------------------------------------------------------------
-        */
-
-        $activeClientsCount = Client::where(
-            'status',
-            'Active'
-        )->count();
-
-        /*
-        |--------------------------------------------------------------------------
-        | KPI - Trucks Assigned
-        |--------------------------------------------------------------------------
-        |
-        | Count unique vehicles that currently have an assignment.
-        |
-        | Current assignment:
-        | start_date <= today
-        | and end_date is null OR end_date >= today
-        |
-        |--------------------------------------------------------------------------
-        */
+        $activeClientsCount = Client::where('status', 'Active')->count();
 
         $trucksAssignedCount = Assignment::query()
             ->whereNotNull('client_id')
             ->whereNotNull('vehicle_id')
-            ->whereDate(
-                'start_date',
-                '<=',
-                $today
-            )
+            ->whereDate('start_date', '<=', $today)
             ->where(function ($query) use ($today) {
                 $query->whereNull('end_date')
-                    ->orWhereDate(
-                        'end_date',
-                        '>=',
-                        $today
-                    );
+                    ->orWhereDate('end_date', '>=', $today);
             })
             ->distinct()
             ->count('vehicle_id');
-
-        /*
-        |--------------------------------------------------------------------------
-        | KPI - Receivables
-        |--------------------------------------------------------------------------
-        |
-        | Invoice balance already represents outstanding amount.
-        |
-        |--------------------------------------------------------------------------
-        */
 
         $receivables = Invoice::query()
             ->where('balance', '>', 0)
             ->sum('balance');
 
-        /*
-        |--------------------------------------------------------------------------
-        | KPI - Renewals Due
-        |--------------------------------------------------------------------------
-        |
-        | Active contracts ending within the next 30 days.
-        |
-        |--------------------------------------------------------------------------
-        */
-
         $renewalsDueCount = Client::query()
             ->where('status', 'Active')
             ->whereNotNull('contract_end')
-            ->whereDate(
-                'contract_end',
-                '>=',
-                $today
-            )
-            ->whereDate(
-                'contract_end',
-                '<=',
-                $today->copy()->addDays(30)
-            )
+            ->whereDate('contract_end', '>=', $today)
+            ->whereDate('contract_end', '<=', $today->copy()->addDays(30))
             ->count();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Client Table - Current Truck Count
-        |--------------------------------------------------------------------------
-        */
 
         $clientVehicleCounts = Assignment::query()
             ->whereNotNull('client_id')
             ->whereNotNull('vehicle_id')
-            ->whereDate(
-                'start_date',
-                '<=',
-                $today
-            )
+            ->whereDate('start_date', '<=', $today)
             ->where(function ($query) use ($today) {
                 $query->whereNull('end_date')
-                    ->orWhereDate(
-                        'end_date',
-                        '>=',
-                        $today
-                    );
+                    ->orWhereDate('end_date', '>=', $today);
             })
             ->select('client_id')
-            ->selectRaw(
-                'COUNT(DISTINCT vehicle_id) as trucks_count'
-            )
+            ->selectRaw('COUNT(DISTINCT vehicle_id) as trucks_count')
             ->groupBy('client_id')
-            ->pluck(
-                'trucks_count',
-                'client_id'
-            );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Client Table - Current Monthly Value
-        |--------------------------------------------------------------------------
-        |
-        | Monthly value is calculated from the client's current assignments.
-        |
-        | Supported rate bases:
-        |
-        | Monthly / Per Month -> rate
-        | Weekly / Per Week   -> rate * 52 / 12
-        | Per Day / Daily     -> rate * 30
-        | Fixed / Fixed Rent  -> rate
-        |
-        | Per Trip / Usage / Custom cannot be converted to a fixed
-        | monthly value without actual usage/trip volume, so they are
-        | not included in the monthly calculation.
-        |
-        |--------------------------------------------------------------------------
-        */
+            ->pluck('trucks_count', 'client_id');
 
         $clientMonthlyValues = Assignment::query()
             ->whereNotNull('client_id')
             ->whereNotNull('rate')
-            ->whereDate(
-                'start_date',
-                '<=',
-                $today
-            )
+            ->whereDate('start_date', '<=', $today)
             ->where(function ($query) use ($today) {
                 $query->whereNull('end_date')
-                    ->orWhereDate(
-                        'end_date',
-                        '>=',
-                        $today
-                    );
+                    ->orWhereDate('end_date', '>=', $today);
             })
-            ->select([
-                'client_id',
-                'rate',
-                'rate_basis',
-            ])
+            ->select(['client_id', 'rate', 'rate_basis'])
             ->get()
             ->groupBy('client_id')
             ->map(function ($assignments) {
-
                 $monthlyValue = 0;
                 $hasMonthlyValue = false;
 
                 foreach ($assignments as $assignment) {
-
                     $rate = (float) $assignment->rate;
 
                     if ($rate < 0) {
                         continue;
                     }
 
-                    $rateBasis = strtolower(
-                        trim((string) $assignment->rate_basis)
-                    );
+                    $rateBasis = strtolower(trim((string) $assignment->rate_basis));
 
                     switch ($rateBasis) {
-
                         case 'monthly':
                         case 'per month':
-
                             $monthlyValue += $rate;
                             $hasMonthlyValue = true;
-
                             break;
 
                         case 'weekly':
                         case 'per week':
-
                             $monthlyValue += ($rate * 52) / 12;
                             $hasMonthlyValue = true;
-
                             break;
 
                         case 'per day':
                         case 'daily':
-
                             $monthlyValue += $rate * 30;
                             $hasMonthlyValue = true;
-
                             break;
 
                         case 'fixed':
                         case 'fixed rent':
-
                             $monthlyValue += $rate;
                             $hasMonthlyValue = true;
-
                             break;
                     }
                 }
 
-                return $hasMonthlyValue
-                    ? $monthlyValue
-                    : null;
+                return $hasMonthlyValue ? $monthlyValue : null;
             });
 
-        /*
-        |--------------------------------------------------------------------------
-        | Attach Truck Count + Monthly Value To Each Client
-        |--------------------------------------------------------------------------
-        */
-
         foreach ($clients as $client) {
-
-            $client->trucks_count = (int) (
-                $clientVehicleCounts[$client->id] ?? 0
-            );
+            $client->trucks_count = (int) ($clientVehicleCounts[$client->id] ?? 0);
 
             if (
                 $clientMonthlyValues->has($client->id)
                 && $clientMonthlyValues[$client->id] !== null
             ) {
-                $client->monthly_value = (float) (
-                    $clientMonthlyValues[$client->id]
-                );
+                $client->monthly_value = (float) $clientMonthlyValues[$client->id];
             }
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Return View
-        |--------------------------------------------------------------------------
-        */
-
-        return view(
-            'clients.index',
-            compact(
-                'clients',
-                'search',
-                'activeClientsCount',
-                'trucksAssignedCount',
-                'receivables',
-                'renewalsDueCount'
-            )
-        );
+        return view('clients.index', compact(
+            'clients',
+            'search',
+            'activeClientsCount',
+            'trucksAssignedCount',
+            'receivables',
+            'renewalsDueCount'
+        ));
     }
 
     /*
@@ -346,7 +188,6 @@ class ClientController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-
             'client_code' => [
                 'required',
                 'string',
@@ -373,35 +214,36 @@ class ClientController extends Controller
             ],
 
             'phone' => [
-    'nullable',
-    'string',
-    'max:30',
-    'regex:/^\+?[0-9\s().-]+$/',
-    'unique:clients,phone',
-    function ($attribute, $value, $fail) {
-        if ($value === null || trim($value) === '') {
-            return;
-        }
+                'nullable',
+                'string',
+                'max:30',
+                'regex:/^\+?[0-9\s().-]+$/',
+                'unique:clients,phone',
+                function ($attribute, $value, $fail) {
+                    if ($value === null || trim($value) === '') {
+                        return;
+                    }
 
-        $digits = preg_replace('/\D/', '', $value);
+                    $digits = preg_replace('/\D/', '', $value);
 
-        if (strlen($digits) < 7 || strlen($digits) > 15) {
-            $fail('Mobile number must contain between 7 and 15 digits.');
-        }
-    },
-],
+                    if (strlen($digits) < 7 || strlen($digits) > 15) {
+                        $fail('Mobile number must contain between 7 and 15 digits.');
+                    }
+                },
+            ],
 
-        'email' => [
-    'nullable',
-    'string',
-    'email:rfc,dns',
-    'max:255',
-    'unique:clients,email',
-],
+            'email' => [
+                'nullable',
+                'string',
+                'email:rfc,dns',
+                'max:255',
+                'unique:clients,email',
+            ],
 
             'address' => [
                 'nullable',
                 'string',
+                'max:1000',
             ],
 
             'city' => [
@@ -411,36 +253,35 @@ class ClientController extends Controller
             ],
 
             'country' => [
-                'nullable',
+                'required',
                 'string',
                 'max:255',
             ],
 
-           'trade_licence' => [
-    'nullable',
-    'string',
-    'max:255',
-    'unique:clients,trade_licence',
-],
+            'trade_licence' => [
+                'nullable',
+                'string',
+                'max:255',
+                'unique:clients,trade_licence',
+            ],
 
-           
             'trn' => [
-    'nullable',
-    'string',
-    'max:255',
-    'unique:clients,trn',
-],
+                'nullable',
+                'string',
+                'max:255',
+                'unique:clients,trn',
+            ],
 
             'contract_start' => [
-    'required',
-    'date',
-],
+                'required',
+                'date',
+            ],
 
-'contract_end' => [
-    'required',
-    'date',
-    'after:contract_start',
-],
+            'contract_end' => [
+                'required',
+                'date',
+                'after:contract_start',
+            ],
 
             'billing_type' => [
                 'required',
@@ -470,12 +311,15 @@ class ClientController extends Controller
                 'nullable',
                 'integer',
                 'min:0',
+                'max:3650',
             ],
 
             'credit_limit' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+                'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'fuel_reimbursement_rule' => [
@@ -501,7 +345,32 @@ class ClientController extends Controller
             'notes' => [
                 'nullable',
                 'string',
+                'max:5000',
             ],
+        ], [
+            'country.required' => 'Country is required. Please select or enter a country.',
+            'country.string' => 'Country must be valid text.',
+            'country.max' => 'Country cannot exceed 255 characters.',
+
+            'credit_days.integer' => 'Credit Days must be a whole number.',
+            'credit_days.min' => 'Credit Days cannot be negative.',
+            'credit_days.max' => 'Credit Days cannot exceed 3650.',
+
+            'credit_limit.numeric' => 'Credit Limit must be a valid number.',
+            'credit_limit.min' => 'Credit Limit cannot be negative.',
+            'credit_limit.max' => 'Credit Limit cannot exceed 99,999,999.99.',
+            'credit_limit.regex' => 'Credit Limit can contain up to 8 whole-number digits and 2 decimal places.',
+
+            'address.max' => 'Address cannot exceed 1000 characters.',
+            'notes.max' => 'Notes cannot exceed 5000 characters.',
+            'phone.regex' => 'Please enter a valid phone number.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.unique' => 'This email address is already in use.',
+            'phone.unique' => 'This phone number is already in use.',
+            'client_code.unique' => 'This client code is already in use.',
+            'trade_licence.unique' => 'This trade licence is already in use.',
+            'trn.unique' => 'This TRN is already in use.',
+            'contract_end.after' => 'Contract End must be after Contract Start.',
         ]);
 
         $client = Client::create($validated);
@@ -514,12 +383,8 @@ class ClientController extends Controller
 
         return redirect()
             ->route('clients.index')
-            ->with(
-                'success',
-                'Client Added Successfully!'
-            );
+            ->with('success', 'Client Added Successfully!');
     }
-
     /*
     |--------------------------------------------------------------------------
     | Show Client
@@ -530,10 +395,7 @@ class ClientController extends Controller
     {
         $client = Client::findOrFail($id);
 
-        return view(
-            'clients.show',
-            compact('client')
-        );
+        return view('clients.show', compact('client'));
     }
 
     /*
@@ -546,11 +408,9 @@ class ClientController extends Controller
     {
         $client = Client::findOrFail($id);
 
-        return view(
-            'clients.edit',
-            compact('client')
-        );
+        return view('clients.edit', compact('client'));
     }
+
     /*
     |--------------------------------------------------------------------------
     | Update Client
@@ -562,13 +422,11 @@ class ClientController extends Controller
         $client = Client::findOrFail($id);
 
         $validated = $request->validate([
-
             'client_code' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('clients', 'client_code')
-                    ->ignore($client->id),
+                Rule::unique('clients', 'client_code')->ignore($client->id),
             ],
 
             'client_name' => [
@@ -589,35 +447,37 @@ class ClientController extends Controller
                 'max:255',
             ],
 
-           'phone' => [
-    'nullable',
-    'string',
-    'max:30',
-    'regex:/^\+?[0-9\s().-]+$/',
-    Rule::unique('clients', 'phone')->ignore($client->id),
-    function ($attribute, $value, $fail) {
-        if ($value === null || trim($value) === '') {
-            return;
-        }
+            'phone' => [
+                'nullable',
+                'string',
+                'max:30',
+                'regex:/^\+?[0-9\s().-]+$/',
+                Rule::unique('clients', 'phone')->ignore($client->id),
+                function ($attribute, $value, $fail) {
+                    if ($value === null || trim($value) === '') {
+                        return;
+                    }
 
-        $digits = preg_replace('/\D/', '', $value);
+                    $digits = preg_replace('/\D/', '', $value);
 
-        if (strlen($digits) < 7 || strlen($digits) > 15) {
-            $fail('Mobile number must contain between 7 and 15 digits.');
-        }
-    },
-],
+                    if (strlen($digits) < 7 || strlen($digits) > 15) {
+                        $fail('Mobile number must contain between 7 and 15 digits.');
+                    }
+                },
+            ],
 
             'email' => [
-    'nullable',
-    'string',
-    'email:rfc,dns',
-    'max:255',
-    Rule::unique('clients', 'email')->ignore($client->id),
-],
+                'nullable',
+                'string',
+                'email:rfc,dns',
+                'max:255',
+                Rule::unique('clients', 'email')->ignore($client->id),
+            ],
+
             'address' => [
                 'nullable',
                 'string',
+                'max:1000',
             ],
 
             'city' => [
@@ -627,40 +487,41 @@ class ClientController extends Controller
             ],
 
             'country' => [
-                'nullable',
+                'required',
                 'string',
                 'max:255',
             ],
 
-           'trade_licence' => [
-    'nullable',
-    'string',
-    'max:255',
-    Rule::unique('clients', 'trade_licence')->ignore($client->id),
-],
+            'trade_licence' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('clients', 'trade_licence')->ignore($client->id),
+            ],
+
             'trade_licence_expiry' => [
-    'nullable',
-    'date',
-    'after:today',
-],
+                'nullable',
+                'date',
+                'after:today',
+            ],
 
-           'trn' => [
-    'nullable',
-    'string',
-    'max:255',
-    Rule::unique('clients', 'trn')->ignore($client->id),
-],
+            'trn' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('clients', 'trn')->ignore($client->id),
+            ],
 
-           'contract_start' => [
-    'required',
-    'date',
-],
+            'contract_start' => [
+                'required',
+                'date',
+            ],
 
-'contract_end' => [
-    'required',
-    'date',
-    'after:contract_start',
-],
+            'contract_end' => [
+                'required',
+                'date',
+                'after:contract_start',
+            ],
 
             'billing_type' => [
                 'required',
@@ -690,12 +551,15 @@ class ClientController extends Controller
                 'nullable',
                 'integer',
                 'min:0',
+                'max:3650',
             ],
 
             'credit_limit' => [
                 'nullable',
                 'numeric',
                 'min:0',
+                'max:99999999.99',
+                'regex:/^\d{1,8}(\.\d{1,2})?$/',
             ],
 
             'fuel_reimbursement_rule' => [
@@ -721,7 +585,32 @@ class ClientController extends Controller
             'notes' => [
                 'nullable',
                 'string',
+                'max:5000',
             ],
+        ], [
+            'country.required' => 'Country is required. Please select or enter a country.',
+            'country.string' => 'Country must be valid text.',
+            'country.max' => 'Country cannot exceed 255 characters.',
+
+            'credit_days.integer' => 'Credit Days must be a whole number.',
+            'credit_days.min' => 'Credit Days cannot be negative.',
+            'credit_days.max' => 'Credit Days cannot exceed 3650.',
+
+            'credit_limit.numeric' => 'Credit Limit must be a valid number.',
+            'credit_limit.min' => 'Credit Limit cannot be negative.',
+            'credit_limit.max' => 'Credit Limit cannot exceed 99,999,999.99.',
+            'credit_limit.regex' => 'Credit Limit can contain up to 8 whole-number digits and 2 decimal places.',
+
+            'address.max' => 'Address cannot exceed 1000 characters.',
+            'notes.max' => 'Notes cannot exceed 5000 characters.',
+            'phone.regex' => 'Please enter a valid phone number.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.unique' => 'This email address is already in use.',
+            'phone.unique' => 'This phone number is already in use.',
+            'client_code.unique' => 'This client code is already in use.',
+            'trade_licence.unique' => 'This trade licence is already in use.',
+            'trn.unique' => 'This TRN is already in use.',
+            'contract_end.after' => 'Contract End must be after Contract Start.',
         ]);
 
         $oldValues = $client->getAttributes();
@@ -738,10 +627,7 @@ class ClientController extends Controller
 
         return redirect()
             ->route('clients.index')
-            ->with(
-                'success',
-                'Client Updated Successfully!'
-            );
+            ->with('success', 'Client Updated Successfully!');
     }
 
     /*
@@ -768,9 +654,6 @@ class ClientController extends Controller
 
         return redirect()
             ->route('clients.index')
-            ->with(
-                'success',
-                'Client Deleted Successfully!'
-            );
+            ->with('success', 'Client Deleted Successfully!');
     }
 }
