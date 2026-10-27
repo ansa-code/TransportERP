@@ -241,9 +241,9 @@ class ClientController extends Controller
             ],
 
             'address' => [
-                'nullable',
+                'required',
                 'string',
-                'max:1000',
+                'max:255',
             ],
 
             'city' => [
@@ -360,8 +360,10 @@ class ClientController extends Controller
             'credit_limit.min' => 'Credit Limit cannot be negative.',
             'credit_limit.max' => 'Credit Limit cannot exceed 99,999,999.99.',
             'credit_limit.regex' => 'Credit Limit can contain up to 8 whole-number digits and 2 decimal places.',
-
-            'address.max' => 'Address cannot exceed 1000 characters.',
+             
+            'address.required' => 'Address is required. Please enter the client address.',
+            'address.max' => 'Address cannot exceed 255 characters.',
+           
             'notes.max' => 'Notes cannot exceed 5000 characters.',
             'phone.regex' => 'Please enter a valid phone number.',
             'email.email' => 'Please enter a valid email address.',
@@ -475,9 +477,9 @@ class ClientController extends Controller
             ],
 
             'address' => [
-                'nullable',
+                'required',
                 'string',
-                'max:1000',
+                'max:255',
             ],
 
             'city' => [
@@ -600,8 +602,10 @@ class ClientController extends Controller
             'credit_limit.min' => 'Credit Limit cannot be negative.',
             'credit_limit.max' => 'Credit Limit cannot exceed 99,999,999.99.',
             'credit_limit.regex' => 'Credit Limit can contain up to 8 whole-number digits and 2 decimal places.',
-
-            'address.max' => 'Address cannot exceed 1000 characters.',
+             
+            'address.required' => 'Address is required. Please enter the client address.',
+            'address.max' => 'Address cannot exceed 255 characters.',
+           
             'notes.max' => 'Notes cannot exceed 5000 characters.',
             'phone.regex' => 'Please enter a valid phone number.',
             'email.email' => 'Please enter a valid email address.',

@@ -565,12 +565,14 @@
                     <label>Address</label>
 
                     <input
-                        type="text"
-                        name="address"
-                        value="{{ old('address') }}"
-                        class="form-control"
-                        placeholder="Enter complete address"
-                    >
+    type="text"
+    name="address"
+    value="{{ old('address') }}"
+    class="form-control"
+    maxlength="255"
+    placeholder="Enter complete address"
+    required
+>
 
                 </div>
 
