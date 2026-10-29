@@ -554,6 +554,7 @@
                             value="{{ old('amount', $payment->amount) }}"
                             min="0.01"
                             step="0.01"
+                            max="9999999999.99"
                             placeholder="0.00"
                             required
                         >
@@ -809,7 +810,7 @@
                                                 type="number"
                                                 name="allocations[{{ $invoice->id }}][allocated_amount]"
                                                 class="allocation-input"
-                                                min="0"
+                                                min="0.01"
                                                 max="{{ $availableForThisPayment }}"
                                                 step="0.01"
                                                 value="{{ old(
@@ -919,6 +920,7 @@
                             name="notes"
                             id="notes"
                             class="form-textarea"
+                            maxlength="5000"
                             placeholder="Add any payment notes..."
                         >{{ old('notes', $payment->notes) }}</textarea>
 

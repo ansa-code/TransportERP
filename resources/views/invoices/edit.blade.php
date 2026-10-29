@@ -336,6 +336,7 @@
                         id="subtotal"
                         value="{{ old('subtotal', number_format((float) $invoice->subtotal, 2, '.', '')) }}"
                         min="0"
+                        max="9999999999.99"
                         step="0.01"
                         required
                     >
@@ -555,6 +556,7 @@
                         id="other_reimbursement"
                         value="{{ old('other_reimbursement', number_format((float) $invoice->other_reimbursement, 2, '.', '')) }}"
                         min="0"
+                        max="9999999999.99"
                         step="0.01"
                         required
                     >

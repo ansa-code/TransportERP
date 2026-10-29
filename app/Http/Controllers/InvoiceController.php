@@ -171,92 +171,154 @@ class InvoiceController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+    'client_id' => [
+        'required',
+        'integer',
+        'exists:clients,id',
+    ],
 
-            'client_id' => [
-                'required',
-                'exists:clients,id',
-            ],
+    'assignment_id' => [
+        'nullable',
+        'integer',
+        'exists:assignments,id',
+    ],
 
-            'assignment_id' => [
-                'nullable',
-                'exists:assignments,id',
-            ],
+    'billing_start' => [
+        'required',
+        'date',
+    ],
 
-            'billing_start' => [
-                'required',
-                'date',
-            ],
+    'billing_end' => [
+        'required',
+        'date',
+        'after_or_equal:billing_start',
+    ],
 
-            'billing_end' => [
-                'required',
-                'date',
-                'after_or_equal:billing_start',
-            ],
+    'invoice_date' => [
+        'required',
+        'date',
+    ],
 
-            'invoice_date' => [
-                'required',
-                'date',
-            ],
+    'due_date' => [
+        'required',
+        'date',
+        'after_or_equal:invoice_date',
+    ],
 
-            'due_date' => [
-                'required',
-                'date',
-                'after_or_equal:invoice_date',
-            ],
+    'source' => [
+        'nullable',
+        'string',
+        'in:Assignment,Trips,Manual',
+        'max:100',
+    ],
 
-            'source' => [
-                'nullable',
-                'string',
-                'max:100',
-            ],
+    'subtotal' => [
+        'required',
+        'numeric',
+        'min:0',
+        'max:9999999999.99',
+        'regex:/^\d{1,10}(\.\d{1,2})?$/',
+    ],
 
-            'subtotal' => [
-                'required',
-                'numeric',
-                'min:0',
-            ],
+    'vat_percent' => [
+        'required',
+        'numeric',
+        'min:0',
+        'max:100',
+        'regex:/^\d{1,3}(\.\d{1,2})?$/',
+    ],
 
-            'vat_percent' => [
-                'required',
-                'numeric',
-                'min:0',
-                'max:100',
-            ],
+    'fuel_recoveries' => [
+        'nullable',
+        'array',
+    ],
 
-            'fuel_recoveries' => [
-                'nullable',
-                'array',
-            ],
+    'fuel_recoveries.*.fuel_id' => [
+        'required',
+        'integer',
+        'distinct',
+        'exists:fuels,id',
+    ],
 
-            'fuel_recoveries.*.fuel_id' => [
-                'required',
-                'integer',
-                'exists:fuels,id',
-            ],
+    'fuel_recoveries.*.amount' => [
+        'required',
+        'numeric',
+        'gt:0',
+        'max:9999999999.99',
+        'regex:/^\d{1,10}(\.\d{1,2})?$/',
+    ],
 
-            'fuel_recoveries.*.amount' => [
-                'required',
-                'numeric',
-                'gt:0',
-            ],
+    'other_reimbursement' => [
+        'required',
+        'numeric',
+        'min:0',
+        'max:9999999999.99',
+        'regex:/^\d{1,10}(\.\d{1,2})?$/',
+    ],
 
-            'other_reimbursement' => [
-                'required',
-                'numeric',
-                'min:0',
-            ],
+    'status' => [
+        'required',
+        'in:Draft,Issued,Partial,Paid,Overdue,Cancelled',
+    ],
 
-            'status' => [
-                'required',
-                'in:Draft,Issued,Partial,Paid,Overdue,Cancelled',
-            ],
+    'notes' => [
+        'nullable',
+        'string',
+        'max:5000',
+    ],
 
-            'notes' => [
-                'nullable',
-                'string',
-            ],
+], [
+    'billing_start.required' =>
+        'Please select a billing start date.',
 
-        ]);
+    'billing_end.required' =>
+        'Please select a billing end date.',
+
+    'billing_end.after_or_equal' =>
+        'Billing End date cannot be earlier than Billing Start date.',
+
+    'source.in' =>
+        'Please select a valid invoice source.',
+
+    'subtotal.required' =>
+        'Please enter the subtotal amount.',
+
+    'subtotal.max' =>
+        'Subtotal cannot exceed AED 9,999,999,999.99.',
+
+    'subtotal.regex' =>
+        'Subtotal can have a maximum of 10 whole-number digits and 2 decimal places.',
+
+    'vat_percent.max' =>
+        'VAT percentage cannot exceed 100%.',
+
+    'vat_percent.regex' =>
+        'VAT percentage can have a maximum of 2 decimal places.',
+
+    'fuel_recoveries.*.fuel_id.distinct' =>
+        'The same fuel entry cannot be selected more than once.',
+
+    'fuel_recoveries.*.amount.gt' =>
+        'Fuel recovery amount must be greater than zero.',
+
+    'fuel_recoveries.*.amount.max' =>
+        'Fuel recovery amount exceeds the maximum allowed amount.',
+
+    'fuel_recoveries.*.amount.regex' =>
+        'Fuel recovery amount can have a maximum of 2 decimal places.',
+
+    'other_reimbursement.required' =>
+        'Please enter the other reimbursement amount.',
+
+    'other_reimbursement.max' =>
+        'Other reimbursement cannot exceed AED 9,999,999,999.99.',
+
+    'other_reimbursement.regex' =>
+        'Other reimbursement can have a maximum of 10 whole-number digits and 2 decimal places.',
+
+    'notes.max' =>
+        'Invoice notes cannot exceed 5000 characters.',
+]);
 
         /*
         |--------------------------------------------------------------------------
@@ -690,93 +752,156 @@ class InvoiceController extends Controller
 
         $oldValues = $invoice->getAttributes();
 
-        $validated = $request->validate([
+         $validated = $request->validate([
+    'client_id' => [
+        'required',
+        'integer',
+        'exists:clients,id',
+    ],
 
-            'client_id' => [
-                'required',
-                'exists:clients,id',
-            ],
+    'assignment_id' => [
+        'nullable',
+        'integer',
+        'exists:assignments,id',
+    ],
 
-            'assignment_id' => [
-                'nullable',
-                'exists:assignments,id',
-            ],
+    'billing_start' => [
+        'required',
+        'date',
+    ],
 
-            'billing_start' => [
-                'required',
-                'date',
-            ],
+    'billing_end' => [
+        'required',
+        'date',
+        'after_or_equal:billing_start',
+    ],
 
-            'billing_end' => [
-                'required',
-                'date',
-                'after_or_equal:billing_start',
-            ],
+    'invoice_date' => [
+        'required',
+        'date',
+    ],
 
-            'invoice_date' => [
-                'required',
-                'date',
-            ],
+    'due_date' => [
+        'required',
+        'date',
+        'after_or_equal:invoice_date',
+    ],
 
-            'due_date' => [
-                'required',
-                'date',
-                'after_or_equal:invoice_date',
-            ],
+    'source' => [
+        'nullable',
+        'string',
+        'in:Assignment,Trips,Manual',
+        'max:100',
+    ],
 
-            'source' => [
-                'nullable',
-                'string',
-                'max:100',
-            ],
+    'subtotal' => [
+        'required',
+        'numeric',
+        'min:0',
+        'max:9999999999.99',
+        'regex:/^\d{1,10}(\.\d{1,2})?$/',
+    ],
 
-            'subtotal' => [
-                'required',
-                'numeric',
-                'min:0',
-            ],
+    'vat_percent' => [
+        'required',
+        'numeric',
+        'min:0',
+        'max:100',
+        'regex:/^\d{1,3}(\.\d{1,2})?$/',
+    ],
 
-            'vat_percent' => [
-                'required',
-                'numeric',
-                'min:0',
-                'max:100',
-            ],
+    'fuel_recoveries' => [
+        'nullable',
+        'array',
+    ],
 
-            'fuel_recoveries' => [
-                'nullable',
-                'array',
-            ],
+    'fuel_recoveries.*.fuel_id' => [
+        'required',
+        'integer',
+        'distinct',
+        'exists:fuels,id',
+    ],
 
-            'fuel_recoveries.*.fuel_id' => [
-                'required',
-                'integer',
-                'exists:fuels,id',
-            ],
+    'fuel_recoveries.*.amount' => [
+        'required',
+        'numeric',
+        'gt:0',
+        'max:9999999999.99',
+        'regex:/^\d{1,10}(\.\d{1,2})?$/',
+    ],
 
-            'fuel_recoveries.*.amount' => [
-                'required',
-                'numeric',
-                'gt:0',
-            ],
+    'other_reimbursement' => [
+        'required',
+        'numeric',
+        'min:0',
+        'max:9999999999.99',
+        'regex:/^\d{1,10}(\.\d{1,2})?$/',
+    ],
 
-            'other_reimbursement' => [
-                'required',
-                'numeric',
-                'min:0',
-            ],
+    'status' => [
+        'required',
+        'in:Draft,Issued,Partial,Paid,Overdue,Cancelled',
+    ],
 
-            'status' => [
-                'required',
-                'in:Draft,Issued,Partial,Paid,Overdue,Cancelled',
-            ],
+    'notes' => [
+        'nullable',
+        'string',
+        'max:5000',
+    ],
 
-            'notes' => [
-                'nullable',
-                'string',
-            ],
+], [
+    'billing_start.required' =>
+        'Please select a billing start date.',
 
-        ]);
+    'billing_end.required' =>
+        'Please select a billing end date.',
+
+    'billing_end.after_or_equal' =>
+        'Billing End date cannot be earlier than Billing Start date.',
+
+    'source.in' =>
+        'Please select a valid invoice source.',
+
+    'subtotal.required' =>
+        'Please enter the subtotal amount.',
+
+    'subtotal.max' =>
+        'Subtotal cannot exceed AED 9,999,999,999.99.',
+
+    'subtotal.regex' =>
+        'Subtotal can have a maximum of 10 whole-number digits and 2 decimal places.',
+
+    'vat_percent.max' =>
+        'VAT percentage cannot exceed 100%.',
+
+    'vat_percent.regex' =>
+        'VAT percentage can have a maximum of 2 decimal places.',
+
+    'fuel_recoveries.*.fuel_id.distinct' =>
+        'The same fuel entry cannot be selected more than once.',
+
+    'fuel_recoveries.*.amount.gt' =>
+        'Fuel recovery amount must be greater than zero.',
+
+    'fuel_recoveries.*.amount.max' =>
+        'Fuel recovery amount exceeds the maximum allowed amount.',
+
+    'fuel_recoveries.*.amount.regex' =>
+        'Fuel recovery amount can have a maximum of 2 decimal places.',
+
+    'other_reimbursement.required' =>
+        'Please enter the other reimbursement amount.',
+
+    'other_reimbursement.max' =>
+        'Other reimbursement cannot exceed AED 9,999,999,999.99.',
+
+    'other_reimbursement.regex' =>
+        'Other reimbursement can have a maximum of 10 whole-number digits and 2 decimal places.',
+
+    'notes.max' =>
+        'Invoice notes cannot exceed 5000 characters.',
+]);
+
 
         /*
         |--------------------------------------------------------------------------

@@ -440,14 +440,17 @@
                             Document Number
                         </label>
 
-                        <input
-                            type="text"
-                            name="document_number"
-                            id="document_number"
-                            class="form-input"
-                            value="{{ old('document_number') }}"
-                            placeholder="e.g. INS-2026-001"
-                        >
+                       <input
+    type="text"
+    name="document_number"
+    id="document_number"
+    class="form-input"
+    value="{{ old('document_number') }}"
+    maxlength="150"
+    pattern="[A-Za-z0-9/._# \-]+"
+    title="Only letters, numbers, spaces, slashes, dots, underscores, hyphens and # are allowed."
+    placeholder="e.g. INS-2026-001"
+>
 
                         @error('document_number')
                             <span class="field-error">
@@ -1109,5 +1112,41 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 </script>
+  <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const issueDate = document.getElementById('issue_date');
+    const expiryDate = document.getElementById('expiry_date');
 
+    if (!issueDate || !expiryDate) {
+        return;
+    }
+
+    function validateDates() {
+        // Future Issue Date is allowed.
+        if (issueDate.value) {
+            expiryDate.min = issueDate.value;
+        } else {
+            expiryDate.removeAttribute('min');
+        }
+
+        // Expiry Date must be strictly after Issue Date.
+        if (
+            issueDate.value &&
+            expiryDate.value &&
+            expiryDate.value <= issueDate.value
+        ) {
+            expiryDate.setCustomValidity(
+                'Expiry Date must be later than Issue Date.'
+            );
+        } else {
+            expiryDate.setCustomValidity('');
+        }
+    }
+
+    issueDate.addEventListener('change', validateDates);
+    expiryDate.addEventListener('change', validateDates);
+
+    validateDates();
+});
+</script>
 @endsection

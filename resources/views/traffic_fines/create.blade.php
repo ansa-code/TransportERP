@@ -351,16 +351,18 @@
                         Fine Number <span class="required-mark">*</span>
                     </label>
 
-                    <input
-                        type="text"
-                        id="fine_number"
-                        name="fine_number"
-                        class="form-control"
-                        value="{{ old('fine_number') }}"
-                        maxlength="255"
-                        placeholder="Enter actual challan / ticket number"
-                        required
-                    >
+                   <input
+    type="text"
+    id="fine_number"
+    name="fine_number"
+    class="form-control"
+    value="{{ old('fine_number') }}"
+    maxlength="50"
+    pattern="[A-Za-z0-9/.\- ]+"
+    title="Only letters, numbers, spaces, dots, hyphens and slashes are allowed."
+    placeholder="Enter actual challan / ticket number"
+    required
+>
 
                     <div class="form-help">
                         Enter the fine number exactly as printed on the traffic challan or ticket.
@@ -520,6 +522,7 @@
                         class="form-control"
                         value="{{ old('amount') }}"
                         min="0.01"
+                        max="9999999999.99"
                         step="0.01"
                         placeholder="0.00"
                         required
@@ -552,7 +555,7 @@
                         name="reason_location"
                         class="form-control"
                         value="{{ old('reason_location') }}"
-                        maxlength="255"
+                        maxlength="100"
                         placeholder="Enter fine reason or location"
                     >
 
@@ -729,15 +732,17 @@
                         Paid Reference
                     </label>
 
-                    <input
-                        type="text"
-                        id="paid_reference"
-                        name="paid_reference"
-                        class="form-control"
-                        value="{{ old('paid_reference') }}"
-                        maxlength="255"
-                        placeholder="Receipt number or payment reference"
-                    >
+                   <input
+    type="text"
+    id="paid_reference"
+    name="paid_reference"
+    class="form-control"
+    value="{{ old('paid_reference') }}"
+    maxlength="50"
+    pattern="[A-Za-z0-9/._#\- ]+"
+    title="Only letters, numbers, spaces, slashes, dots, underscores, hyphens and # are allowed."
+    placeholder="e.g. TXN-458721963"
+>
 
                     <div class="form-help">
                         Required when Payment Status is Paid.
@@ -768,6 +773,7 @@
                         type="file"
                         id="attachment"
                         name="attachment"
+                        data-max-size="10485760"
                         class="form-control"
                         accept=".jpg,.jpeg,.png,.pdf"
                     >
@@ -813,5 +819,77 @@
     </form>
 
 </div>
+    
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const status = document.getElementById('payment_status');
+    const deduction = document.getElementById('deduct_from_driver');
+    const paidDate = document.getElementById('paid_date');
+    const paidReference = document.getElementById('paid_reference');
+    const fineDate = document.getElementById('fine_date');
 
+    if (!status || !deduction || !paidDate ||
+        !paidReference || !fineDate) {
+        return;
+    }
+
+    const noOption = deduction.querySelector('option[value="0"]');
+    const yesOption = deduction.querySelector('option[value="1"]');
+
+    function updateDeductionState() {
+        noOption.disabled = false;
+        yesOption.disabled = false;
+
+        if (status.value === 'Unpaid') {
+            deduction.value = '0';
+            yesOption.disabled = true;
+        } else if (status.value === 'Deducted') {
+            deduction.value = '1';
+            noOption.disabled = true;
+        } else if (status.value === 'Cancelled') {
+            deduction.value = '0';
+            yesOption.disabled = true;
+        }
+        // Paid mein Yes aur No dono select kar sakte hain.
+    }
+
+    function updatePaidFields() {
+        const isPaid = status.value === 'Paid';
+
+        paidDate.disabled = !isPaid;
+        paidReference.disabled = !isPaid;
+
+        paidDate.required = isPaid;
+        paidReference.required = isPaid;
+
+        if (!isPaid) {
+            paidDate.value = '';
+            paidReference.value = '';
+        }
+
+        const now = new Date();
+        const localToday = new Date(
+            now.getTime() - now.getTimezoneOffset() * 60000
+        ).toISOString().slice(0, 10);
+
+        paidDate.max = localToday;
+
+        if (fineDate.value) {
+            paidDate.min = fineDate.value;
+        } else {
+            paidDate.removeAttribute('min');
+        }
+    }
+
+    status.addEventListener('change', function () {
+        updateDeductionState();
+        updatePaidFields();
+    });
+
+    fineDate.addEventListener('change', updatePaidFields);
+
+    updateDeductionState();
+    updatePaidFields();
+});
+</script>
 @endsection

@@ -154,6 +154,26 @@
         color: white;
     }
 
+    .validation-box {
+    margin-bottom: 20px;
+    padding: 14px 16px;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    background: #fef2f2;
+    color: #991b1b;
+    font-size: 13px;
+}
+
+.validation-box strong {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.validation-box ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
     @media (max-width: 700px) {
 
         .form-card {
@@ -208,6 +228,16 @@
         >
 
             @csrf
+            @if($errors->any())
+    <div class="validation-box">
+        <strong>Please fix the following errors:</strong>
+        <ul>
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 
             <div class="form-grid">
 
@@ -285,6 +315,7 @@
                         class="form-control"
                         min="0.01"
                         step="0.01"
+                        max="9999999999.99"
                         placeholder="Enter advance amount"
                         required
                     >
@@ -406,6 +437,7 @@
                     <textarea
                         name="reason"
                         class="form-control"
+                        maxlength="1000"
                         placeholder="Enter reason for the driver advance"
                     >{{ old('reason') }}</textarea>
 
@@ -470,18 +502,15 @@
         const approvedBy = document.getElementById('approved_by');
 
         function updateApproverState() {
-
-            if (status.value === 'Approved') {
-
-                approvedBy.required = true;
-
-            } else {
-
-                approvedBy.required = false;
-
-            }
-
-        }
+    if (status.value === 'Approved') {
+        approvedBy.disabled = false;
+        approvedBy.required = true;
+    } else {
+        approvedBy.required = false;
+        approvedBy.value = '';
+        approvedBy.disabled = true;
+    }
+}
 
         status.addEventListener('change', updateApproverState);
 

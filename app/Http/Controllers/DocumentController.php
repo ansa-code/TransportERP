@@ -188,23 +188,66 @@ class DocumentController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'document_type' => ['required', 'string', 'max:100'],
-            'document_number' => ['nullable', 'string', 'max:150'],
-            'related_type' => ['required', 'in:vehicle,driver,client,vendor'],
-            'related_id' => ['required', 'integer'],
-            'issue_date' => ['nullable', 'date'],
-            'expiry_date' => ['nullable', 'date', 'after_or_equal:issue_date'],
+            'document_type' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+            'document_number' => [
+                'nullable',
+                'string',
+                'max:150',
+                'regex:/^[A-Za-z0-9\/._# -]+$/',
+            ],
+            'related_type' => [
+                'required',
+                'in:vehicle,driver,client,vendor',
+            ],
+            'related_id' => [
+                'required',
+                'integer',
+            ],
+            'issue_date' => [
+                'nullable',
+                'required_with:expiry_date',
+                'date',
+            ],
+            'expiry_date' => [
+                'nullable',
+                'date',
+                'after:issue_date',
+            ],
             'file' => [
                 'required',
                 'file',
                 'mimes:pdf,jpg,jpeg,png,webp,doc,docx',
                 'max:10240',
             ],
-            'status' => ['required', 'in:active,expired,archived'],
-            'notes' => ['nullable', 'string'],
+            'status' => [
+                'required',
+                'in:active,expired,archived',
+            ],
+            'notes' => [
+                'nullable',
+                'string',
+            ],
+        ], [
+            'document_number.regex' =>
+                'Document Number may contain only letters, numbers, spaces, slashes, dots, underscores, hyphens and #.',
+
+            'document_number.max' =>
+                'Document Number cannot exceed 150 characters.',
+
+            'issue_date.required_with' =>
+                'Issue Date is required when an Expiry Date is entered.',
+
+            'expiry_date.after' =>
+                'Expiry Date must be later than Issue Date.',
         ]);
 
-        $modelClass = $this->resolveRelatedModel($validated['related_type']);
+        $modelClass = $this->resolveRelatedModel(
+            $validated['related_type']
+        );
 
         abort_unless(
             $modelClass::whereKey($validated['related_id'])->exists(),
@@ -247,9 +290,6 @@ class DocumentController extends Controller
         return view('documents.show', compact('document'));
     }
 
-    /**
-     * Display document file.
-     */
     public function file(Document $document)
     {
         abort_unless($document->file_path, 404);
@@ -283,20 +323,65 @@ class DocumentController extends Controller
         ));
     }
 
-    public function update(Request $request, Document $document): RedirectResponse
-    {
+    public function update(
+        Request $request,
+        Document $document
+    ): RedirectResponse {
         $validated = $request->validate([
-            'document_type' => ['required', 'string', 'max:100'],
-            'document_number' => ['nullable', 'string', 'max:150'],
-            'related_type' => ['required', 'in:vehicle,driver,client,vendor'],
-            'related_id' => ['required', 'integer'],
-            'issue_date' => ['nullable', 'date'],
-            'expiry_date' => ['nullable', 'date', 'after_or_equal:issue_date'],
-            'status' => ['required', 'in:active,expired,archived'],
-            'notes' => ['nullable', 'string'],
+            'document_type' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+            'document_number' => [
+                'nullable',
+                'string',
+                'max:150',
+                'regex:/^[A-Za-z0-9\/._# -]+$/',
+            ],
+            'related_type' => [
+                'required',
+                'in:vehicle,driver,client,vendor',
+            ],
+            'related_id' => [
+                'required',
+                'integer',
+            ],
+            'issue_date' => [
+                'nullable',
+                'required_with:expiry_date',
+                'date',
+            ],
+            'expiry_date' => [
+                'nullable',
+                'date',
+                'after:issue_date',
+            ],
+            'status' => [
+                'required',
+                'in:active,expired,archived',
+            ],
+            'notes' => [
+                'nullable',
+                'string',
+            ],
+        ], [
+            'document_number.regex' =>
+                'Document Number may contain only letters, numbers, spaces, slashes, dots, underscores, hyphens and #.',
+
+            'document_number.max' =>
+                'Document Number cannot exceed 150 characters.',
+
+            'issue_date.required_with' =>
+                'Issue Date is required when an Expiry Date is entered.',
+
+            'expiry_date.after' =>
+                'Expiry Date must be later than Issue Date.',
         ]);
 
-        $modelClass = $this->resolveRelatedModel($validated['related_type']);
+        $modelClass = $this->resolveRelatedModel(
+            $validated['related_type']
+        );
 
         abort_unless(
             $modelClass::whereKey($validated['related_id'])->exists(),
@@ -320,8 +405,10 @@ class DocumentController extends Controller
             ->with('success', 'Document updated successfully.');
     }
 
-    public function replace(Request $request, Document $document): RedirectResponse
-    {
+    public function replace(
+        Request $request,
+        Document $document
+    ): RedirectResponse {
         $validated = $request->validate([
             'file' => [
                 'required',
@@ -329,11 +416,42 @@ class DocumentController extends Controller
                 'mimes:pdf,jpg,jpeg,png,webp,doc,docx',
                 'max:10240',
             ],
-            'document_number' => ['nullable', 'string', 'max:150'],
-            'issue_date' => ['nullable', 'date'],
-            'expiry_date' => ['nullable', 'date', 'after_or_equal:issue_date'],
-            'status' => ['required', 'in:active,expired,archived'],
-            'notes' => ['nullable', 'string'],
+            'document_number' => [
+                'nullable',
+                'string',
+                'max:150',
+                'regex:/^[A-Za-z0-9\/._# -]+$/',
+            ],
+            'issue_date' => [
+                'nullable',
+                'required_with:expiry_date',
+                'date',
+            ],
+            'expiry_date' => [
+                'nullable',
+                'date',
+                'after:issue_date',
+            ],
+            'status' => [
+                'required',
+                'in:active,expired,archived',
+            ],
+            'notes' => [
+                'nullable',
+                'string',
+            ],
+        ], [
+            'document_number.regex' =>
+                'Document Number may contain only letters, numbers, spaces, slashes, dots, underscores, hyphens and #.',
+
+            'document_number.max' =>
+                'Document Number cannot exceed 150 characters.',
+
+            'issue_date.required_with' =>
+                'Issue Date is required when an Expiry Date is entered.',
+
+            'expiry_date.after' =>
+                'Expiry Date must be later than Issue Date.',
         ]);
 
         $file = $request->file('file');
@@ -385,14 +503,15 @@ class DocumentController extends Controller
     public function destroy(Document $document): RedirectResponse
     {
         DB::transaction(function () use ($document) {
-
             $documentsToDelete = collect([$document])
                 ->merge($document->versions)
                 ->unique('id');
 
             foreach ($documentsToDelete as $version) {
                 if ($version->file_path) {
-                    Storage::disk('public')->delete($version->file_path);
+                    Storage::disk('public')->delete(
+                        $version->file_path
+                    );
                 }
             }
 

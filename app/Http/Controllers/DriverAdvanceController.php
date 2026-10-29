@@ -74,15 +74,17 @@ class DriverAdvanceController extends Controller
             ],
 
             'amount' => [
-                'required',
-                'numeric',
-                'gt:0',
-            ],
-
+    'required',
+    'numeric',
+    'gt:0',
+    'max:9999999999.99',
+    'regex:/^\d{1,10}(\.\d{1,2})?$/',
+],
             'reason' => [
-                'nullable',
-                'string',
-            ],
+    'required',
+    'string',
+    'max:1000',
+],
 
             'approved_by' => [
                 'nullable',
@@ -98,7 +100,13 @@ class DriverAdvanceController extends Controller
                 'nullable',
                 'string',
             ],
-        ]);
+           
+            ], [
+    'reason.required' => 'Advance reason is required. Please explain why the driver needs this advance.',
+    'reason.string' => 'Please enter a valid advance reason.',
+    'reason.max' => 'Advance reason cannot exceed 1000 characters.',
+]);
+
 
         /*
         |--------------------------------------------------------------------------
@@ -192,15 +200,18 @@ class DriverAdvanceController extends Controller
             ],
 
             'amount' => [
-                'required',
-                'numeric',
-                'gt:0',
-            ],
+    'required',
+    'numeric',
+    'gt:0',
+    'max:9999999999.99',
+    'regex:/^\d{1,10}(\.\d{1,2})?$/',
+],
 
             'reason' => [
-                'nullable',
-                'string',
-            ],
+    'required',
+    'string',
+    'max:1000',
+],
 
             'approved_by' => [
                 'nullable',
@@ -216,7 +227,11 @@ class DriverAdvanceController extends Controller
                 'nullable',
                 'string',
             ],
-        ]);
+       ], [
+    'reason.required' => 'Advance reason is required. Please explain why the driver needs this advance.',
+    'reason.string' => 'Please enter a valid advance reason.',
+    'reason.max' => 'Advance reason cannot exceed 1000 characters.',
+]);
 
         /*
         |--------------------------------------------------------------------------

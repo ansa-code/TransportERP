@@ -81,63 +81,106 @@ class PaymentController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'client_id' => [
-                'required',
-                'integer',
-                'exists:clients,id',
-            ],
+       $validated = $request->validate([
+    'client_id' => [
+        'required',
+        'integer',
+        'exists:clients,id',
+    ],
 
-            'payment_date' => [
-                'required',
-                'date',
-            ],
+    'payment_date' => [
+        'required',
+        'date',
+    ],
 
-            'amount' => [
-                'required',
-                'numeric',
-                'gt:0',
-            ],
+    'amount' => [
+        'required',
+        'numeric',
+        'gt:0',
+        'max:9999999999.99',
+        'regex:/^\d{1,10}(\.\d{1,2})?$/',
+    ],
 
-            'payment_method' => [
-                'required',
-                'in:Bank,Cash,Cheque,Other',
-            ],
+    'payment_method' => [
+        'required',
+        'in:Bank,Cash,Cheque,Other',
+    ],
 
-            'reference' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
+    'reference' => [
+        'nullable',
+        'string',
+        'max:255',
+    ],
 
-            'notes' => [
-                'nullable',
-                'string',
-            ],
+    'notes' => [
+        'nullable',
+        'string',
+        'max:5000',
+    ],
 
-            'attachment' => [
-                'nullable',
-                'file',
-                'max:5120',
-            ],
+    'attachment' => [
+        'nullable',
+        'file',
+       'mimes:pdf,jpg,jpeg,png,doc,docx',
+        'max:5120',
+    ],
 
-            'allocations' => [
-                'nullable',
-                'array',
-            ],
+    'allocations' => [
+        'nullable',
+        'array',
+    ],
 
-            'allocations.*.invoice_id' => [
-                'required',
-                'integer',
-                'exists:invoices,id',
-            ],
+    'allocations.*.invoice_id' => [
+        'required',
+        'integer',
+        'distinct',
+        'exists:invoices,id',
+    ],
 
-            'allocations.*.allocated_amount' => [
-                'nullable',
-                'numeric',
-                'gt:0',
-            ],
-        ]);
+    'allocations.*.allocated_amount' => [
+        'nullable',
+        'numeric',
+        'gt:0',
+        'max:9999999999.99',
+        'regex:/^\d{1,10}(\.\d{1,2})?$/',
+    ],
+], [
+    'amount.required' =>
+        'Please enter the payment amount.',
+
+    'amount.gt' =>
+        'Payment amount must be greater than zero.',
+
+    'amount.max' =>
+        'Payment amount cannot exceed AED 9,999,999,999.99.',
+
+    'amount.regex' =>
+        'Payment amount can have a maximum of 2 decimal places.',
+
+    'payment_method.in' =>
+        'Please select a valid payment method.',
+
+    'attachment.mimes' =>
+        'Attachment must be a PDF, JPG, JPEG or PNG file.',
+
+    'attachment.max' =>
+        'Attachment cannot exceed 5 MB.',
+
+    'notes.max' =>
+        'Payment notes cannot exceed 5000 characters.',
+
+    'allocations.*.invoice_id.distinct' =>
+        'The same invoice cannot be selected more than once.',
+
+    'allocations.*.allocated_amount.gt' =>
+        'Allocated amount must be greater than zero.',
+
+    'allocations.*.allocated_amount.max' =>
+        'Allocated amount exceeds the maximum allowed amount.',
+
+    'allocations.*.allocated_amount.regex' =>
+        'Allocated amount can have a maximum of 2 decimal places.',
+]);
 
         /*
         |--------------------------------------------------------------------------
@@ -414,62 +457,105 @@ public function attachment(Payment $payment)
         $oldValues = $payment->getAttributes();
 
         $validated = $request->validate([
-            'client_id' => [
-                'required',
-                'integer',
-                'exists:clients,id',
-            ],
+    'client_id' => [
+        'required',
+        'integer',
+        'exists:clients,id',
+    ],
 
-            'payment_date' => [
-                'required',
-                'date',
-            ],
+    'payment_date' => [
+        'required',
+        'date',
+    ],
 
-            'amount' => [
-                'required',
-                'numeric',
-                'gt:0',
-            ],
+    'amount' => [
+        'required',
+        'numeric',
+        'gt:0',
+        'max:9999999999.99',
+        'regex:/^\d{1,10}(\.\d{1,2})?$/',
+    ],
 
-            'payment_method' => [
-                'required',
-                'in:Bank,Cash,Cheque,Other',
-            ],
+    'payment_method' => [
+        'required',
+        'in:Bank,Cash,Cheque,Other',
+    ],
 
-            'reference' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
+    'reference' => [
+        'nullable',
+        'string',
+        'max:255',
+    ],
 
-            'notes' => [
-                'nullable',
-                'string',
-            ],
+    'notes' => [
+        'nullable',
+        'string',
+        'max:5000',
+    ],
 
-            'attachment' => [
-                'nullable',
-                'file',
-                'max:5120',
-            ],
+    'attachment' => [
+        'nullable',
+        'file',
+        'mimes:pdf,jpg,jpeg,png',
+        'max:5120',
+    ],
 
-            'allocations' => [
-                'nullable',
-                'array',
-            ],
+    'allocations' => [
+        'nullable',
+        'array',
+    ],
 
-            'allocations.*.invoice_id' => [
-                'required',
-                'integer',
-                'exists:invoices,id',
-            ],
+    'allocations.*.invoice_id' => [
+        'required',
+        'integer',
+        'distinct',
+        'exists:invoices,id',
+    ],
 
-            'allocations.*.allocated_amount' => [
-                'nullable',
-                'numeric',
-                'gt:0',
-            ],
-        ]);
+    'allocations.*.allocated_amount' => [
+        'nullable',
+        'numeric',
+        'gt:0',
+        'max:9999999999.99',
+        'regex:/^\d{1,10}(\.\d{1,2})?$/',
+    ],
+], [
+    'amount.required' =>
+        'Please enter the payment amount.',
+
+    'amount.gt' =>
+        'Payment amount must be greater than zero.',
+
+    'amount.max' =>
+        'Payment amount cannot exceed AED 9,999,999,999.99.',
+
+    'amount.regex' =>
+        'Payment amount can have a maximum of 2 decimal places.',
+
+    'payment_method.in' =>
+        'Please select a valid payment method.',
+
+    'attachment.mimes' =>
+        'Attachment must be a PDF, JPG, JPEG or PNG file.',
+
+    'attachment.max' =>
+        'Attachment cannot exceed 5 MB.',
+
+    'notes.max' =>
+        'Payment notes cannot exceed 5000 characters.',
+
+    'allocations.*.invoice_id.distinct' =>
+        'The same invoice cannot be selected more than once.',
+
+    'allocations.*.allocated_amount.gt' =>
+        'Allocated amount must be greater than zero.',
+
+    'allocations.*.allocated_amount.max' =>
+        'Allocated amount exceeds the maximum allowed amount.',
+
+    'allocations.*.allocated_amount.regex' =>
+        'Allocated amount can have a maximum of 2 decimal places.',
+]);
 
         /*
         |--------------------------------------------------------------------------

@@ -346,6 +346,7 @@
                         id="subtotal"
                         value="{{ old('subtotal', '0.00') }}"
                         min="0"
+                        max="9999999999.99"
                         step="0.01"
                         required
                     >
@@ -534,6 +535,7 @@
                         id="other_reimbursement"
                         value="{{ old('other_reimbursement', '0.00') }}"
                         min="0"
+                        max="9999999999.99"
                         step="0.01"
                         required
                     >
@@ -1335,8 +1337,7 @@
                 dueDate.min =
                     invoiceDate.value;
 
-                billingStart.max =
-                    invoiceDate.value;
+                
 
             }
 
