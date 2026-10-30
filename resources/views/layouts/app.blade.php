@@ -408,6 +408,24 @@
             white-space: nowrap;
         }
 
+        .logout-button {
+    background: #fff;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: 0.2s;
+}
+
+.logout-button:hover {
+    background: #dc3545;
+    color: #fff;
+}
+
         /* =========================================================
            CONTENT
         ========================================================= */
@@ -1033,8 +1051,15 @@
 
 
                 <div class="profile">
-                    Admin
-                </div>
+    {{ Auth::user()->name ?? 'Admin' }}
+</div>
+
+<form action="{{ route('logout') }}" method="POST" style="margin: 0;">
+    @csrf
+    <button type="submit" class="logout-button">
+        Sign Out
+    </button>
+</form>
 
             </div>
 
@@ -1078,6 +1103,25 @@
     <script>
 
         document.addEventListener('DOMContentLoaded', function () {
+
+        /* =====================================================
+   AUTO CLOSE NATIVE DATE PICKER AFTER DATE SELECTION
+===================================================== */
+
+document.addEventListener('change', function (event) {
+
+    const dateInput = event.target;
+
+    if (
+        dateInput instanceof HTMLInputElement &&
+        dateInput.type === 'date'
+    ) {
+        setTimeout(function () {
+            dateInput.blur();
+        }, 0);
+    }
+
+}, true);
 
 
             /* =====================================================

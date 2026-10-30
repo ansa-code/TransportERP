@@ -81,6 +81,16 @@ Route::resource('clients', ClientController::class);
 
 Route::resource('assignments', AssignmentController::class);
 
+Route::post(
+    'assignments/{id}/done',
+    [AssignmentController::class, 'markDone']
+)->name('assignments.done');
+
+Route::post(
+    'assignments/{id}/undo-done',
+    [AssignmentController::class, 'undoDone']
+)->name('assignments.undo-done');
+
 Route::resource('trips', TripController::class);
 
 Route::resource('maintenances', MaintenanceController::class);

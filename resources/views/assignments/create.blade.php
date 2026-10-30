@@ -186,6 +186,77 @@
         background: #0b5ed7;
     }
 
+    /* Pending Leave Confirmation Modal */
+    .sick-leave-modal-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        background: rgba(15, 23, 42, .58);
+    }
+
+    .sick-leave-modal {
+        width: 100%;
+        max-width: 470px;
+        padding: 25px;
+        border-radius: 14px;
+        background: #ffffff;
+        box-shadow: 0 15px 45px rgba(0, 0, 0, .2);
+    }
+
+    .sick-leave-modal h3 {
+        margin: 0 0 10px;
+        color: #856404;
+        font-size: 19px;
+        font-weight: 800;
+    }
+
+    .sick-leave-modal p {
+        margin: 0 0 12px;
+        color: #495057;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .sick-leave-date-list {
+        margin: 10px 0 18px;
+        padding: 12px 14px 12px 32px;
+        border: 1px solid #ffe69c;
+        border-radius: 8px;
+        background: #fff3cd;
+        color: #664d03;
+        font-size: 12px;
+    }
+
+    .sick-leave-modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 9px;
+    }
+
+    .sick-leave-modal-actions button {
+        min-height: 39px;
+        padding: 0 17px;
+        border: none;
+        border-radius: 7px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .sick-leave-no-btn {
+        background: #6c757d;
+        color: #ffffff;
+    }
+
+    .sick-leave-yes-btn {
+        background: #0d6efd;
+        color: #ffffff;
+    }
+
     @media (max-width: 700px) {
         .assignment-grid {
             grid-template-columns: 1fr;
@@ -206,6 +277,18 @@
 
         .assignment-back-btn,
         .assignment-save-btn {
+            width: 100%;
+        }
+
+        .sick-leave-modal {
+            padding: 20px;
+        }
+
+        .sick-leave-modal-actions {
+            flex-direction: column-reverse;
+        }
+
+        .sick-leave-modal-actions button {
             width: 100%;
         }
     }
@@ -233,8 +316,19 @@
 
     {{-- FORM CARD --}}
     <div class="assignment-form-card">
-        <form action="{{ route('assignments.store') }}" method="POST">
+        <form
+            id="assignmentCreateForm"
+            action="{{ route('assignments.store') }}"
+            method="POST"
+        >
             @csrf
+
+            <input
+                type="hidden"
+                name="confirm_pending_sick_leave"
+                id="confirm_pending_sick_leave"
+                value="0"
+            >
 
             {{-- ASSIGNMENT INFORMATION --}}
             <div class="assignment-section">
@@ -258,13 +352,17 @@
                     {{-- Status --}}
                     <div class="assignment-field">
                         <label for="status">Status <span class="required-mark">*</span></label>
+
                         <select id="status" name="status" class="assignment-select">
                             <option value="Planned" {{ old('status', 'Planned') === 'Planned' ? 'selected' : '' }}>Planned</option>
-                            <option value="Active" {{ old('status') === 'Active' ? 'selected' : '' }}>Active</option>
-                            <option value="Suspended" {{ old('status') === 'Suspended' ? 'selected' : '' }}>Suspended</option>
-                            <option value="Completed" {{ old('status') === 'Completed' ? 'selected' : '' }}>Completed</option>
+                            <option value="Assigned" {{ old('status') === 'Assigned' ? 'selected' : '' }}>Assigned</option>
+                            <option value="In Transit" {{ old('status') === 'In Transit' ? 'selected' : '' }}>In Transit</option>
+                            <option value="Delivered" {{ old('status') === 'Delivered' ? 'selected' : '' }}>Delivered</option>
+                            <option value="Closed" {{ old('status') === 'Closed' ? 'selected' : '' }}>Closed</option>
                             <option value="Cancelled" {{ old('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+                            <option value="Suspended" {{ old('status') === 'Suspended' ? 'selected' : '' }}>Suspended</option>
                         </select>
+
                         @error('status')
                             <div class="assignment-error">{{ $message }}</div>
                         @enderror
@@ -522,6 +620,107 @@
 
         </form>
     </div>
+
+    {{-- PENDING LEAVE CONFIRMATION MODAL --}}
+    @if(session('pending_sick_leave_warning'))
+        <div
+            class="sick-leave-modal-overlay"
+            id="pendingSickLeaveModal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="sickLeaveModalTitle"
+        >
+            <div class="sick-leave-modal">
+
+                <h3 id="sickLeaveModalTitle">
+                    Pending Leave Warning
+                </h3>
+
+                <p>
+                    The selected driver has a Pending Leave request
+                    that overlaps with this assignment's date range.
+                </p>
+
+                <p>
+                    The following leave request(s) were found:
+                </p>
+
+                <ul class="sick-leave-date-list">
+                    @foreach(session('pending_sick_leave_warning') as $leave)
+                        <li>
+                            <strong>{{ $leave['leave_type'] }} Leave:</strong>
+                            {{ $leave['start_date'] }}
+                            to
+                            {{ $leave['end_date'] }}
+                        </li>
+                    @endforeach
+                </ul>
+
+                <p>
+                    Do you want to proceed with assigning this driver
+                    despite the pending leave request?
+                </p>
+
+                <p>
+                    Selecting <strong>Yes</strong> confirms that you have
+                    reviewed this warning. The decision will be recorded
+                    in the Activity Log.
+                </p>
+
+                <div class="sick-leave-modal-actions">
+
+                    <button
+                        type="button"
+                        class="sick-leave-no-btn"
+                        id="cancelSickLeaveConfirmation"
+                    >
+                        No, Go Back
+                    </button>
+
+                    <button
+                        type="button"
+                        class="sick-leave-yes-btn"
+                        id="confirmSickLeaveAssignment"
+                    >
+                        Yes, Proceed
+                    </button>
+
+                </div>
+            </div>
+        </div>
+    @endif
+
 </div>
+
+@if(session('pending_sick_leave_warning'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const modal = document.getElementById('pendingSickLeaveModal');
+            const form = document.getElementById('assignmentCreateForm');
+            const confirmButton = document.getElementById('confirmSickLeaveAssignment');
+            const cancelButton = document.getElementById('cancelSickLeaveConfirmation');
+            const confirmationInput = document.getElementById('confirm_pending_sick_leave');
+
+            if (!modal || !form || !confirmButton || !cancelButton || !confirmationInput) {
+                return;
+            }
+
+            // No: close the warning without submitting the assignment.
+            cancelButton.addEventListener('click', function () {
+                modal.remove();
+                confirmationInput.value = '0';
+            });
+
+            // Yes: explicitly confirm and submit the original form again.
+            confirmButton.addEventListener('click', function () {
+                confirmationInput.value = '1';
+                confirmButton.disabled = true;
+                confirmButton.textContent = 'Processing...';
+
+                form.requestSubmit();
+            });
+        });
+    </script>
+@endif
 
 @endsection

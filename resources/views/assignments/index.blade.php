@@ -3,21 +3,13 @@
 @section('content')
 
 <style>
-
-/* =========================================================
-   ASSIGNMENT CENTER
-========================================================= */
-
 .assignment-page {
     width: 100%;
     max-width: 1400px;
     margin: 0 auto;
 }
 
-
-/* =========================================================
-   HEADER
-========================================================= */
+/* HEADER */
 
 .assignment-header {
     display: flex;
@@ -60,10 +52,7 @@
     color: #ffffff;
 }
 
-
-/* =========================================================
-   FILTER BAR
-========================================================= */
+/* FILTERS */
 
 .assignment-filters {
     display: flex;
@@ -113,22 +102,6 @@
     border-color: #0d6efd;
 }
 
-.assignment-filter-btn {
-    height: 40px;
-    padding: 0 16px;
-    border: none;
-    border-radius: 8px;
-    background: #198754;
-    color: #ffffff;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.assignment-filter-btn:hover {
-    background: #157347;
-}
-
 .assignment-clear-btn {
     display: inline-flex;
     align-items: center;
@@ -148,10 +121,7 @@
     color: #ffffff;
 }
 
-
-/* =========================================================
-   KANBAN BOARD
-========================================================= */
+/* BOARD */
 
 .assignment-board {
     display: grid;
@@ -159,11 +129,6 @@
     gap: 16px;
     width: 100%;
 }
-
-
-/* =========================================================
-   BOARD LANE
-========================================================= */
 
 .assignment-lane {
     min-width: 0;
@@ -196,10 +161,7 @@
     font-weight: 800;
 }
 
-
-/* =========================================================
-   ASSIGNMENT CARD
-========================================================= */
+/* CARDS */
 
 .assignment-card {
     background: #ffffff;
@@ -235,10 +197,7 @@
     line-height: 1.55;
 }
 
-
-/* =========================================================
-   EMPTY STATE
-========================================================= */
+/* EMPTY STATE */
 
 .assignment-empty {
     padding: 35px 10px;
@@ -248,10 +207,7 @@
     font-weight: 600;
 }
 
-
-/* =========================================================
-   STATUS
-========================================================= */
+/* STATUS BADGES */
 
 .assignment-status {
     display: inline-flex;
@@ -268,19 +224,19 @@
     color: #b45309;
 }
 
-.status-active {
+.status-assigned {
     background: #dcfce7;
     color: #15803d;
 }
 
-.status-suspended {
-    background: #fee2e2;
-    color: #b91c1c;
-}
-
-.status-completed {
+.status-in-transit {
     background: #dbeafe;
     color: #1d4ed8;
+}
+
+.status-delivered {
+    background: #cffafe;
+    color: #0e7490;
 }
 
 .status-cancelled {
@@ -288,16 +244,19 @@
     color: #41464b;
 }
 
+.status-suspended {
+    background: #fee2e2;
+    color: #b91c1c;
+}
 
-/* =========================================================
-   CARD ACTIONS
-========================================================= */
+/* CARD ACTIONS */
 
 .assignment-card-actions {
     display: flex;
     align-items: center;
     gap: 6px;
     margin-top: 12px;
+    flex-wrap: wrap;
 }
 
 .assignment-edit-btn {
@@ -335,21 +294,101 @@
     background: #bb2d3b;
 }
 
+/* DONE / UNDO */
 
-/* =========================================================
-   RESPONSIVE
-========================================================= */
+.assignment-done-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+}
+
+.assignment-done-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 0 12px;
+    border: none;
+    border-radius: 7px;
+    background: #198754;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.assignment-done-btn:hover {
+    background: #157347;
+}
+
+.assignment-done-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 0 11px;
+    border-radius: 7px;
+    background: #d1fae5;
+    color: #047857;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.assignment-undo-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    padding: 0 11px;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.assignment-undo-btn:hover {
+    background: #f1f5f9;
+}
+
+/* ALERTS */
+
+.assignment-alert {
+    padding: 11px 14px;
+    margin-bottom: 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.assignment-alert-success {
+    background: #d1e7dd;
+    color: #0f5132;
+}
+
+.assignment-alert-error {
+    background: #f8d7da;
+    color: #842029;
+}
+
+.assignment-alert-info {
+    background: #cff4fc;
+    color: #055160;
+}
+
+/* RESPONSIVE */
 
 @media (max-width: 1100px) {
-
     .assignment-board {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-
 }
 
 @media (max-width: 700px) {
-
     .assignment-header {
         flex-direction: column;
     }
@@ -370,7 +409,6 @@
     }
 
     .assignment-select,
-    .assignment-filter-btn,
     .assignment-clear-btn {
         width: 100%;
     }
@@ -378,33 +416,22 @@
     .assignment-board {
         grid-template-columns: 1fr;
     }
-
 }
-
 </style>
-
 
 <div class="assignment-page">
 
-
-    {{-- =====================================================
-         HEADER
-    ====================================================== --}}
+    {{-- HEADER --}}
 
     <div class="assignment-header">
 
         <div class="assignment-title">
-
-            <h1>
-                Assignment Center
-            </h1>
+            <h1>Assignment Center</h1>
 
             <p>
                 Allocate trucks and drivers to clients with billing and cost controls
             </p>
-
         </div>
-
 
         <a
             href="{{ route('assignments.create') }}"
@@ -415,19 +442,16 @@
 
     </div>
 
+    
 
-    {{-- =====================================================
-         FILTERS
-    ====================================================== --}}
+    {{-- FILTERS --}}
 
     <form
-    action="{{ route('assignments.index') }}"
-    method="GET"
-    class="assignment-filters"
-    id="assignmentFilterForm"
->
-
-        {{-- Search --}}
+        action="{{ route('assignments.index') }}"
+        method="GET"
+        class="assignment-filters"
+        id="assignmentFilterForm"
+    >
 
         <input
             type="text"
@@ -437,137 +461,82 @@
             placeholder="🔍 Search assignment, client, truck or driver..."
         >
 
-
-        {{-- Client --}}
-
         <select
             name="client"
             class="assignment-select"
             onchange="document.getElementById('assignmentFilterForm').submit()"
->
         >
-
-            <option value="">
-                Client 
-            </option>
+            <option value="">Client</option>
 
             @foreach($clients as $client)
-
                 <option
                     value="{{ $client->id }}"
                     {{ $clientId == $client->id ? 'selected' : '' }}
                 >
                     {{ $client->client_name }}
                 </option>
-
             @endforeach
-
         </select>
-
-
-        {{-- Truck Type --}}
 
         <select
             name="vehicle_type"
             class="assignment-select"
             onchange="document.getElementById('assignmentFilterForm').submit()"
->
         >
-
-            <option value="">
-                Truck Type 
-            </option>
+            <option value="">Truck Type</option>
 
             @foreach($vehicleTypes as $type)
-
                 <option
                     value="{{ $type }}"
                     {{ $vehicleType == $type ? 'selected' : '' }}
                 >
                     {{ $type }}
                 </option>
-
             @endforeach
-
         </select>
-
-
-        {{-- Rate Type --}}
 
         <select
             name="rate_type"
             class="assignment-select"
             onchange="document.getElementById('assignmentFilterForm').submit()"
->
         >
-
-            <option value="">
-                Rate Type 
-            </option>
+            <option value="">Rate Type</option>
 
             @foreach($rateBases as $rate)
-
                 <option
                     value="{{ $rate }}"
                     {{ $rateBasis == $rate ? 'selected' : '' }}
                 >
                     {{ $rate }}
                 </option>
-
             @endforeach
-
         </select>
 
-
-       
-
-
-        {{-- Clear Button --}}
-
-        @if(
-            $search ||
-            $clientId ||
-            $vehicleType ||
-            $rateBasis
-        )
-
+        @if($search || $clientId || $vehicleType || $rateBasis)
             <a
                 href="{{ route('assignments.index') }}"
                 class="assignment-clear-btn"
             >
                 Clear
             </a>
-
         @endif
 
     </form>
 
-
-    {{-- =====================================================
-         ASSIGNMENT BOARD
-    ====================================================== --}}
+    {{-- ASSIGNMENT BOARD --}}
 
     <div class="assignment-board">
 
-
-        {{-- =================================================
-             PLANNED
-        ================================================== --}}
+        {{-- PLANNED --}}
 
         <div class="assignment-lane">
 
             <div class="assignment-lane-header">
-
-                <div class="assignment-lane-title">
-                    Planned
-                </div>
-
+                <div class="assignment-lane-title">Planned</div>
                 <div class="assignment-lane-count">
                     {{ $plannedAssignments->count() }}
                 </div>
-
             </div>
-
 
             @forelse($plannedAssignments as $assignment)
 
@@ -577,29 +546,17 @@
                         {{ $assignment->assignment_no ?? 'Assignment' }}
                     </h4>
 
-
                     <p class="assignment-card-info">
-
-                        Client:
-                        {{ $assignment->client?->client_name ?? '-' }}
-
+                        Client: {{ $assignment->client?->client_name ?? '-' }}
                         <br>
-
-                        Truck:
-                        {{ $assignment->vehicle?->plate_number ?? '-' }}
-
+                        Truck: {{ $assignment->vehicle?->plate_number ?? '-' }}
                         <br>
-
-                        Driver:
-                        {{ $assignment->driver?->driver_name ?? '-' }}
-
+                        Driver: {{ $assignment->driver?->driver_name ?? '-' }}
                     </p>
-
 
                     <span class="assignment-status status-planned">
                         Planned
                     </span>
-
 
                     <div class="assignment-card-actions">
 
@@ -610,13 +567,11 @@
                             Edit
                         </a>
 
-
                         <form
                             action="{{ route('assignments.destroy', $assignment->id) }}"
                             method="POST"
                             style="margin:0;"
                         >
-
                             @csrf
                             @method('DELETE')
 
@@ -627,7 +582,6 @@
                             >
                                 Delete
                             </button>
-
                         </form>
 
                     </div>
@@ -644,27 +598,18 @@
 
         </div>
 
-
-        {{-- =================================================
-             ACTIVE
-        ================================================== --}}
+        {{-- ASSIGNED --}}
 
         <div class="assignment-lane">
 
             <div class="assignment-lane-header">
-
-                <div class="assignment-lane-title">
-                    Active
-                </div>
-
+                <div class="assignment-lane-title">Assigned</div>
                 <div class="assignment-lane-count">
-                    {{ $activeAssignments->count() }}
+                    {{ $assignedAssignments->count() }}
                 </div>
-
             </div>
 
-
-            @forelse($activeAssignments as $assignment)
+            @forelse($assignedAssignments as $assignment)
 
                 <div class="assignment-card">
 
@@ -672,29 +617,17 @@
                         {{ $assignment->assignment_no ?? 'Assignment' }}
                     </h4>
 
-
                     <p class="assignment-card-info">
-
-                        Client:
-                        {{ $assignment->client?->client_name ?? '-' }}
-
+                        Client: {{ $assignment->client?->client_name ?? '-' }}
                         <br>
-
-                        Truck:
-                        {{ $assignment->vehicle?->plate_number ?? '-' }}
-
+                        Truck: {{ $assignment->vehicle?->plate_number ?? '-' }}
                         <br>
-
-                        Driver:
-                        {{ $assignment->driver?->driver_name ?? '-' }}
-
+                        Driver: {{ $assignment->driver?->driver_name ?? '-' }}
                     </p>
 
-
-                    <span class="assignment-status status-active">
-                        Active
+                    <span class="assignment-status status-assigned">
+                        Assigned
                     </span>
-
 
                     <div class="assignment-card-actions">
 
@@ -705,13 +638,11 @@
                             Edit
                         </a>
 
-
                         <form
                             action="{{ route('assignments.destroy', $assignment->id) }}"
                             method="POST"
                             style="margin:0;"
                         >
-
                             @csrf
                             @method('DELETE')
 
@@ -722,7 +653,6 @@
                             >
                                 Delete
                             </button>
-
                         </form>
 
                     </div>
@@ -732,32 +662,25 @@
             @empty
 
                 <div class="assignment-empty">
-                    No active assignments.
+                    No assigned assignments.
                 </div>
 
             @endforelse
 
         </div>
-        {{-- =================================================
-             SUSPENDED
-        ================================================== --}}
+
+        {{-- IN TRANSIT --}}
 
         <div class="assignment-lane">
 
             <div class="assignment-lane-header">
-
-                <div class="assignment-lane-title">
-                    Suspended
-                </div>
-
+                <div class="assignment-lane-title">In Transit</div>
                 <div class="assignment-lane-count">
-                    {{ $suspendedAssignments->count() }}
+                    {{ $inTransitAssignments->count() }}
                 </div>
-
             </div>
 
-
-            @forelse($suspendedAssignments as $assignment)
+            @forelse($inTransitAssignments as $assignment)
 
                 <div class="assignment-card">
 
@@ -765,29 +688,17 @@
                         {{ $assignment->assignment_no ?? 'Assignment' }}
                     </h4>
 
-
                     <p class="assignment-card-info">
-
-                        Client:
-                        {{ $assignment->client?->client_name ?? '-' }}
-
+                        Client: {{ $assignment->client?->client_name ?? '-' }}
                         <br>
-
-                        Truck:
-                        {{ $assignment->vehicle?->plate_number ?? '-' }}
-
+                        Truck: {{ $assignment->vehicle?->plate_number ?? '-' }}
                         <br>
-
-                        Driver:
-                        {{ $assignment->driver?->driver_name ?? '-' }}
-
+                        Driver: {{ $assignment->driver?->driver_name ?? '-' }}
                     </p>
 
-
-                    <span class="assignment-status status-suspended">
-                        Suspended
+                    <span class="assignment-status status-in-transit">
+                        In Transit
                     </span>
-
 
                     <div class="assignment-card-actions">
 
@@ -798,13 +709,11 @@
                             Edit
                         </a>
 
-
                         <form
                             action="{{ route('assignments.destroy', $assignment->id) }}"
                             method="POST"
                             style="margin:0;"
                         >
-
                             @csrf
                             @method('DELETE')
 
@@ -815,7 +724,6 @@
                             >
                                 Delete
                             </button>
-
                         </form>
 
                     </div>
@@ -825,34 +733,24 @@
             @empty
 
                 <div class="assignment-empty">
-                    No suspended assignments.
+                    No in-transit assignments.
                 </div>
 
             @endforelse
 
         </div>
-
-
-        {{-- =================================================
-             COMPLETED
-        ================================================== --}}
+        {{-- DELIVERED --}}
 
         <div class="assignment-lane">
 
             <div class="assignment-lane-header">
-
-                <div class="assignment-lane-title">
-                    Completed
-                </div>
-
+                <div class="assignment-lane-title">Delivered</div>
                 <div class="assignment-lane-count">
-                    {{ $completedAssignments->count() }}
+                    {{ $deliveredAssignments->count() }}
                 </div>
-
             </div>
 
-
-            @forelse($completedAssignments as $assignment)
+            @forelse($deliveredAssignments as $assignment)
 
                 <div class="assignment-card">
 
@@ -860,29 +758,17 @@
                         {{ $assignment->assignment_no ?? 'Assignment' }}
                     </h4>
 
-
                     <p class="assignment-card-info">
-
-                        Client:
-                        {{ $assignment->client?->client_name ?? '-' }}
-
+                        Client: {{ $assignment->client?->client_name ?? '-' }}
                         <br>
-
-                        Truck:
-                        {{ $assignment->vehicle?->plate_number ?? '-' }}
-
+                        Truck: {{ $assignment->vehicle?->plate_number ?? '-' }}
                         <br>
-
-                        Driver:
-                        {{ $assignment->driver?->driver_name ?? '-' }}
-
+                        Driver: {{ $assignment->driver?->driver_name ?? '-' }}
                     </p>
 
-
-                    <span class="assignment-status status-completed">
-                        Completed
+                    <span class="assignment-status status-delivered">
+                        Delivered
                     </span>
-
 
                     <div class="assignment-card-actions">
 
@@ -893,13 +779,11 @@
                             Edit
                         </a>
 
-
                         <form
                             action="{{ route('assignments.destroy', $assignment->id) }}"
                             method="POST"
                             style="margin:0;"
                         >
-
                             @csrf
                             @method('DELETE')
 
@@ -910,7 +794,6 @@
                             >
                                 Delete
                             </button>
-
                         </form>
 
                     </div>
@@ -920,38 +803,111 @@
             @empty
 
                 <div class="assignment-empty">
-                    No completed assignments.
+                    No delivered assignments.
                 </div>
 
             @endforelse
 
         </div>
 
+        {{-- CLOSED --}}
 
-        {{-- =================================================
-             CANCELLED
-        ================================================== --}}
-
-        <div
-            class="assignment-lane"
-            style="
-                margin-top:16px;
-                min-height:auto;
-            "
-        >
+        <div class="assignment-lane">
 
             <div class="assignment-lane-header">
+                <div class="assignment-lane-title">Closed</div>
+                <div class="assignment-lane-count">
+                    {{ $closedAssignments->count() }}
+                </div>
+            </div>
 
-                <div class="assignment-lane-title">
-                    Cancelled
+            @forelse($closedAssignments as $assignment)
+
+                <div class="assignment-card">
+
+                    <h4 class="assignment-card-title">
+                        {{ $assignment->assignment_no ?? 'Assignment' }}
+                    </h4>
+
+                    <p class="assignment-card-info">
+                        Client: {{ $assignment->client?->client_name ?? '-' }}
+                        <br>
+                        Truck: {{ $assignment->vehicle?->plate_number ?? '-' }}
+                        <br>
+                        Driver: {{ $assignment->driver?->driver_name ?? '-' }}
+                    </p>
+
+                    {{-- No separate Closed badge --}}
+
+                    <div class="assignment-done-actions">
+
+                        @if($assignment->done_at)
+
+                            <span class="assignment-done-label">
+                                <span aria-hidden="true">✓</span>
+                                Done
+                            </span>
+
+                            <form
+                                action="{{ route('assignments.undo-done', $assignment->id) }}"
+                                method="POST"
+                                style="margin:0;"
+                            >
+                                @csrf
+
+                                <button
+                                    type="submit"
+                                    class="assignment-undo-btn"
+                                    onclick="return confirm('Undo the Done mark for this assignment?')"
+                                >
+                                    Undo
+                                </button>
+                            </form>
+
+                        @else
+
+                            <form
+                                action="{{ route('assignments.done', $assignment->id) }}"
+                                method="POST"
+                                style="margin:0;"
+                            >
+                                @csrf
+
+                                <button
+                                    type="submit"
+                                    class="assignment-done-btn"
+                                    onclick="return confirm('Mark this assignment as Done?')"
+                                >
+                                    ✓ Mark Done
+                                </button>
+                            </form>
+
+                        @endif
+
+                    </div>
+
                 </div>
 
+            @empty
+
+                <div class="assignment-empty">
+                    No closed assignments.
+                </div>
+
+            @endforelse
+
+        </div>
+
+        {{-- CANCELLED --}}
+
+        <div class="assignment-lane">
+
+            <div class="assignment-lane-header">
+                <div class="assignment-lane-title">Cancelled</div>
                 <div class="assignment-lane-count">
                     {{ $cancelledAssignments->count() }}
                 </div>
-
             </div>
-
 
             @forelse($cancelledAssignments as $assignment)
 
@@ -961,29 +917,17 @@
                         {{ $assignment->assignment_no ?? 'Assignment' }}
                     </h4>
 
-
                     <p class="assignment-card-info">
-
-                        Client:
-                        {{ $assignment->client?->client_name ?? '-' }}
-
+                        Client: {{ $assignment->client?->client_name ?? '-' }}
                         <br>
-
-                        Truck:
-                        {{ $assignment->vehicle?->plate_number ?? '-' }}
-
+                        Truck: {{ $assignment->vehicle?->plate_number ?? '-' }}
                         <br>
-
-                        Driver:
-                        {{ $assignment->driver?->driver_name ?? '-' }}
-
+                        Driver: {{ $assignment->driver?->driver_name ?? '-' }}
                     </p>
-
 
                     <span class="assignment-status status-cancelled">
                         Cancelled
                     </span>
-
 
                     <div class="assignment-card-actions">
 
@@ -994,13 +938,11 @@
                             Edit
                         </a>
 
-
                         <form
                             action="{{ route('assignments.destroy', $assignment->id) }}"
                             method="POST"
                             style="margin:0;"
                         >
-
                             @csrf
                             @method('DELETE')
 
@@ -1011,7 +953,6 @@
                             >
                                 Delete
                             </button>
-
                         </form>
 
                     </div>
@@ -1028,21 +969,81 @@
 
         </div>
 
-    </div>
+        {{-- SUSPENDED --}}
 
+        <div class="assignment-lane">
 
-    {{-- =====================================================
-         PAGINATION
-    ====================================================== --}}
+            <div class="assignment-lane-header">
+                <div class="assignment-lane-title">Suspended</div>
+                <div class="assignment-lane-count">
+                    {{ $suspendedAssignments->count() }}
+                </div>
+            </div>
 
-    @if(method_exists($assignments, 'links'))
+            @forelse($suspendedAssignments as $assignment)
 
-        <div style="margin-top:20px;">
-            {{ $assignments->links() }}
+                <div class="assignment-card">
+
+                    <h4 class="assignment-card-title">
+                        {{ $assignment->assignment_no ?? 'Assignment' }}
+                    </h4>
+
+                    <p class="assignment-card-info">
+                        Client: {{ $assignment->client?->client_name ?? '-' }}
+                        <br>
+                        Truck: {{ $assignment->vehicle?->plate_number ?? '-' }}
+                        <br>
+                        Driver: {{ $assignment->driver?->driver_name ?? '-' }}
+                    </p>
+
+                    <span class="assignment-status status-suspended">
+                        Suspended
+                    </span>
+
+                    <div class="assignment-card-actions">
+
+                        <a
+                            href="{{ route('assignments.edit', $assignment->id) }}"
+                            class="assignment-edit-btn"
+                        >
+                            Edit
+                        </a>
+
+                        <form
+                            action="{{ route('assignments.destroy', $assignment->id) }}"
+                            method="POST"
+                            style="margin:0;"
+                        >
+                            @csrf
+                            @method('DELETE')
+
+                            <button
+                                type="submit"
+                                class="assignment-delete-btn"
+                                onclick="return confirm('Delete this assignment record?')"
+                            >
+                                Delete
+                            </button>
+                        </form>
+
+                    </div>
+
+                </div>
+
+            @empty
+
+                <div class="assignment-empty">
+                    No suspended assignments.
+                </div>
+
+            @endforelse
+
         </div>
 
-    @endif
+    </div>
 
+    {{-- Pagination intentionally removed.
+         All matching assignments load on this page. --}}
 
 </div>
 
