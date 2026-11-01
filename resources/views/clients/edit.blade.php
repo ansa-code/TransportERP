@@ -183,7 +183,7 @@
     type="text"
     name="company_name"
     class="form-control"
-    value="{{ old('company_name') }}"
+    value="{{ old('company_name', $client->company_name) }}"
     maxlength="255"
     required
 >

@@ -9,6 +9,7 @@ use App\Services\ActivityLogService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Rules\ValidClientEmail;
 
 class ClientController extends Controller
 {
@@ -214,6 +215,7 @@ class ClientController extends Controller
             ],
 
             'phone' => [
+                'required_without:email',
                 'nullable',
                 'string',
                 'max:30',
@@ -233,13 +235,13 @@ class ClientController extends Controller
             ],
 
             'email' => [
-                'nullable',
-                'string',
-                'email:rfc,dns',
-                'max:255',
-                'unique:clients,email',
-            ],
-
+    'nullable',
+    'string',
+    'email:rfc,dns',
+    'max:255',
+    'unique:clients,email',
+    new ValidClientEmail(),
+],
             'address' => [
                 'required',
                 'string',
@@ -360,15 +362,17 @@ class ClientController extends Controller
             'credit_limit.min' => 'Credit Limit cannot be negative.',
             'credit_limit.max' => 'Credit Limit cannot exceed 99,999,999.99.',
             'credit_limit.regex' => 'Credit Limit can contain up to 8 whole-number digits and 2 decimal places.',
-             
+
             'address.required' => 'Address is required. Please enter the client address.',
             'address.max' => 'Address cannot exceed 255 characters.',
-           
+
             'notes.max' => 'Notes cannot exceed 5000 characters.',
             'phone.regex' => 'Please enter a valid phone number.',
             'email.email' => 'Please enter a valid email address.',
             'email.unique' => 'This email address is already in use.',
             'phone.unique' => 'This phone number is already in use.',
+            'phone.required_without' => 'Please provide at least a phone number or email address.',
+
             'client_code.unique' => 'This client code is already in use.',
             'trade_licence.unique' => 'This trade licence is already in use.',
             'trn.unique' => 'This TRN is already in use.',
@@ -387,6 +391,7 @@ class ClientController extends Controller
             ->route('clients.index')
             ->with('success', 'Client Added Successfully!');
     }
+
     /*
     |--------------------------------------------------------------------------
     | Show Client
@@ -412,7 +417,6 @@ class ClientController extends Controller
 
         return view('clients.edit', compact('client'));
     }
-
     /*
     |--------------------------------------------------------------------------
     | Update Client
@@ -450,6 +454,7 @@ class ClientController extends Controller
             ],
 
             'phone' => [
+                'required_without:email',
                 'nullable',
                 'string',
                 'max:30',
@@ -469,13 +474,13 @@ class ClientController extends Controller
             ],
 
             'email' => [
-                'nullable',
-                'string',
-                'email:rfc,dns',
-                'max:255',
-                Rule::unique('clients', 'email')->ignore($client->id),
-            ],
-
+    'nullable',
+    'string',
+    'email:rfc,dns',
+    'max:255',
+    Rule::unique('clients', 'email')->ignore($client->id),
+    new ValidClientEmail(),
+],
             'address' => [
                 'required',
                 'string',
@@ -602,15 +607,17 @@ class ClientController extends Controller
             'credit_limit.min' => 'Credit Limit cannot be negative.',
             'credit_limit.max' => 'Credit Limit cannot exceed 99,999,999.99.',
             'credit_limit.regex' => 'Credit Limit can contain up to 8 whole-number digits and 2 decimal places.',
-             
+
             'address.required' => 'Address is required. Please enter the client address.',
             'address.max' => 'Address cannot exceed 255 characters.',
-           
+
             'notes.max' => 'Notes cannot exceed 5000 characters.',
             'phone.regex' => 'Please enter a valid phone number.',
             'email.email' => 'Please enter a valid email address.',
             'email.unique' => 'This email address is already in use.',
             'phone.unique' => 'This phone number is already in use.',
+            'phone.required_without' => 'Please provide at least a phone number or email address.',
+
             'client_code.unique' => 'This client code is already in use.',
             'trade_licence.unique' => 'This trade licence is already in use.',
             'trn.unique' => 'This TRN is already in use.',
