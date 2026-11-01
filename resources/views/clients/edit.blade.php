@@ -248,7 +248,7 @@
                         type="text"
                         name="trade_licence"
                         class="form-control"
-                        value="{{ old('trade_licence', $client->trade_licence) }}"
+                       value="{{ old('trade_licence_expiry', $client->trade_licence_expiry ? $client->trade_licence_expiry->format('Y-m-d') : '') }}"
                     >
                 </div>
 

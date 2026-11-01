@@ -235,13 +235,14 @@ class ClientController extends Controller
             ],
 
             'email' => [
-    'nullable',
-    'string',
-    'email:rfc,dns',
-    'max:255',
-    'unique:clients,email',
-    new ValidClientEmail(),
-],
+                'nullable',
+                'string',
+                'email:rfc,dns',
+                'max:255',
+                'unique:clients,email',
+                new ValidClientEmail(),
+            ],
+
             'address' => [
                 'required',
                 'string',
@@ -265,6 +266,12 @@ class ClientController extends Controller
                 'string',
                 'max:255',
                 'unique:clients,trade_licence',
+            ],
+
+            'trade_licence_expiry' => [
+                'nullable',
+                'date',
+                'after:today',
             ],
 
             'trn' => [
@@ -349,6 +356,7 @@ class ClientController extends Controller
                 'string',
                 'max:5000',
             ],
+
         ], [
             'country.required' => 'Country is required. Please select or enter a country.',
             'country.string' => 'Country must be valid text.',
@@ -369,14 +377,21 @@ class ClientController extends Controller
             'notes.max' => 'Notes cannot exceed 5000 characters.',
             'phone.regex' => 'Please enter a valid phone number.',
             'email.email' => 'Please enter a valid email address.',
-            'email.unique' => 'This email address is already in use.',
+            'email.unique' => 'This email address is already registered. Please use a different email address.',
             'phone.unique' => 'This phone number is already in use.',
             'phone.required_without' => 'Please provide at least a phone number or email address.',
 
             'client_code.unique' => 'This client code is already in use.',
             'trade_licence.unique' => 'This trade licence is already in use.',
+            'trade_licence_expiry.date' => 'Please enter a valid Trade Licence Expiry date.',
+            'trade_licence_expiry.after' => 'Trade Licence Expiry Date must be after today.',
             'trn.unique' => 'This TRN is already in use.',
-            'contract_end.after' => 'Contract End must be after Contract Start.',
+
+            'contract_start.required' => 'Contract Start date is required.',
+            'contract_start.date' => 'Please enter a valid Contract Start date.',
+            'contract_end.required' => 'Contract End date is required.',
+            'contract_end.date' => 'Please enter a valid Contract End date.',
+            'contract_end.after' => 'Contract End date must be after Contract Start date.',
         ]);
 
         $client = Client::create($validated);
@@ -474,13 +489,14 @@ class ClientController extends Controller
             ],
 
             'email' => [
-    'nullable',
-    'string',
-    'email:rfc,dns',
-    'max:255',
-    Rule::unique('clients', 'email')->ignore($client->id),
-    new ValidClientEmail(),
-],
+                'nullable',
+                'string',
+                'email:rfc,dns',
+                'max:255',
+                Rule::unique('clients', 'email')->ignore($client->id),
+                new ValidClientEmail(),
+            ],
+
             'address' => [
                 'required',
                 'string',
@@ -594,6 +610,7 @@ class ClientController extends Controller
                 'string',
                 'max:5000',
             ],
+
         ], [
             'country.required' => 'Country is required. Please select or enter a country.',
             'country.string' => 'Country must be valid text.',
@@ -614,14 +631,21 @@ class ClientController extends Controller
             'notes.max' => 'Notes cannot exceed 5000 characters.',
             'phone.regex' => 'Please enter a valid phone number.',
             'email.email' => 'Please enter a valid email address.',
-            'email.unique' => 'This email address is already in use.',
+            'email.unique' => 'This email address is already registered. Please use a different email address.',
             'phone.unique' => 'This phone number is already in use.',
             'phone.required_without' => 'Please provide at least a phone number or email address.',
 
             'client_code.unique' => 'This client code is already in use.',
             'trade_licence.unique' => 'This trade licence is already in use.',
+            'trade_licence_expiry.date' => 'Please enter a valid Trade Licence Expiry date.',
+            'trade_licence_expiry.after' => 'Trade Licence Expiry Date must be after today.',
             'trn.unique' => 'This TRN is already in use.',
-            'contract_end.after' => 'Contract End must be after Contract Start.',
+
+            'contract_start.required' => 'Contract Start date is required.',
+            'contract_start.date' => 'Please enter a valid Contract Start date.',
+            'contract_end.required' => 'Contract End date is required.',
+            'contract_end.date' => 'Please enter a valid Contract End date.',
+            'contract_end.after' => 'Contract End date must be after Contract Start date.',
         ]);
 
         $oldValues = $client->getAttributes();
