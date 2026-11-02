@@ -205,8 +205,12 @@ class AssignmentController extends Controller
             'driver_id' => ['required', 'exists:drivers,id'],
 
             'start_date' => ['required', 'date'],
-            'end_date' => ['required', 'date', 'after:start_date'],
-
+            'end_date' => [
+    'required',
+    'date',
+    'after_or_equal:start_date',
+    'after_or_equal:today',
+],
             'rate' => [
                 'required',
                 'numeric',
@@ -285,7 +289,7 @@ class AssignmentController extends Controller
             'start_date.date' => 'Please enter a valid start date.',
             'end_date.required' => 'Please select the assignment end date.',
             'end_date.date' => 'Please enter a valid end date.',
-            'end_date.after' => 'The assignment end date must be after the start date.',
+           'end_date.after_or_equal' => 'Assignment End Date must be today or later and cannot be before the Start Date.',
 
             'rate.required' => 'Please enter the assignment rate.',
             'rate.numeric' => 'The rate must be a valid number.',

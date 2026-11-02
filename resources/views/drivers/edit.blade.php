@@ -329,37 +329,38 @@
 
                 {{-- Visa Type --}}
 
-<div class="form-group">
+                <div class="form-group">
 
-    <label>Visa Type</label>
+                    <label>Visa Type</label>
 
-    <select
-        name="visa_type"
-        class="form-control @error('visa_type') is-invalid @enderror"
-    >
-        <option value="">Select Visa Type</option>
+                    <select
+                        name="visa_type"
+                        class="form-control @error('visa_type') is-invalid @enderror"
+                    >
+                        <option value="">Select Visa Type</option>
 
-        <option value="Temporary"
-            {{ old('visa_type', $driver->visa_type) == 'Temporary' ? 'selected' : '' }}>
-            Temporary
-        </option>
+                        <option value="Temporary"
+                            {{ old('visa_type', $driver->visa_type) == 'Temporary' ? 'selected' : '' }}>
+                            Temporary
+                        </option>
 
-        <option value="Permanent"
-            {{ old('visa_type', $driver->visa_type) == 'Permanent' ? 'selected' : '' }}>
-            Permanent
-        </option>
+                        <option value="Permanent"
+                            {{ old('visa_type', $driver->visa_type) == 'Permanent' ? 'selected' : '' }}>
+                            Permanent
+                        </option>
 
-        <option value="Other"
-            {{ old('visa_type', $driver->visa_type) == 'Other' ? 'selected' : '' }}>
-            Other
-        </option>
-    </select>
+                        <option value="Other"
+                            {{ old('visa_type', $driver->visa_type) == 'Other' ? 'selected' : '' }}>
+                            Other
+                        </option>
+                    </select>
 
-    @error('visa_type')
-        <div class="field-error">{{ $message }}</div>
-    @enderror
+                    @error('visa_type')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
 
-</div>
+                </div>
+
 
                 {{-- Visa Provided By --}}
 
@@ -407,7 +408,7 @@
                     <input
                         type="date"
                         name="visa_expiry"
-                        value="{{ old('visa_expiry', $driver->visa_expiry) }}"
+                        value="{{ old('visa_expiry', $driver->visa_expiry?->format('Y-m-d')) }}"
                         class="form-control @error('visa_expiry') is-invalid @enderror"
                     >
 
@@ -456,8 +457,6 @@
                     @enderror
 
                 </div>
-
-
                 {{-- Licence Expiry --}}
 
                 <div class="form-group">
@@ -467,7 +466,7 @@
                     <input
                         type="date"
                         name="license_expiry"
-                        value="{{ old('license_expiry', $driver->license_expiry) }}"
+                        value="{{ old('license_expiry', $driver->license_expiry?->format('Y-m-d')) }}"
                         class="form-control @error('license_expiry') is-invalid @enderror"
                     >
 
@@ -476,6 +475,7 @@
                     @enderror
 
                 </div>
+
                 {{-- Basic Salary --}}
                 <div class="form-group">
                     <label>
@@ -606,15 +606,15 @@
 
             <div class="form-actions">
 
-    <a href="{{ route('drivers.index') }}" class="cancel-btn">
-        Cancel
-    </a>
+                <a href="{{ route('drivers.index') }}" class="cancel-btn">
+                    Cancel
+                </a>
 
-    <button type="submit" class="update-btn">
-        Update Driver
-    </button>
+                <button type="submit" class="update-btn">
+                    Update Driver
+                </button>
 
-</div>
+            </div>
 
         </form>
     </div>
