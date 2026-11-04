@@ -5,8 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Client;
 use App\Models\Assignment;
+use App\Models\Trip;
 use App\Models\PaymentAllocation;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Invoice extends Model
 {
@@ -54,9 +56,28 @@ class Invoice extends Model
         return $this->belongsTo(Client::class);
     }
 
+    // Existing single Assignment relationship
     public function assignment()
     {
         return $this->belongsTo(Assignment::class);
+    }
+
+    // Multiple Assignments linked to this invoice
+    public function assignments(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Assignment::class,
+            'invoice_assignments'
+        )->withTimestamps();
+    }
+
+    // Multiple Trips linked to this invoice
+    public function trips(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Trip::class,
+            'invoice_trips'
+        )->withTimestamps();
     }
 
     public function fuelRecoveries(): HasMany

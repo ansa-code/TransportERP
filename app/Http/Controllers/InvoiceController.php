@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Invoice;
 use App\Models\Client;
 use App\Models\Assignment;
+use App\Models\Trip;
 use App\Models\Fuel;
 use App\Models\FuelRecovery;
 use App\Services\ActivityLogService;
@@ -127,6 +128,13 @@ class InvoiceController extends Controller
         ->latest()
         ->get();
 
+        $trips = Trip::with([
+            'client',
+            'assignment',
+        ])
+        ->latest()
+        ->get();
+
         /*
         |--------------------------------------------------------------------------
         | Eligible Fuel Recoveries
@@ -157,6 +165,7 @@ class InvoiceController extends Controller
             compact(
                 'clients',
                 'assignments',
+                'trips',
                 'fuels'
             )
         );
@@ -171,154 +180,216 @@ class InvoiceController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-    'client_id' => [
-        'required',
-        'integer',
-        'exists:clients,id',
-    ],
+            'client_id' => [
+                'required',
+                'integer',
+                'exists:clients,id',
+            ],
 
-    'assignment_id' => [
-        'nullable',
-        'integer',
-        'exists:assignments,id',
-    ],
+            'assignment_ids' => [
+                'nullable',
+                'array',
+            ],
 
-    'billing_start' => [
-        'required',
-        'date',
-    ],
+            'assignment_ids.*' => [
+                'required',
+                'integer',
+                'distinct',
+                'exists:assignments,id',
+            ],
 
-    'billing_end' => [
-        'required',
-        'date',
-        'after_or_equal:billing_start',
-    ],
+            'trip_ids' => [
+                'nullable',
+                'array',
+            ],
 
-    'invoice_date' => [
-        'required',
-        'date',
-    ],
+            'trip_ids.*' => [
+                'required',
+                'integer',
+                'distinct',
+                'exists:trips,id',
+            ],
 
-    'due_date' => [
-        'required',
-        'date',
-        'after_or_equal:invoice_date',
-    ],
+            'billing_start' => [
+                'required',
+                'date',
+            ],
 
-    'source' => [
-        'nullable',
-        'string',
-        'in:Assignment,Trips,Manual',
-        'max:100',
-    ],
+            'billing_end' => [
+                'required',
+                'date',
+                'after_or_equal:billing_start',
+            ],
 
-    'subtotal' => [
-        'required',
-        'numeric',
-        'min:0',
-        'max:9999999999.99',
-        'regex:/^\d{1,10}(\.\d{1,2})?$/',
-    ],
+            'invoice_date' => [
+                'required',
+                'date',
+            ],
 
-    'vat_percent' => [
-        'required',
-        'numeric',
-        'min:0',
-        'max:100',
-        'regex:/^\d{1,3}(\.\d{1,2})?$/',
-    ],
+            'due_date' => [
+                'required',
+                'date',
+                'after_or_equal:invoice_date',
+            ],
 
-    'fuel_recoveries' => [
-        'nullable',
-        'array',
-    ],
+            'source' => [
+                'nullable',
+                'string',
+                'in:Assignment,Trips,Manual',
+                'max:100',
+            ],
 
-    'fuel_recoveries.*.fuel_id' => [
-        'required',
-        'integer',
-        'distinct',
-        'exists:fuels,id',
-    ],
+            'subtotal' => [
+                'required',
+                'numeric',
+                'min:0',
+                'max:9999999999.99',
+                'regex:/^\d{1,10}(\.\d{1,2})?$/',
+            ],
 
-    'fuel_recoveries.*.amount' => [
-        'required',
-        'numeric',
-        'gt:0',
-        'max:9999999999.99',
-        'regex:/^\d{1,10}(\.\d{1,2})?$/',
-    ],
+            'vat_percent' => [
+                'required',
+                'numeric',
+                'min:0',
+                'max:100',
+                'regex:/^\d{1,3}(\.\d{1,2})?$/',
+            ],
 
-    'other_reimbursement' => [
-        'required',
-        'numeric',
-        'min:0',
-        'max:9999999999.99',
-        'regex:/^\d{1,10}(\.\d{1,2})?$/',
-    ],
+            'fuel_recoveries' => [
+                'nullable',
+                'array',
+            ],
 
-    'status' => [
-        'required',
-        'in:Draft,Issued,Partial,Paid,Overdue,Cancelled',
-    ],
+            'fuel_recoveries.*.fuel_id' => [
+                'required',
+                'integer',
+                'distinct',
+                'exists:fuels,id',
+            ],
 
-    'notes' => [
-        'nullable',
-        'string',
-        'max:5000',
-    ],
+            'fuel_recoveries.*.amount' => [
+                'required',
+                'numeric',
+                'gt:0',
+                'max:9999999999.99',
+                'regex:/^\d{1,10}(\.\d{1,2})?$/',
+            ],
 
-], [
-    'billing_start.required' =>
-        'Please select a billing start date.',
+            'other_reimbursement' => [
+                'required',
+                'numeric',
+                'min:0',
+                'max:9999999999.99',
+                'regex:/^\d{1,10}(\.\d{1,2})?$/',
+            ],
 
-    'billing_end.required' =>
-        'Please select a billing end date.',
+            'status' => [
+                'required',
+                'in:Draft,Issued,Partial,Paid,Overdue,Cancelled',
+            ],
 
-    'billing_end.after_or_equal' =>
-        'Billing End date cannot be earlier than Billing Start date.',
+            'notes' => [
+                'nullable',
+                'string',
+                'max:5000',
+            ],
 
-    'source.in' =>
-        'Please select a valid invoice source.',
+        ], [
+            'billing_start.required' =>
+                'Please select a billing start date.',
 
-    'subtotal.required' =>
-        'Please enter the subtotal amount.',
+            'billing_end.required' =>
+                'Please select a billing end date.',
 
-    'subtotal.max' =>
-        'Subtotal cannot exceed AED 9,999,999,999.99.',
+            'billing_end.after_or_equal' =>
+                'Billing End date cannot be earlier than Billing Start date.',
 
-    'subtotal.regex' =>
-        'Subtotal can have a maximum of 10 whole-number digits and 2 decimal places.',
+            'source.in' =>
+                'Please select a valid invoice source.',
 
-    'vat_percent.max' =>
-        'VAT percentage cannot exceed 100%.',
+            'subtotal.required' =>
+                'Please enter the subtotal amount.',
 
-    'vat_percent.regex' =>
-        'VAT percentage can have a maximum of 2 decimal places.',
+            'subtotal.max' =>
+                'Subtotal cannot exceed AED 9,999,999,999.99.',
 
-    'fuel_recoveries.*.fuel_id.distinct' =>
-        'The same fuel entry cannot be selected more than once.',
+            'subtotal.regex' =>
+                'Subtotal can have a maximum of 10 whole-number digits and 2 decimal places.',
 
-    'fuel_recoveries.*.amount.gt' =>
-        'Fuel recovery amount must be greater than zero.',
+            'vat_percent.max' =>
+                'VAT percentage cannot exceed 100%.',
 
-    'fuel_recoveries.*.amount.max' =>
-        'Fuel recovery amount exceeds the maximum allowed amount.',
+            'vat_percent.regex' =>
+                'VAT percentage can have a maximum of 2 decimal places.',
 
-    'fuel_recoveries.*.amount.regex' =>
-        'Fuel recovery amount can have a maximum of 2 decimal places.',
+            'assignment_ids.*.distinct' =>
+                'The same assignment cannot be selected more than once.',
 
-    'other_reimbursement.required' =>
-        'Please enter the other reimbursement amount.',
+            'trip_ids.*.distinct' =>
+                'The same trip cannot be selected more than once.',
 
-    'other_reimbursement.max' =>
-        'Other reimbursement cannot exceed AED 9,999,999,999.99.',
+            'fuel_recoveries.*.fuel_id.distinct' =>
+                'The same fuel entry cannot be selected more than once.',
 
-    'other_reimbursement.regex' =>
-        'Other reimbursement can have a maximum of 10 whole-number digits and 2 decimal places.',
+            'fuel_recoveries.*.amount.gt' =>
+                'Fuel recovery amount must be greater than zero.',
 
-    'notes.max' =>
-        'Invoice notes cannot exceed 5000 characters.',
-]);
+            'fuel_recoveries.*.amount.max' =>
+                'Fuel recovery amount exceeds the maximum allowed amount.',
+
+            'fuel_recoveries.*.amount.regex' =>
+                'Fuel recovery amount can have a maximum of 2 decimal places.',
+
+            'other_reimbursement.required' =>
+                'Please enter the other reimbursement amount.',
+
+            'other_reimbursement.max' =>
+                'Other reimbursement cannot exceed AED 9,999,999,999.99.',
+
+            'other_reimbursement.regex' =>
+                'Other reimbursement can have a maximum of 10 whole-number digits and 2 decimal places.',
+
+            'notes.max' =>
+                'Invoice notes cannot exceed 5000 characters.',
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validate Selected Assignments And Trips Belong To Client
+        |--------------------------------------------------------------------------
+        */
+
+        $assignmentIds = $validated['assignment_ids'] ?? [];
+
+        $tripIds = $validated['trip_ids'] ?? [];
+
+        if (
+            count($assignmentIds) > 0
+            && Assignment::where('client_id', $validated['client_id'])
+                ->whereIn('id', $assignmentIds)
+                ->count() !== count($assignmentIds)
+        ) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'assignment_ids' =>
+                        'One or more selected assignments do not belong to the selected client.',
+                ]);
+        }
+
+        if (
+            count($tripIds) > 0
+            && Trip::where('client_id', $validated['client_id'])
+                ->whereIn('id', $tripIds)
+                ->count() !== count($tripIds)
+        ) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'trip_ids' =>
+                        'One or more selected trips do not belong to the selected client.',
+                ]);
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -385,7 +456,7 @@ class InvoiceController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Create Invoice + Fuel Recovery Records
+        | Create Invoice + Selected Assignments, Trips And Fuel Recoveries
         |--------------------------------------------------------------------------
         */
 
@@ -400,7 +471,9 @@ class InvoiceController extends Controller
             $totalAmount,
             $paidAmount,
             $balance,
-            $fuelRecoveries
+            $fuelRecoveries,
+            $assignmentIds,
+            $tripIds
         ) {
 
             $invoice = Invoice::create([
@@ -412,7 +485,7 @@ class InvoiceController extends Controller
                 'client_id' => $validated['client_id'],
 
                 'assignment_id' =>
-                    $validated['assignment_id'] ?? null,
+                    $assignmentIds[0] ?? null,
 
                 'billing_start' =>
                     $validated['billing_start'],
@@ -463,6 +536,10 @@ class InvoiceController extends Controller
                     $validated['notes'] ?? null,
 
             ]);
+
+            $invoice->assignments()->sync($assignmentIds);
+
+            $invoice->trips()->sync($tripIds);
 
             foreach ($fuelRecoveries as $recovery) {
 
@@ -515,6 +592,8 @@ class InvoiceController extends Controller
         $invoice = Invoice::with([
             'client',
             'assignment',
+            'assignments',
+            'trips',
             'fuelRecoveries.fuel.vehicle',
             'fuelRecoveries.fuel.driver',
         ])->findOrFail($id);
@@ -540,7 +619,6 @@ class InvoiceController extends Controller
             compact('invoice')
         );
     }
-
     /*
     |--------------------------------------------------------------------------
     | Generate Invoice PDF
@@ -552,6 +630,8 @@ class InvoiceController extends Controller
         $invoice = Invoice::with([
             'client',
             'assignment',
+            'assignments',
+            'trips',
             'fuelRecoveries.fuel.vehicle',
             'fuelRecoveries.fuel.driver',
         ])->findOrFail($id);
@@ -595,6 +675,8 @@ class InvoiceController extends Controller
         $invoice = Invoice::with([
             'client',
             'assignment',
+            'assignments',
+            'trips',
             'fuelRecoveries.fuel.vehicle',
             'fuelRecoveries.fuel.driver',
         ])->findOrFail($id);
@@ -603,11 +685,6 @@ class InvoiceController extends Controller
         |--------------------------------------------------------------------------
         | Generate Fresh Invoice PDF
         |--------------------------------------------------------------------------
-        |
-        | The PDF is generated here specifically for the email.
-        | This guarantees that the email always receives the
-        | current invoice PDF as an actual attachment.
-        |
         */
 
         $pdf = Pdf::loadView(
@@ -672,6 +749,8 @@ class InvoiceController extends Controller
     {
         $invoice = Invoice::with([
             'fuelRecoveries',
+            'assignments',
+            'trips',
         ])->findOrFail($id);
 
         $clients = Client::where(
@@ -683,6 +762,13 @@ class InvoiceController extends Controller
 
         $assignments = Assignment::with([
             'client',
+        ])
+        ->latest()
+        ->get();
+
+        $trips = Trip::with([
+            'client',
+            'assignment',
         ])
         ->latest()
         ->get();
@@ -726,10 +812,12 @@ class InvoiceController extends Controller
                 'invoice',
                 'clients',
                 'assignments',
+                'trips',
                 'fuels'
             )
         );
     }
+
     /*
     |--------------------------------------------------------------------------
     | Update Invoice
@@ -742,6 +830,8 @@ class InvoiceController extends Controller
     ) {
         $invoice = Invoice::with([
             'fuelRecoveries',
+            'assignments',
+            'trips',
         ])->findOrFail($id);
 
         /*
@@ -752,156 +842,217 @@ class InvoiceController extends Controller
 
         $oldValues = $invoice->getAttributes();
 
-         $validated = $request->validate([
-    'client_id' => [
-        'required',
-        'integer',
-        'exists:clients,id',
-    ],
+        $validated = $request->validate([
+            'client_id' => [
+                'required',
+                'integer',
+                'exists:clients,id',
+            ],
 
-    'assignment_id' => [
-        'nullable',
-        'integer',
-        'exists:assignments,id',
-    ],
+            'assignment_ids' => [
+                'nullable',
+                'array',
+            ],
 
-    'billing_start' => [
-        'required',
-        'date',
-    ],
+            'assignment_ids.*' => [
+                'required',
+                'integer',
+                'distinct',
+                'exists:assignments,id',
+            ],
 
-    'billing_end' => [
-        'required',
-        'date',
-        'after_or_equal:billing_start',
-    ],
+            'trip_ids' => [
+                'nullable',
+                'array',
+            ],
 
-    'invoice_date' => [
-        'required',
-        'date',
-    ],
+            'trip_ids.*' => [
+                'required',
+                'integer',
+                'distinct',
+                'exists:trips,id',
+            ],
 
-    'due_date' => [
-        'required',
-        'date',
-        'after_or_equal:invoice_date',
-    ],
+            'billing_start' => [
+                'required',
+                'date',
+            ],
 
-    'source' => [
-        'nullable',
-        'string',
-        'in:Assignment,Trips,Manual',
-        'max:100',
-    ],
+            'billing_end' => [
+                'required',
+                'date',
+                'after_or_equal:billing_start',
+            ],
 
-    'subtotal' => [
-        'required',
-        'numeric',
-        'min:0',
-        'max:9999999999.99',
-        'regex:/^\d{1,10}(\.\d{1,2})?$/',
-    ],
+            'invoice_date' => [
+                'required',
+                'date',
+            ],
 
-    'vat_percent' => [
-        'required',
-        'numeric',
-        'min:0',
-        'max:100',
-        'regex:/^\d{1,3}(\.\d{1,2})?$/',
-    ],
+            'due_date' => [
+                'required',
+                'date',
+                'after_or_equal:invoice_date',
+            ],
 
-    'fuel_recoveries' => [
-        'nullable',
-        'array',
-    ],
+            'source' => [
+                'nullable',
+                'string',
+                'in:Assignment,Trips,Manual',
+                'max:100',
+            ],
 
-    'fuel_recoveries.*.fuel_id' => [
-        'required',
-        'integer',
-        'distinct',
-        'exists:fuels,id',
-    ],
+            'subtotal' => [
+                'required',
+                'numeric',
+                'min:0',
+                'max:9999999999.99',
+                'regex:/^\d{1,10}(\.\d{1,2})?$/',
+            ],
 
-    'fuel_recoveries.*.amount' => [
-        'required',
-        'numeric',
-        'gt:0',
-        'max:9999999999.99',
-        'regex:/^\d{1,10}(\.\d{1,2})?$/',
-    ],
+            'vat_percent' => [
+                'required',
+                'numeric',
+                'min:0',
+                'max:100',
+                'regex:/^\d{1,3}(\.\d{1,2})?$/',
+            ],
 
-    'other_reimbursement' => [
-        'required',
-        'numeric',
-        'min:0',
-        'max:9999999999.99',
-        'regex:/^\d{1,10}(\.\d{1,2})?$/',
-    ],
+            'fuel_recoveries' => [
+                'nullable',
+                'array',
+            ],
 
-    'status' => [
-        'required',
-        'in:Draft,Issued,Partial,Paid,Overdue,Cancelled',
-    ],
+            'fuel_recoveries.*.fuel_id' => [
+                'required',
+                'integer',
+                'distinct',
+                'exists:fuels,id',
+            ],
 
-    'notes' => [
-        'nullable',
-        'string',
-        'max:5000',
-    ],
+            'fuel_recoveries.*.amount' => [
+                'required',
+                'numeric',
+                'gt:0',
+                'max:9999999999.99',
+                'regex:/^\d{1,10}(\.\d{1,2})?$/',
+            ],
 
-], [
-    'billing_start.required' =>
-        'Please select a billing start date.',
+            'other_reimbursement' => [
+                'required',
+                'numeric',
+                'min:0',
+                'max:9999999999.99',
+                'regex:/^\d{1,10}(\.\d{1,2})?$/',
+            ],
 
-    'billing_end.required' =>
-        'Please select a billing end date.',
+            'status' => [
+                'required',
+                'in:Draft,Issued,Partial,Paid,Overdue,Cancelled',
+            ],
 
-    'billing_end.after_or_equal' =>
-        'Billing End date cannot be earlier than Billing Start date.',
+            'notes' => [
+                'nullable',
+                'string',
+                'max:5000',
+            ],
 
-    'source.in' =>
-        'Please select a valid invoice source.',
+        ], [
+            'billing_start.required' =>
+                'Please select a billing start date.',
 
-    'subtotal.required' =>
-        'Please enter the subtotal amount.',
+            'billing_end.required' =>
+                'Please select a billing end date.',
 
-    'subtotal.max' =>
-        'Subtotal cannot exceed AED 9,999,999,999.99.',
+            'billing_end.after_or_equal' =>
+                'Billing End date cannot be earlier than Billing Start date.',
 
-    'subtotal.regex' =>
-        'Subtotal can have a maximum of 10 whole-number digits and 2 decimal places.',
+            'source.in' =>
+                'Please select a valid invoice source.',
 
-    'vat_percent.max' =>
-        'VAT percentage cannot exceed 100%.',
+            'subtotal.required' =>
+                'Please enter the subtotal amount.',
 
-    'vat_percent.regex' =>
-        'VAT percentage can have a maximum of 2 decimal places.',
+            'subtotal.max' =>
+                'Subtotal cannot exceed AED 9,999,999,999.99.',
 
-    'fuel_recoveries.*.fuel_id.distinct' =>
-        'The same fuel entry cannot be selected more than once.',
+            'subtotal.regex' =>
+                'Subtotal can have a maximum of 10 whole-number digits and 2 decimal places.',
 
-    'fuel_recoveries.*.amount.gt' =>
-        'Fuel recovery amount must be greater than zero.',
+            'vat_percent.max' =>
+                'VAT percentage cannot exceed 100%.',
 
-    'fuel_recoveries.*.amount.max' =>
-        'Fuel recovery amount exceeds the maximum allowed amount.',
+            'vat_percent.regex' =>
+                'VAT percentage can have a maximum of 2 decimal places.',
 
-    'fuel_recoveries.*.amount.regex' =>
-        'Fuel recovery amount can have a maximum of 2 decimal places.',
+            'assignment_ids.*.distinct' =>
+                'The same assignment cannot be selected more than once.',
 
-    'other_reimbursement.required' =>
-        'Please enter the other reimbursement amount.',
+            'trip_ids.*.distinct' =>
+                'The same trip cannot be selected more than once.',
 
-    'other_reimbursement.max' =>
-        'Other reimbursement cannot exceed AED 9,999,999,999.99.',
+            'fuel_recoveries.*.fuel_id.distinct' =>
+                'The same fuel entry cannot be selected more than once.',
 
-    'other_reimbursement.regex' =>
-        'Other reimbursement can have a maximum of 10 whole-number digits and 2 decimal places.',
+            'fuel_recoveries.*.amount.gt' =>
+                'Fuel recovery amount must be greater than zero.',
 
-    'notes.max' =>
-        'Invoice notes cannot exceed 5000 characters.',
-]);
+            'fuel_recoveries.*.amount.max' =>
+                'Fuel recovery amount exceeds the maximum allowed amount.',
 
+            'fuel_recoveries.*.amount.regex' =>
+                'Fuel recovery amount can have a maximum of 2 decimal places.',
+
+            'other_reimbursement.required' =>
+                'Please enter the other reimbursement amount.',
+
+            'other_reimbursement.max' =>
+                'Other reimbursement cannot exceed AED 9,999,999,999.99.',
+
+            'other_reimbursement.regex' =>
+                'Other reimbursement can have a maximum of 10 whole-number digits and 2 decimal places.',
+
+            'notes.max' =>
+                'Invoice notes cannot exceed 5000 characters.',
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validate Selected Assignments And Trips Belong To Client
+        |--------------------------------------------------------------------------
+        */
+
+        $assignmentIds = $validated['assignment_ids'] ?? [];
+
+        $tripIds = $validated['trip_ids'] ?? [];
+
+        if (
+            count($assignmentIds) > 0
+            && Assignment::where('client_id', $validated['client_id'])
+                ->whereIn('id', $assignmentIds)
+                ->count() !== count($assignmentIds)
+        ) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'assignment_ids' =>
+                        'One or more selected assignments do not belong to the selected client.',
+                ]);
+        }
+
+        if (
+            count($tripIds) > 0
+            && Trip::where('client_id', $validated['client_id'])
+                ->whereIn('id', $tripIds)
+                ->count() !== count($tripIds)
+        ) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'trip_ids' =>
+                        'One or more selected trips do not belong to the selected client.',
+                ]);
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -916,7 +1067,6 @@ class InvoiceController extends Controller
             $validated['client_id'],
             $invoice->id
         );
-
         /*
         |--------------------------------------------------------------------------
         | Calculate VAT
@@ -1012,7 +1162,7 @@ class InvoiceController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Update Invoice + Fuel Recoveries
+        | Update Invoice + Selected Assignments, Trips And Fuel Recoveries
         |--------------------------------------------------------------------------
         */
 
@@ -1028,7 +1178,9 @@ class InvoiceController extends Controller
             $paidAmount,
             $balance,
             $status,
-            $fuelRecoveries
+            $fuelRecoveries,
+            $assignmentIds,
+            $tripIds
         ) {
 
             $invoice->update([
@@ -1037,7 +1189,7 @@ class InvoiceController extends Controller
                     $validated['client_id'],
 
                 'assignment_id' =>
-                    $validated['assignment_id'] ?? null,
+                    $assignmentIds[0] ?? null,
 
                 'billing_start' =>
                     $validated['billing_start'],
@@ -1088,6 +1240,16 @@ class InvoiceController extends Controller
                     $validated['notes'] ?? null,
 
             ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Synchronize Selected Assignments And Trips
+            |--------------------------------------------------------------------------
+            */
+
+            $invoice->assignments()->sync($assignmentIds);
+
+            $invoice->trips()->sync($tripIds);
 
             /*
             |--------------------------------------------------------------------------

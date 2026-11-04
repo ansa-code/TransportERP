@@ -5,7 +5,9 @@ namespace App\Models;
 use App\Models\Client;
 use App\Models\Vehicle;
 use App\Models\Driver;
+use App\Models\Invoice;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Assignment extends Model
 {
@@ -79,5 +81,20 @@ class Assignment extends Model
     public function driver()
     {
         return $this->belongsTo(Driver::class);
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Invoices
+    |--------------------------------------------------------------------------
+    */
+
+    public function invoices(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Invoice::class,
+            'invoice_assignments'
+        )->withTimestamps();
     }
 }

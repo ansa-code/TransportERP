@@ -2,6 +2,14 @@
 
 @section('content')
 
+@php
+    $displayAssignments = $invoice->assignments;
+
+    if ($displayAssignments->isEmpty() && $invoice->assignment) {
+        $displayAssignments = collect([$invoice->assignment]);
+    }
+@endphp
+
 <div class="invoice-show-page">
 
     {{-- PAGE HEADER --}}
@@ -356,8 +364,6 @@ Al Shaqra Transport</textarea>
         </div>
 
     </div>
-
-
     {{-- BILLING PERIOD --}}
     <div class="detail-card">
 
@@ -419,23 +425,52 @@ Al Shaqra Transport</textarea>
             </div>
 
 
+            {{-- SELECTED ASSIGNMENTS --}}
             <div class="detail-item">
 
                 <span>
-                    Assignment
+                    Assignments
                 </span>
 
                 <strong>
 
-                    @if($invoice->assignment)
+                    @forelse($displayAssignments as $assignment)
 
-                        Assignment #{{ $invoice->assignment->id }}
+                        <span style="display:block; margin-bottom:5px;">
+                            Assignment #{{ $assignment->id }}
+                        </span>
 
-                    @else
+                    @empty
 
                         —
 
-                    @endif
+                    @endforelse
+
+                </strong>
+
+            </div>
+
+
+            {{-- SELECTED TRIPS --}}
+            <div class="detail-item">
+
+                <span>
+                    Trips
+                </span>
+
+                <strong>
+
+                    @forelse($invoice->trips as $trip)
+
+                        <span style="display:block; margin-bottom:5px;">
+                            Trip #{{ $trip->id }}
+                        </span>
+
+                    @empty
+
+                        —
+
+                    @endforelse
 
                 </strong>
 
@@ -536,6 +571,8 @@ Al Shaqra Transport</textarea>
         </div>
 
     </div>
+
+
     {{-- PAYMENT & BALANCE --}}
     <div class="detail-card">
 
@@ -602,8 +639,6 @@ Al Shaqra Transport</textarea>
         </div>
 
     </div>
-
-
     {{-- INVOICE DETAILS --}}
     <div class="detail-card">
 
@@ -781,11 +816,8 @@ Al Shaqra Transport</textarea>
     .invoice-show-page {
         width: 100%;
         max-width: 1150px;
-
         margin: 0 auto;
-
         padding: 10px 0 40px;
-
         min-width: 0;
     }
 
@@ -794,21 +826,16 @@ Al Shaqra Transport</textarea>
 
     .page-header {
         display: flex;
-
         align-items: center;
         justify-content: space-between;
-
         gap: 20px;
-
         margin-bottom: 20px;
     }
 
 
     .page-header h1 {
         margin: 0 0 6px;
-
         color: #101d42;
-
         font-size: 28px;
         font-weight: 800;
     }
@@ -816,18 +843,14 @@ Al Shaqra Transport</textarea>
 
     .page-header p {
         margin: 0;
-
         color: #6b7280;
-
         font-size: 14px;
     }
 
 
     .header-actions {
         display: flex;
-
         align-items: center;
-
         gap: 8px;
     }
 
@@ -837,30 +860,21 @@ Al Shaqra Transport</textarea>
     .back-btn,
     .edit-header-btn {
         display: inline-flex;
-
         align-items: center;
         justify-content: center;
-
         min-height: 40px;
-
         padding: 0 15px;
-
         border-radius: 8px;
-
         text-decoration: none;
-
         font-size: 12px;
         font-weight: 800;
-
         white-space: nowrap;
     }
 
 
     .back-btn {
         border: 1px solid #d8dee8;
-
         background: #ffffff;
-
         color: #475569;
     }
 
@@ -872,7 +886,6 @@ Al Shaqra Transport</textarea>
 
     .edit-header-btn {
         background: #2563eb;
-
         color: #ffffff;
     }
 
@@ -886,35 +899,25 @@ Al Shaqra Transport</textarea>
 
     .invoice-hero {
         padding: 22px;
-
         border-radius: 16px;
-
         background: #101d42;
-
-        box-shadow:
-            0 10px 25px rgba(16, 29, 66, .14);
-
+        box-shadow: 0 10px 25px rgba(16, 29, 66, .14);
         color: #ffffff;
     }
 
 
     .hero-top {
         display: flex;
-
         align-items: center;
         justify-content: space-between;
-
         gap: 20px;
     }
 
 
     .hero-left {
         display: flex;
-
         align-items: center;
-
         gap: 14px;
-
         min-width: 0;
     }
 
@@ -922,41 +925,29 @@ Al Shaqra Transport</textarea>
     .invoice-icon {
         width: 52px;
         height: 52px;
-
         min-width: 52px;
-
         display: flex;
-
         align-items: center;
         justify-content: center;
-
         border-radius: 13px;
-
         background: rgba(255, 255, 255, .12);
-
         font-size: 24px;
     }
 
 
     .hero-label {
         display: block;
-
         margin-bottom: 4px;
-
         color: rgba(255, 255, 255, .62);
-
         font-size: 10px;
         font-weight: 800;
-
         letter-spacing: 1px;
     }
 
 
     .hero-left h2 {
         margin: 0 0 4px;
-
         color: #ffffff;
-
         font-size: 23px;
         font-weight: 800;
     }
@@ -964,9 +955,7 @@ Al Shaqra Transport</textarea>
 
     .hero-left p {
         margin: 0;
-
         color: rgba(255, 255, 255, .72);
-
         font-size: 12px;
     }
 
@@ -975,59 +964,48 @@ Al Shaqra Transport</textarea>
 
     .hero-status {
         display: inline-flex;
-
         align-items: center;
         justify-content: center;
-
         padding: 7px 12px;
-
         border-radius: 999px;
-
         font-size: 11px;
         font-weight: 800;
-
         white-space: nowrap;
     }
 
 
     .hero-status-draft {
         background: rgba(255, 255, 255, .13);
-
         color: #e2e8f0;
     }
 
 
     .hero-status-issued {
         background: #dbeafe;
-
         color: #1d4ed8;
     }
 
 
     .hero-status-partial {
         background: #ffedd5;
-
         color: #c2410c;
     }
 
 
     .hero-status-paid {
         background: #d1fae5;
-
         color: #047857;
     }
 
 
     .hero-status-overdue {
         background: #fee2e2;
-
         color: #b91c1c;
     }
 
 
     .hero-status-cancelled {
         background: #e2e8f0;
-
         color: #475569;
     }
 
@@ -1036,36 +1014,25 @@ Al Shaqra Transport</textarea>
 
     .hero-summary-grid {
         display: grid;
-
-        grid-template-columns:
-            repeat(4, minmax(0, 1fr));
-
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 11px;
-
         margin-top: 20px;
     }
 
 
     .hero-summary-card {
         min-width: 0;
-
         padding: 13px 14px;
-
         border: 1px solid rgba(255, 255, 255, .12);
-
         border-radius: 10px;
-
         background: rgba(255, 255, 255, .07);
     }
 
 
     .hero-summary-card span {
         display: block;
-
         margin-bottom: 5px;
-
         color: rgba(255, 255, 255, .58);
-
         font-size: 10px;
         font-weight: 700;
     }
@@ -1073,16 +1040,11 @@ Al Shaqra Transport</textarea>
 
     .hero-summary-card strong {
         display: block;
-
         color: #ffffff;
-
         font-size: 13px;
         font-weight: 800;
-
         white-space: nowrap;
-
         overflow: hidden;
-
         text-overflow: ellipsis;
     }
 
@@ -1096,34 +1058,22 @@ Al Shaqra Transport</textarea>
 
     .action-bar {
         display: flex;
-
         align-items: center;
         justify-content: space-between;
-
         gap: 20px;
-
         margin: 17px 0;
-
         padding: 14px 17px;
-
         border: 1px solid #e7ebf2;
-
         border-radius: 12px;
-
         background: #ffffff;
-
-        box-shadow:
-            0 4px 14px rgba(16, 29, 66, .04);
+        box-shadow: 0 4px 14px rgba(16, 29, 66, .04);
     }
 
 
     .action-bar strong {
         display: block;
-
         margin-bottom: 3px;
-
         color: #101d42;
-
         font-size: 13px;
         font-weight: 800;
     }
@@ -1131,16 +1081,13 @@ Al Shaqra Transport</textarea>
 
     .action-bar > div:first-child span {
         color: #7a8497;
-
         font-size: 11px;
     }
 
 
     .invoice-actions {
         display: flex;
-
         align-items: center;
-
         gap: 7px;
     }
 
@@ -1148,30 +1095,21 @@ Al Shaqra Transport</textarea>
     .print-btn,
     .email-btn {
         display: inline-flex;
-
         align-items: center;
         justify-content: center;
-
         min-height: 34px;
-
         padding: 0 11px;
-
         border: none;
-
         border-radius: 7px;
-
         text-decoration: none;
-
         font-size: 10px;
         font-weight: 800;
-
         cursor: pointer;
     }
 
 
     .print-btn {
         background: #101d42;
-
         color: #ffffff;
     }
 
@@ -1183,7 +1121,6 @@ Al Shaqra Transport</textarea>
 
     .email-btn {
         background: #eaf2ff;
-
         color: #1d4ed8;
     }
 
@@ -1197,20 +1134,13 @@ Al Shaqra Transport</textarea>
 
     .email-modal-overlay {
         position: fixed;
-
         inset: 0;
-
         z-index: 9999;
-
         display: none;
-
         align-items: center;
         justify-content: center;
-
         padding: 20px;
-
         background: rgba(15, 23, 42, .58);
-
         backdrop-filter: blur(3px);
     }
 
@@ -1222,55 +1152,38 @@ Al Shaqra Transport</textarea>
 
     .email-modal {
         width: 100%;
-
         max-width: 520px;
-
         max-height: 90vh;
-
         overflow-y: auto;
-
         border-radius: 16px;
-
         background: #ffffff;
-
-        box-shadow:
-            0 25px 60px rgba(15, 23, 42, .22);
+        box-shadow: 0 25px 60px rgba(15, 23, 42, .22);
     }
 
 
     .email-modal-header {
         display: flex;
-
         align-items: flex-start;
         justify-content: space-between;
-
         gap: 20px;
-
         padding: 20px;
-
         border-bottom: 1px solid #edf0f5;
     }
 
 
     .email-modal-label {
         display: block;
-
         margin-bottom: 5px;
-
         color: #2563eb;
-
         font-size: 9px;
         font-weight: 800;
-
         letter-spacing: 1px;
     }
 
 
     .email-modal-header h2 {
         margin: 0 0 5px;
-
         color: #101d42;
-
         font-size: 20px;
         font-weight: 800;
     }
@@ -1278,9 +1191,7 @@ Al Shaqra Transport</textarea>
 
     .email-modal-header p {
         margin: 0;
-
         color: #7a8497;
-
         font-size: 11px;
     }
 
@@ -1288,21 +1199,13 @@ Al Shaqra Transport</textarea>
     .email-modal-close {
         width: 32px;
         height: 32px;
-
         flex-shrink: 0;
-
         border: none;
-
         border-radius: 8px;
-
         background: #f1f5f9;
-
         color: #475569;
-
         font-size: 22px;
-
         line-height: 1;
-
         cursor: pointer;
     }
 
@@ -1324,11 +1227,8 @@ Al Shaqra Transport</textarea>
 
     .email-form-group label {
         display: block;
-
         margin-bottom: 7px;
-
         color: #334155;
-
         font-size: 11px;
         font-weight: 800;
     }
@@ -1337,39 +1237,27 @@ Al Shaqra Transport</textarea>
     .email-form-group input,
     .email-form-group textarea {
         width: 100%;
-
         box-sizing: border-box;
-
         border: 1px solid #d8dee8;
-
         border-radius: 8px;
-
         background: #ffffff;
-
         color: #334155;
-
         font-family: inherit;
-
         font-size: 12px;
-
         outline: none;
     }
 
 
     .email-form-group input {
         height: 40px;
-
         padding: 0 12px;
     }
 
 
     .email-form-group textarea {
         min-height: 130px;
-
         padding: 11px 12px;
-
         resize: vertical;
-
         line-height: 1.6;
     }
 
@@ -1377,27 +1265,18 @@ Al Shaqra Transport</textarea>
     .email-form-group input:focus,
     .email-form-group textarea:focus {
         border-color: #2563eb;
-
-        box-shadow:
-            0 0 0 3px rgba(37, 99, 235, .10);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, .10);
     }
-
+    /* EMAIL FORM INFO */
 
     .email-form-info {
         display: flex;
-
         align-items: center;
-
         gap: 10px;
-
         margin-bottom: 18px;
-
         padding: 11px 12px;
-
         border: 1px solid #dbeafe;
-
         border-radius: 9px;
-
         background: #eff6ff;
     }
 
@@ -1409,11 +1288,8 @@ Al Shaqra Transport</textarea>
 
     .email-form-info strong {
         display: block;
-
         margin-bottom: 2px;
-
         color: #1e3a8a;
-
         font-size: 11px;
         font-weight: 800;
     }
@@ -1421,19 +1297,15 @@ Al Shaqra Transport</textarea>
 
     .email-form-info p {
         margin: 0;
-
         color: #64748b;
-
         font-size: 10px;
     }
 
 
     .email-modal-actions {
         display: flex;
-
         align-items: center;
         justify-content: flex-end;
-
         gap: 8px;
     }
 
@@ -1441,23 +1313,17 @@ Al Shaqra Transport</textarea>
     .email-cancel-btn,
     .email-send-btn {
         min-height: 38px;
-
         padding: 0 15px;
-
         border-radius: 8px;
-
         font-size: 11px;
         font-weight: 800;
-
         cursor: pointer;
     }
 
 
     .email-cancel-btn {
         border: 1px solid #d8dee8;
-
         background: #ffffff;
-
         color: #475569;
     }
 
@@ -1469,9 +1335,7 @@ Al Shaqra Transport</textarea>
 
     .email-send-btn {
         border: none;
-
         background: #2563eb;
-
         color: #ffffff;
     }
 
@@ -1479,51 +1343,39 @@ Al Shaqra Transport</textarea>
     .email-send-btn:hover {
         background: #1d4ed8;
     }
+
+
     /* DETAIL CARD */
 
     .detail-card {
         margin-bottom: 17px;
-
         background: #ffffff;
-
         border: 1px solid #e7ebf2;
-
         border-radius: 14px;
-
-        box-shadow:
-            0 5px 18px rgba(16, 29, 66, .05);
-
+        box-shadow: 0 5px 18px rgba(16, 29, 66, .05);
         overflow: hidden;
     }
 
 
     .detail-card-header {
         display: flex;
-
         align-items: center;
-
         padding: 17px 20px;
-
         border-bottom: 1px solid #edf0f5;
     }
 
 
     .detail-card-header h2 {
         margin: 0 0 4px;
-
         color: #101d42;
-
         font-size: 16px;
-
         font-weight: 800;
     }
 
 
     .detail-card-header p {
         margin: 0;
-
         color: #7a8497;
-
         font-size: 11px;
     }
 
@@ -1532,19 +1384,14 @@ Al Shaqra Transport</textarea>
 
     .detail-grid {
         display: grid;
-
-        grid-template-columns:
-            repeat(2, minmax(0, 1fr));
-
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 0;
     }
 
 
     .detail-item {
         min-width: 0;
-
         padding: 16px 20px;
-
         border-bottom: 1px solid #eef2f7;
     }
 
@@ -1561,30 +1408,20 @@ Al Shaqra Transport</textarea>
 
     .detail-item span:first-child {
         display: block;
-
         margin-bottom: 5px;
-
         color: #94a3b8;
-
         font-size: 10px;
-
         font-weight: 700;
-
         text-transform: uppercase;
-
         letter-spacing: .35px;
     }
 
 
     .detail-item strong {
         display: block;
-
         color: #334155;
-
         font-size: 13px;
-
         font-weight: 800;
-
         word-break: break-word;
     }
 
@@ -1598,75 +1435,50 @@ Al Shaqra Transport</textarea>
 
     .amount-box {
         margin: 18px 20px;
-
         padding: 14px 16px;
-
         border: 1px solid #e5eaf1;
-
         border-radius: 11px;
-
         background: #f8fafc;
     }
 
 
     .amount-row {
         display: flex;
-
         align-items: center;
-
         justify-content: space-between;
-
         gap: 20px;
-
         padding: 9px 0;
-
         color: #64748b;
-
         font-size: 12px;
     }
 
 
     .amount-row strong {
         color: #334155;
-
         font-size: 12px;
-
         font-weight: 800;
-
         white-space: nowrap;
     }
 
 
     .amount-total {
         display: flex;
-
         align-items: center;
-
         justify-content: space-between;
-
         gap: 20px;
-
         margin-top: 7px;
-
         padding-top: 13px;
-
         border-top: 1px solid #dce3ec;
-
         color: #101d42;
-
         font-size: 13px;
-
         font-weight: 800;
     }
 
 
     .amount-total strong {
         color: #101d42;
-
         font-size: 17px;
-
         font-weight: 800;
-
         white-space: nowrap;
     }
 
@@ -1675,53 +1487,36 @@ Al Shaqra Transport</textarea>
 
     .payment-summary-grid {
         display: grid;
-
-        grid-template-columns:
-            repeat(3, minmax(0, 1fr));
-
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 13px;
-
         padding: 18px 20px;
     }
 
 
     .payment-box {
         min-width: 0;
-
         padding: 16px;
-
         border: 1px solid #e5eaf1;
-
         border-radius: 11px;
-
         background: #f8fafc;
     }
 
 
     .payment-box span {
         display: block;
-
         margin-bottom: 6px;
-
         color: #7a8497;
-
         font-size: 10px;
-
         font-weight: 700;
-
         text-transform: uppercase;
-
         letter-spacing: .3px;
     }
 
 
     .payment-box strong {
         display: block;
-
         font-size: 17px;
-
         font-weight: 800;
-
         white-space: nowrap;
     }
 
@@ -1733,7 +1528,6 @@ Al Shaqra Transport</textarea>
 
     .paid-box {
         background: #f0fdf4;
-
         border-color: #dcfce7;
     }
 
@@ -1745,7 +1539,6 @@ Al Shaqra Transport</textarea>
 
     .balance-box {
         background: #fff7ed;
-
         border-color: #fed7aa;
     }
 
@@ -1759,59 +1552,47 @@ Al Shaqra Transport</textarea>
 
     .detail-status {
         display: inline-flex;
-
         align-items: center;
-
         justify-content: center;
-
         padding: 5px 9px;
-
         border-radius: 999px;
-
         font-size: 10px;
-
         font-weight: 800;
     }
 
 
     .detail-status.hero-status-draft {
         background: #f1f5f9;
-
         color: #475569;
     }
 
 
     .detail-status.hero-status-issued {
         background: #eaf2ff;
-
         color: #1d4ed8;
     }
 
 
     .detail-status.hero-status-partial {
         background: #fff7ed;
-
         color: #c2410c;
     }
 
 
     .detail-status.hero-status-paid {
         background: #ecfdf5;
-
         color: #047857;
     }
 
 
     .detail-status.hero-status-overdue {
         background: #fef2f2;
-
         color: #b91c1c;
     }
 
 
     .detail-status.hero-status-cancelled {
         background: #f1f5f9;
-
         color: #64748b;
     }
 
@@ -1825,20 +1606,15 @@ Al Shaqra Transport</textarea>
 
     .notes-area p {
         margin: 0;
-
         color: #475569;
-
         font-size: 13px;
-
         line-height: 1.7;
-
         white-space: pre-wrap;
     }
 
 
     .empty-notes {
         color: #94a3b8;
-
         font-size: 12px;
     }
 
@@ -1847,13 +1623,9 @@ Al Shaqra Transport</textarea>
 
     .footer-actions {
         display: flex;
-
         align-items: center;
-
         justify-content: flex-end;
-
         gap: 8px;
-
         margin-top: 5px;
     }
 
@@ -1861,30 +1633,20 @@ Al Shaqra Transport</textarea>
     .cancel-btn,
     .edit-btn {
         display: inline-flex;
-
         align-items: center;
-
         justify-content: center;
-
         min-height: 39px;
-
         padding: 0 15px;
-
         border-radius: 8px;
-
         text-decoration: none;
-
         font-size: 12px;
-
         font-weight: 800;
     }
 
 
     .cancel-btn {
         border: 1px solid #d8dee8;
-
         background: #ffffff;
-
         color: #475569;
     }
 
@@ -1896,7 +1658,6 @@ Al Shaqra Transport</textarea>
 
     .edit-btn {
         background: #2563eb;
-
         color: #ffffff;
     }
 
@@ -1911,8 +1672,7 @@ Al Shaqra Transport</textarea>
     @media (max-width: 850px) {
 
         .hero-summary-grid {
-            grid-template-columns:
-                repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
 
@@ -1927,14 +1687,12 @@ Al Shaqra Transport</textarea>
 
         .invoice-show-page {
             padding-left: 10px;
-
             padding-right: 10px;
         }
 
 
         .page-header {
             flex-direction: column;
-
             align-items: flex-start;
         }
 
@@ -1952,7 +1710,6 @@ Al Shaqra Transport</textarea>
 
         .hero-top {
             flex-direction: column;
-
             align-items: flex-start;
         }
 
@@ -1969,14 +1726,12 @@ Al Shaqra Transport</textarea>
 
         .action-bar {
             flex-direction: column;
-
             align-items: flex-start;
         }
 
 
         .invoice-actions {
             width: 100%;
-
             flex-wrap: wrap;
         }
 
@@ -2019,7 +1774,6 @@ Al Shaqra Transport</textarea>
 
         .footer-actions {
             flex-direction: column-reverse;
-
             align-items: stretch;
         }
 
@@ -2037,7 +1791,6 @@ Al Shaqra Transport</textarea>
 
         .email-modal {
             max-height: 94vh;
-
             border-radius: 13px;
         }
 
@@ -2054,7 +1807,6 @@ Al Shaqra Transport</textarea>
 
         .email-modal-actions {
             flex-direction: column-reverse;
-
             align-items: stretch;
         }
 
@@ -2086,21 +1838,18 @@ Al Shaqra Transport</textarea>
 
         .invoice-show-page {
             max-width: none;
-
             padding: 0;
         }
 
 
         .invoice-hero {
             box-shadow: none;
-
             break-inside: avoid;
         }
 
 
         .detail-card {
             box-shadow: none;
-
             break-inside: avoid;
         }
 

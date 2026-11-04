@@ -2,6 +2,22 @@
 
 @section('content')
 
+@php
+    $selectedAssignmentIds = old(
+        'assignment_ids',
+        $invoice->assignments->pluck('id')->toArray()
+    );
+
+    if (empty($selectedAssignmentIds) && $invoice->assignment_id) {
+        $selectedAssignmentIds = [$invoice->assignment_id];
+    }
+
+    $selectedTripIds = old(
+        'trip_ids',
+        $invoice->trips->pluck('id')->toArray()
+    );
+@endphp
+
 <div class="invoice-edit-page">
 
     {{-- PAGE HEADER --}}
@@ -120,29 +136,28 @@
                 </div>
 
 
-                {{-- ASSIGNMENT --}}
+                {{-- ASSIGNMENTS --}}
                 <div class="form-group">
 
-                    <label for="assignment_id">
-                        Assignment
+                    <label for="assignment_ids">
+                        Assignments
                     </label>
 
                     <select
-                        name="assignment_id"
-                        id="assignment_id"
+                        name="assignment_ids[]"
+                        id="assignment_ids"
+                        multiple
+                        size="4"
                     >
-
-                        <option value="">
-                            Select Assignment
-                        </option>
 
                         @foreach($assignments as $assignment)
 
                             <option
                                 value="{{ $assignment->id }}"
-                                {{ old('assignment_id', $invoice->assignment_id) == $assignment->id ? 'selected' : '' }}
+                                data-client-id="{{ $assignment->client_id }}"
+                                {{ in_array($assignment->id, $selectedAssignmentIds) ? 'selected' : '' }}
                             >
-                                {{ $assignment->id }}
+                                Assignment #{{ $assignment->id }}
 
                                 @if($assignment->client)
                                     — {{ $assignment->client->client_name }}
@@ -155,7 +170,49 @@
                     </select>
 
                     <small>
-                        Optional source reference.
+                        Select one or more assignments belonging to the selected client.
+                        Hold Ctrl (Windows) to select multiple records.
+                    </small>
+
+                </div>
+
+
+                {{-- TRIPS --}}
+                <div class="form-group">
+
+                    <label for="trip_ids">
+                        Trips
+                    </label>
+
+                    <select
+                        name="trip_ids[]"
+                        id="trip_ids"
+                        multiple
+                        size="4"
+                    >
+
+                        @foreach($trips as $trip)
+
+                            <option
+                                value="{{ $trip->id }}"
+                                data-client-id="{{ $trip->client_id }}"
+                                {{ in_array($trip->id, $selectedTripIds) ? 'selected' : '' }}
+                            >
+                                Trip #{{ $trip->id }}
+
+                                @if($trip->client)
+                                    — {{ $trip->client->client_name }}
+                                @endif
+
+                            </option>
+
+                        @endforeach
+
+                    </select>
+
+                    <small>
+                        Select one or more trips belonging to the selected client.
+                        Hold Ctrl (Windows) to select multiple records.
                     </small>
 
                 </div>
@@ -319,11 +376,9 @@
                 </div>
 
             </div>
-
-
+            {{-- SUBTOTAL --}}
             <div class="form-grid">
 
-                {{-- SUBTOTAL --}}
                 <div class="form-group">
 
                     <label for="subtotal">
@@ -437,38 +492,28 @@
                                         data-remaining="{{ number_format($remainingAmount, 2, '.', '') }}"
                                     >
 
-                                        {{-- FUEL ENTRY --}}
                                         <td>
-
                                             <strong>
                                                 {{ $fuel->fuel_entry_no }}
                                             </strong>
-
                                         </td>
 
 
-                                        {{-- VEHICLE --}}
                                         <td>
                                             {{ $fuel->vehicle->plate_number ?? '—' }}
                                         </td>
 
 
-                                        {{-- CLIENT --}}
                                         <td>
                                             {{ $fuel->client->client_name ?? '—' }}
                                         </td>
 
 
-                                        {{-- AVAILABLE --}}
                                         <td>
-
-                                            AED
-                                            {{ number_format($remainingAmount, 2) }}
-
+                                            AED {{ number_format($remainingAmount, 2) }}
                                         </td>
 
 
-                                        {{-- RECOVER --}}
                                         <td>
 
                                             <div class="recovery-input-wrap">
@@ -626,6 +671,8 @@
             </div>
 
         </div>
+
+
         {{-- PAYMENT SUMMARY --}}
         <div class="form-card">
 
@@ -947,6 +994,12 @@
         padding: 0 11px;
     }
 
+    .form-group select[multiple] {
+        height: auto;
+        min-height: 100px;
+        padding: 8px 11px;
+    }
+
     .form-group textarea {
         min-height: 100px;
         padding: 11px;
@@ -1166,7 +1219,6 @@
         font-size: 17px;
         font-weight: 800;
     }
-
     /* ACTIONS */
 
     .form-actions {
@@ -1270,6 +1322,54 @@
 
     document.addEventListener('DOMContentLoaded', function () {
 
+        /* CLIENT-WISE ASSIGNMENT AND TRIP FILTER */
+
+        const clientSelect =
+            document.getElementById('client_id');
+
+        const assignmentSelect =
+            document.getElementById('assignment_ids');
+
+        const tripSelect =
+            document.getElementById('trip_ids');
+
+
+        function filterClientRecords() {
+
+            const selectedClientId = clientSelect.value;
+
+            [assignmentSelect, tripSelect].forEach(function (select) {
+
+                Array.from(select.options).forEach(function (option) {
+
+                    const belongsToClient =
+                        selectedClientId !== '' &&
+                        option.dataset.clientId === selectedClientId;
+
+                    option.hidden = !belongsToClient;
+                    option.disabled = !belongsToClient;
+
+                    if (!belongsToClient) {
+                        option.selected = false;
+                    }
+
+                });
+
+            });
+
+        }
+
+
+        clientSelect.addEventListener(
+            'change',
+            filterClientRecords
+        );
+
+        filterClientRecords();
+
+
+        /* EXISTING INVOICE CALCULATIONS */
+
         const subtotalInput =
             document.getElementById('subtotal');
 
@@ -1338,71 +1438,70 @@
 
         function rebuildFuelInputs() {
 
-    hiddenInputs.innerHTML = '';
+            hiddenInputs.innerHTML = '';
 
-    let index = 0;
+            let index = 0;
 
-    document
-        .querySelectorAll('.fuel-amount-input')
-        .forEach(function (input) {
+            document
+                .querySelectorAll('.fuel-amount-input')
+                .forEach(function (input) {
 
-            if (input.disabled) {
-                return;
-            }
+                    if (input.disabled) {
+                        return;
+                    }
 
-            const amount =
-                parseFloat(input.value) || 0;
+                    const amount =
+                        parseFloat(input.value) || 0;
 
-            if (amount <= 0) {
-                return;
-            }
+                    if (amount <= 0) {
+                        return;
+                    }
 
-            const fuelId =
-                input.dataset.fuelId;
-
-
-            const fuelIdInput =
-                document.createElement('input');
-
-            fuelIdInput.type = 'hidden';
-
-            fuelIdInput.name =
-                'fuel_recoveries[' +
-                index +
-                '][fuel_id]';
-
-            fuelIdInput.value =
-                fuelId;
+                    const fuelId =
+                        input.dataset.fuelId;
 
 
-            const amountInput =
-                document.createElement('input');
+                    const fuelIdInput =
+                        document.createElement('input');
 
-            amountInput.type = 'hidden';
+                    fuelIdInput.type = 'hidden';
 
-            amountInput.name =
-                'fuel_recoveries[' +
-                index +
-                '][amount]';
+                    fuelIdInput.name =
+                        'fuel_recoveries[' +
+                        index +
+                        '][fuel_id]';
 
-            amountInput.value =
-                amount.toFixed(2);
-
-
-            hiddenInputs.appendChild(
-                fuelIdInput
-            );
-
-            hiddenInputs.appendChild(
-                amountInput
-            );
+                    fuelIdInput.value =
+                        fuelId;
 
 
-            index++;
+                    const amountInput =
+                        document.createElement('input');
 
-        });
+                    amountInput.type = 'hidden';
 
-}
+                    amountInput.name =
+                        'fuel_recoveries[' +
+                        index +
+                        '][amount]';
+
+                    amountInput.value =
+                        amount.toFixed(2);
+
+
+                    hiddenInputs.appendChild(
+                        fuelIdInput
+                    );
+
+                    hiddenInputs.appendChild(
+                        amountInput
+                    );
+
+                    index++;
+
+                });
+
+        }
 
 
         function calculateInvoice() {
@@ -1486,8 +1585,7 @@
                             !this.checked;
 
                         if (!this.checked) {
-                            amountInput.value =
-                                '0.00';
+                            amountInput.value = '0.00';
                         }
 
                         calculateInvoice();
@@ -1526,6 +1624,8 @@
         );
 
 
+        /* DATE VALIDATION */
+
         const invoiceDate =
             document.getElementById('invoice_date');
 
@@ -1542,7 +1642,8 @@
         function updateDateLimits() {
 
             if (invoiceDate.value) {
-            dueDate.min =
+
+                dueDate.min =
                     invoiceDate.value;
 
             }

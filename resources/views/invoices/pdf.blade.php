@@ -7,6 +7,14 @@
         Invoice {{ $invoice->invoice_no ?? $invoice->invoice_number }}
     </title>
 
+    @php
+        $displayAssignments = $invoice->assignments;
+
+        if ($displayAssignments->isEmpty() && $invoice->assignment) {
+            $displayAssignments = collect([$invoice->assignment]);
+        }
+    @endphp
+
     <style>
         @page {
             margin: 28px;
@@ -149,7 +157,7 @@
         }
 
         .billing-table th {
-            padding: 9px;
+            padding: 9px 6px;
             background: #f1f5f9;
             color: #475569;
             border: 1px solid #e2e8f0;
@@ -160,10 +168,15 @@
         }
 
         .billing-table td {
-            padding: 10px;
+            padding: 10px 6px;
             color: #334155;
             border: 1px solid #e2e8f0;
             font-size: 10px;
+            vertical-align: top;
+        }
+
+        .record-list {
+            line-height: 1.7;
         }
 
         .text-right {
@@ -305,7 +318,6 @@
 
             </td>
 
-
             {{-- INVOICE INFORMATION --}}
 
             <td class="header-right">
@@ -328,7 +340,6 @@
 
     </table>
 
-
     {{-- CLIENT / INVOICE INFO --}}
 
     <table class="info-table">
@@ -348,7 +359,6 @@
                 </div>
 
             </td>
-
 
             {{-- INVOICE DATE --}}
 
@@ -373,7 +383,6 @@
 
     </table>
 
-
     {{-- BILLING PERIOD --}}
 
     <div class="section-title">
@@ -386,21 +395,15 @@
 
             <tr>
 
-                <th>
-                    Billing Period
-                </th>
+                <th>Billing Period</th>
 
-                <th>
-                    Source
-                </th>
+                <th>Source</th>
 
-                <th>
-                    Assignment
-                </th>
+                <th>Assignments</th>
 
-                <th class="text-right">
-                    Subtotal
-                </th>
+                <th>Trips</th>
+
+                <th class="text-right">Subtotal</th>
 
             </tr>
 
@@ -420,8 +423,20 @@
                     {{ $invoice->source ?? 'Manual' }}
                 </td>
 
-                <td>
-                    {{ $invoice->assignment->id ?? '—' }}
+                <td class="record-list">
+                    @forelse($displayAssignments as $assignment)
+                        {{ $assignment->id }}@if(!$loop->last),<br>@endif
+                    @empty
+                        —
+                    @endforelse
+                </td>
+
+                <td class="record-list">
+                    @forelse($invoice->trips as $trip)
+                        {{ $trip->id }}@if(!$loop->last),<br>@endif
+                    @empty
+                        —
+                    @endforelse
                 </td>
 
                 <td class="text-right">
@@ -433,8 +448,6 @@
         </tbody>
 
     </table>
-
-
     {{-- AMOUNT SUMMARY --}}
 
     <table class="bottom-table">
@@ -459,7 +472,6 @@
 
             </td>
 
-
             {{-- TOTALS --}}
 
             <td class="totals-cell">
@@ -480,7 +492,6 @@
 
                     </tr>
 
-
                     {{-- VAT --}}
 
                     <tr>
@@ -496,7 +507,6 @@
 
                     </tr>
 
-
                     {{-- FUEL REIMBURSEMENT --}}
 
                     <tr>
@@ -510,7 +520,6 @@
                         </td>
 
                     </tr>
-
 
                     {{-- OTHER REIMBURSEMENT --}}
 
@@ -526,7 +535,6 @@
 
                     </tr>
 
-
                     {{-- GRAND TOTAL --}}
 
                     <tr class="grand-total">
@@ -541,7 +549,6 @@
 
                     </tr>
 
-
                     {{-- PAID --}}
 
                     <tr class="paid-row">
@@ -555,7 +562,6 @@
                         </td>
 
                     </tr>
-
 
                     {{-- OUTSTANDING BALANCE --}}
 
@@ -578,7 +584,6 @@
         </tr>
 
     </table>
-
 
     {{-- FOOTER --}}
 
