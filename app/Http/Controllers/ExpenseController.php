@@ -276,6 +276,13 @@ class ExpenseController extends Controller
                 'nullable',
                 'string',
             ],
+        ], [
+            'parts_cost.max' => 'Please enter a cost figure of up to 8 digits.',
+            'parts_cost.regex' => 'Please enter a cost figure of up to 8 digits.',
+            'labour_cost.max' => 'Please enter a cost figure of up to 8 digits.',
+            'labour_cost.regex' => 'Please enter a cost figure of up to 8 digits.',
+            'other_cost.max' => 'Please enter a cost figure of up to 8 digits.',
+            'other_cost.regex' => 'Please enter a cost figure of up to 8 digits.',
         ]);
 
         foreach ($validated['expense_type'] as $type) {
@@ -556,6 +563,13 @@ class ExpenseController extends Controller
                 'nullable',
                 'string',
             ],
+        ], [
+            'parts_cost.max' => 'Please enter a cost figure of up to 8 digits.',
+            'parts_cost.regex' => 'Please enter a cost figure of up to 8 digits.',
+            'labour_cost.max' => 'Please enter a cost figure of up to 8 digits.',
+            'labour_cost.regex' => 'Please enter a cost figure of up to 8 digits.',
+            'other_cost.max' => 'Please enter a cost figure of up to 8 digits.',
+            'other_cost.regex' => 'Please enter a cost figure of up to 8 digits.',
         ]);
 
         foreach ($validated['expense_type'] as $type) {

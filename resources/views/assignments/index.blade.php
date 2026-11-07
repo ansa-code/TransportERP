@@ -10,7 +10,6 @@
 }
 
 /* HEADER */
-
 .assignment-header {
     display: flex;
     justify-content: space-between;
@@ -53,7 +52,6 @@
 }
 
 /* FILTERS */
-
 .assignment-filters {
     display: flex;
     align-items: center;
@@ -122,7 +120,6 @@
 }
 
 /* BOARD */
-
 .assignment-board {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -162,7 +159,6 @@
 }
 
 /* CARDS */
-
 .assignment-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
@@ -198,7 +194,6 @@
 }
 
 /* EMPTY STATE */
-
 .assignment-empty {
     padding: 35px 10px;
     text-align: center;
@@ -208,7 +203,6 @@
 }
 
 /* STATUS BADGES */
-
 .assignment-status {
     display: inline-flex;
     align-items: center;
@@ -239,6 +233,11 @@
     color: #0e7490;
 }
 
+.status-closed {
+    background: #d1fae5;
+    color: #047857;
+}
+
 .status-cancelled {
     background: #e2e3e5;
     color: #41464b;
@@ -250,7 +249,6 @@
 }
 
 /* CARD ACTIONS */
-
 .assignment-card-actions {
     display: flex;
     align-items: center;
@@ -294,94 +292,7 @@
     background: #bb2d3b;
 }
 
-/* DONE / UNDO */
-
-.assignment-done-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-top: 14px;
-}
-
-.assignment-done-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 34px;
-    padding: 0 12px;
-    border: none;
-    border-radius: 7px;
-    background: #198754;
-    color: #ffffff;
-    font-size: 11px;
-    font-weight: 800;
-    cursor: pointer;
-}
-
-.assignment-done-btn:hover {
-    background: #157347;
-}
-
-.assignment-done-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    min-height: 34px;
-    padding: 0 11px;
-    border-radius: 7px;
-    background: #d1fae5;
-    color: #047857;
-    font-size: 11px;
-    font-weight: 800;
-}
-
-.assignment-undo-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 32px;
-    padding: 0 11px;
-    border: 1px solid #cbd5e1;
-    border-radius: 7px;
-    background: #ffffff;
-    color: #475569;
-    font-size: 11px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.assignment-undo-btn:hover {
-    background: #f1f5f9;
-}
-
-/* ALERTS */
-
-.assignment-alert {
-    padding: 11px 14px;
-    margin-bottom: 16px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.assignment-alert-success {
-    background: #d1e7dd;
-    color: #0f5132;
-}
-
-.assignment-alert-error {
-    background: #f8d7da;
-    color: #842029;
-}
-
-.assignment-alert-info {
-    background: #cff4fc;
-    color: #055160;
-}
-
 /* RESPONSIVE */
-
 @media (max-width: 1100px) {
     .assignment-board {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -422,12 +333,9 @@
 <div class="assignment-page">
 
     {{-- HEADER --}}
-
     <div class="assignment-header">
-
         <div class="assignment-title">
             <h1>Assignment Center</h1>
-
             <p>
                 Allocate trucks and drivers to clients with billing and cost controls
             </p>
@@ -439,20 +347,16 @@
         >
             Create Assignment
         </a>
-
     </div>
 
-    
-
+   
     {{-- FILTERS --}}
-
     <form
         action="{{ route('assignments.index') }}"
         method="GET"
         class="assignment-filters"
         id="assignmentFilterForm"
     >
-
         <input
             type="text"
             name="search"
@@ -520,17 +424,13 @@
                 Clear
             </a>
         @endif
-
     </form>
 
     {{-- ASSIGNMENT BOARD --}}
-
     <div class="assignment-board">
 
         {{-- PLANNED --}}
-
         <div class="assignment-lane">
-
             <div class="assignment-lane-header">
                 <div class="assignment-lane-title">Planned</div>
                 <div class="assignment-lane-count">
@@ -539,9 +439,7 @@
             </div>
 
             @forelse($plannedAssignments as $assignment)
-
                 <div class="assignment-card">
-
                     <h4 class="assignment-card-title">
                         {{ $assignment->assignment_no ?? 'Assignment' }}
                     </h4>
@@ -559,7 +457,6 @@
                     </span>
 
                     <div class="assignment-card-actions">
-
                         <a
                             href="{{ route('assignments.edit', $assignment->id) }}"
                             class="assignment-edit-btn"
@@ -583,25 +480,17 @@
                                 Delete
                             </button>
                         </form>
-
                     </div>
-
                 </div>
-
             @empty
-
                 <div class="assignment-empty">
                     No planned assignments.
                 </div>
-
             @endforelse
-
         </div>
 
         {{-- ASSIGNED --}}
-
         <div class="assignment-lane">
-
             <div class="assignment-lane-header">
                 <div class="assignment-lane-title">Assigned</div>
                 <div class="assignment-lane-count">
@@ -610,9 +499,7 @@
             </div>
 
             @forelse($assignedAssignments as $assignment)
-
                 <div class="assignment-card">
-
                     <h4 class="assignment-card-title">
                         {{ $assignment->assignment_no ?? 'Assignment' }}
                     </h4>
@@ -630,7 +517,6 @@
                     </span>
 
                     <div class="assignment-card-actions">
-
                         <a
                             href="{{ route('assignments.edit', $assignment->id) }}"
                             class="assignment-edit-btn"
@@ -654,25 +540,17 @@
                                 Delete
                             </button>
                         </form>
-
                     </div>
-
                 </div>
-
             @empty
-
                 <div class="assignment-empty">
                     No assigned assignments.
                 </div>
-
             @endforelse
-
         </div>
 
         {{-- IN TRANSIT --}}
-
         <div class="assignment-lane">
-
             <div class="assignment-lane-header">
                 <div class="assignment-lane-title">In Transit</div>
                 <div class="assignment-lane-count">
@@ -681,9 +559,7 @@
             </div>
 
             @forelse($inTransitAssignments as $assignment)
-
                 <div class="assignment-card">
-
                     <h4 class="assignment-card-title">
                         {{ $assignment->assignment_no ?? 'Assignment' }}
                     </h4>
@@ -700,49 +576,24 @@
                         In Transit
                     </span>
 
+                    {{-- In Transit: Edit allowed, Delete not allowed --}}
                     <div class="assignment-card-actions">
-
                         <a
                             href="{{ route('assignments.edit', $assignment->id) }}"
                             class="assignment-edit-btn"
                         >
                             Edit
                         </a>
-
-                        <form
-                            action="{{ route('assignments.destroy', $assignment->id) }}"
-                            method="POST"
-                            style="margin:0;"
-                        >
-                            @csrf
-                            @method('DELETE')
-
-                            <button
-                                type="submit"
-                                class="assignment-delete-btn"
-                                onclick="return confirm('Delete this assignment record?')"
-                            >
-                                Delete
-                            </button>
-                        </form>
-
                     </div>
-
                 </div>
-
             @empty
-
                 <div class="assignment-empty">
                     No in-transit assignments.
                 </div>
-
             @endforelse
-
         </div>
         {{-- DELIVERED --}}
-
         <div class="assignment-lane">
-
             <div class="assignment-lane-header">
                 <div class="assignment-lane-title">Delivered</div>
                 <div class="assignment-lane-count">
@@ -751,9 +602,7 @@
             </div>
 
             @forelse($deliveredAssignments as $assignment)
-
                 <div class="assignment-card">
-
                     <h4 class="assignment-card-title">
                         {{ $assignment->assignment_no ?? 'Assignment' }}
                     </h4>
@@ -770,50 +619,17 @@
                         Delivered
                     </span>
 
-                    <div class="assignment-card-actions">
-
-                        <a
-                            href="{{ route('assignments.edit', $assignment->id) }}"
-                            class="assignment-edit-btn"
-                        >
-                            Edit
-                        </a>
-
-                        <form
-                            action="{{ route('assignments.destroy', $assignment->id) }}"
-                            method="POST"
-                            style="margin:0;"
-                        >
-                            @csrf
-                            @method('DELETE')
-
-                            <button
-                                type="submit"
-                                class="assignment-delete-btn"
-                                onclick="return confirm('Delete this assignment record?')"
-                            >
-                                Delete
-                            </button>
-                        </form>
-
-                    </div>
-
+                    {{-- Delivered: No Edit or Delete --}}
                 </div>
-
             @empty
-
                 <div class="assignment-empty">
                     No delivered assignments.
                 </div>
-
             @endforelse
-
         </div>
 
         {{-- CLOSED --}}
-
         <div class="assignment-lane">
-
             <div class="assignment-lane-header">
                 <div class="assignment-lane-title">Closed</div>
                 <div class="assignment-lane-count">
@@ -822,9 +638,7 @@
             </div>
 
             @forelse($closedAssignments as $assignment)
-
                 <div class="assignment-card">
-
                     <h4 class="assignment-card-title">
                         {{ $assignment->assignment_no ?? 'Assignment' }}
                     </h4>
@@ -837,71 +651,21 @@
                         Driver: {{ $assignment->driver?->driver_name ?? '-' }}
                     </p>
 
-                    {{-- No separate Closed badge --}}
+                    <span class="assignment-status status-closed">
+                        Closed
+                    </span>
 
-                    <div class="assignment-done-actions">
-
-                        @if($assignment->done_at)
-
-                            <span class="assignment-done-label">
-                                <span aria-hidden="true">✓</span>
-                                Done
-                            </span>
-
-                            <form
-                                action="{{ route('assignments.undo-done', $assignment->id) }}"
-                                method="POST"
-                                style="margin:0;"
-                            >
-                                @csrf
-
-                                <button
-                                    type="submit"
-                                    class="assignment-undo-btn"
-                                    onclick="return confirm('Undo the Done mark for this assignment?')"
-                                >
-                                    Undo
-                                </button>
-                            </form>
-
-                        @else
-
-                            <form
-                                action="{{ route('assignments.done', $assignment->id) }}"
-                                method="POST"
-                                style="margin:0;"
-                            >
-                                @csrf
-
-                                <button
-                                    type="submit"
-                                    class="assignment-done-btn"
-                                    onclick="return confirm('Mark this assignment as Done?')"
-                                >
-                                    ✓ Mark Done
-                                </button>
-                            </form>
-
-                        @endif
-
-                    </div>
-
+                    {{-- Closed: No Edit or Delete --}}
                 </div>
-
             @empty
-
                 <div class="assignment-empty">
                     No closed assignments.
                 </div>
-
             @endforelse
-
         </div>
 
         {{-- CANCELLED --}}
-
         <div class="assignment-lane">
-
             <div class="assignment-lane-header">
                 <div class="assignment-lane-title">Cancelled</div>
                 <div class="assignment-lane-count">
@@ -910,9 +674,7 @@
             </div>
 
             @forelse($cancelledAssignments as $assignment)
-
                 <div class="assignment-card">
-
                     <h4 class="assignment-card-title">
                         {{ $assignment->assignment_no ?? 'Assignment' }}
                     </h4>
@@ -929,50 +691,25 @@
                         Cancelled
                     </span>
 
+                    {{-- Cancelled: Edit allowed, Delete not allowed --}}
                     <div class="assignment-card-actions">
-
                         <a
                             href="{{ route('assignments.edit', $assignment->id) }}"
                             class="assignment-edit-btn"
                         >
                             Edit
                         </a>
-
-                        <form
-                            action="{{ route('assignments.destroy', $assignment->id) }}"
-                            method="POST"
-                            style="margin:0;"
-                        >
-                            @csrf
-                            @method('DELETE')
-
-                            <button
-                                type="submit"
-                                class="assignment-delete-btn"
-                                onclick="return confirm('Delete this assignment record?')"
-                            >
-                                Delete
-                            </button>
-                        </form>
-
                     </div>
-
                 </div>
-
             @empty
-
                 <div class="assignment-empty">
                     No cancelled assignments.
                 </div>
-
             @endforelse
-
         </div>
 
         {{-- SUSPENDED --}}
-
         <div class="assignment-lane">
-
             <div class="assignment-lane-header">
                 <div class="assignment-lane-title">Suspended</div>
                 <div class="assignment-lane-count">
@@ -981,9 +718,7 @@
             </div>
 
             @forelse($suspendedAssignments as $assignment)
-
                 <div class="assignment-card">
-
                     <h4 class="assignment-card-title">
                         {{ $assignment->assignment_no ?? 'Assignment' }}
                     </h4>
@@ -1000,44 +735,21 @@
                         Suspended
                     </span>
 
+                    {{-- Suspended: Edit allowed, Delete not allowed --}}
                     <div class="assignment-card-actions">
-
                         <a
                             href="{{ route('assignments.edit', $assignment->id) }}"
                             class="assignment-edit-btn"
                         >
                             Edit
                         </a>
-
-                        <form
-                            action="{{ route('assignments.destroy', $assignment->id) }}"
-                            method="POST"
-                            style="margin:0;"
-                        >
-                            @csrf
-                            @method('DELETE')
-
-                            <button
-                                type="submit"
-                                class="assignment-delete-btn"
-                                onclick="return confirm('Delete this assignment record?')"
-                            >
-                                Delete
-                            </button>
-                        </form>
-
                     </div>
-
                 </div>
-
             @empty
-
                 <div class="assignment-empty">
                     No suspended assignments.
                 </div>
-
             @endforelse
-
         </div>
 
     </div>

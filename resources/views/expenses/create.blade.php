@@ -306,6 +306,7 @@
                         id="parts_cost"
                         step="0.01"
                         min="0"
+                        max="99999999.99"
                         value="{{ old('parts_cost', '0.00') }}"
                         placeholder="0.00"
                     >
@@ -319,6 +320,7 @@
                         id="labour_cost"
                         step="0.01"
                         min="0"
+                        max="99999999.99"
                         value="{{ old('labour_cost', '0.00') }}"
                         placeholder="0.00"
                     >
@@ -332,6 +334,7 @@
                         id="other_cost"
                         step="0.01"
                         min="0"
+                        max="99999999.99"
                         value="{{ old('other_cost', '0.00') }}"
                         placeholder="0.00"
                     >
@@ -357,6 +360,7 @@
 
             </div>
         </div>
+
         {{-- PAYMENT --}}
         <div class="form-card">
             <div class="card-heading">
@@ -631,9 +635,8 @@
     .form-group select {
         height: 38px;
         padding: 0 12px;
-    }
-
-    .form-group textarea {
+}
+      .form-group textarea {
         min-height: 115px;
         padding: 11px 12px;
         resize: vertical;
@@ -835,7 +838,8 @@
         }
     }
 </style>
-  <script>
+
+ <script>
 document.addEventListener('DOMContentLoaded', function () {
 
     const categorySelect = document.getElementById('category');
@@ -853,6 +857,24 @@ document.addEventListener('DOMContentLoaded', function () {
     const paymentStatus = document.getElementById('payment_status');
     const paymentReference = document.getElementById('payment_method_reference');
     const expenseForm = document.getElementById('expenseForm');
+
+    // Jira requirement: Maximum 8 whole-number digits for individual costs.
+    const costLimit = 99999999.99;
+    const costErrorMessage = 'Please enter a cost figure of up to 8 digits.';
+
+    const costFields = [partsCost, labourCost, otherCost];
+
+    costFields.forEach(function (field) {
+        field.addEventListener('input', function () {
+            const value = parseFloat(field.value);
+
+            if (field.value !== '' && value > costLimit) {
+                field.setCustomValidity(costErrorMessage);
+            } else {
+                field.setCustomValidity('');
+            }
+        });
+    });
 
     // Category-dependent fields
     const insuranceForGroup = document.getElementById('insuranceForGroup');
@@ -1130,6 +1152,21 @@ document.addEventListener('DOMContentLoaded', function () {
     expenseForm.addEventListener('submit', function (event) {
 
         calculateTotal();
+
+        // Jira validation for all three individual cost fields.
+        for (const field of costFields) {
+            const value = parseFloat(field.value);
+
+            if (field.value !== '' && value > costLimit) {
+                event.preventDefault();
+                field.setCustomValidity(costErrorMessage);
+                field.reportValidity();
+                field.focus();
+                return;
+            }
+
+            field.setCustomValidity('');
+        }
 
         const selectedTypes = expenseTypeDropdown.querySelectorAll(
             'input[type="checkbox"]:checked'

@@ -106,7 +106,32 @@ class InvoiceController extends Controller
             )
         );
     }
+    
+    public function getClientRecords($clientId)
+    {
+        $client = Client::findOrFail($clientId);
 
+        $assignments = Assignment::where('client_id', $client->id)
+            ->orderByDesc('id')
+            ->get(['id', 'assignment_no']);
+
+        $trips = Trip::where(function ($query) use ($client) {
+        $query->where('client_id', $client->id)
+            ->orWhere(function ($q) use ($client) {
+                $q->whereNull('client_id')
+                    ->whereHas('assignment', function ($assignmentQuery) use ($client) {
+                        $assignmentQuery->where('client_id', $client->id);
+                    });
+            });
+    })
+    ->orderByDesc('id')
+    ->get(['id', 'trip_no']);
+
+        return response()->json([
+            'assignments' => $assignments,
+            'trips' => $trips,
+        ]);
+    }
     /*
     |--------------------------------------------------------------------------
     | Create Invoice Form
@@ -377,19 +402,30 @@ class InvoiceController extends Controller
                 ]);
         }
 
-        if (
-            count($tripIds) > 0
-            && Trip::where('client_id', $validated['client_id'])
-                ->whereIn('id', $tripIds)
-                ->count() !== count($tripIds)
-        ) {
-            return back()
-                ->withInput()
-                ->withErrors([
-                    'trip_ids' =>
-                        'One or more selected trips do not belong to the selected client.',
-                ]);
-        }
+       if (
+    count($tripIds) > 0
+    && Trip::whereIn('id', $tripIds)
+        ->where(function ($query) use ($validated) {
+            $query->where('client_id', $validated['client_id'])
+                ->orWhere(function ($q) use ($validated) {
+                    $q->whereNull('client_id')
+                        ->whereHas('assignment', function ($assignmentQuery) use ($validated) {
+                            $assignmentQuery->where(
+                                'client_id',
+                                $validated['client_id']
+                            );
+                        });
+                });
+        })
+        ->count() !== count($tripIds)
+) {
+    return back()
+        ->withInput()
+        ->withErrors([
+            'trip_ids' =>
+                'One or more selected trips do not belong to the selected client.',
+        ]);
+}
 
         /*
         |--------------------------------------------------------------------------
@@ -1040,19 +1076,30 @@ class InvoiceController extends Controller
                 ]);
         }
 
-        if (
-            count($tripIds) > 0
-            && Trip::where('client_id', $validated['client_id'])
-                ->whereIn('id', $tripIds)
-                ->count() !== count($tripIds)
-        ) {
-            return back()
-                ->withInput()
-                ->withErrors([
-                    'trip_ids' =>
-                        'One or more selected trips do not belong to the selected client.',
-                ]);
-        }
+if (
+    count($tripIds) > 0
+    && Trip::whereIn('id', $tripIds)
+        ->where(function ($query) use ($validated) {
+            $query->where('client_id', $validated['client_id'])
+                ->orWhere(function ($q) use ($validated) {
+                    $q->whereNull('client_id')
+                        ->whereHas('assignment', function ($assignmentQuery) use ($validated) {
+                            $assignmentQuery->where(
+                                'client_id',
+                                $validated['client_id']
+                            );
+                        });
+                });
+        })
+        ->count() !== count($tripIds)
+) {
+    return back()
+        ->withInput()
+        ->withErrors([
+            'trip_ids' =>
+                'One or more selected trips do not belong to the selected client.',
+        ]);
+}
 
         /*
         |--------------------------------------------------------------------------

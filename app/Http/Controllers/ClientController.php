@@ -9,7 +9,7 @@ use App\Services\ActivityLogService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use App\Rules\ValidClientEmail;
+use App\Rules\RejectMisspelledEmailDomain;
 
 class ClientController extends Controller
 {
@@ -240,7 +240,7 @@ class ClientController extends Controller
                 'email:rfc,dns',
                 'max:255',
                 'unique:clients,email',
-                new ValidClientEmail(),
+                new RejectMisspelledEmailDomain(),
             ],
 
             'address' => [
@@ -289,7 +289,8 @@ class ClientController extends Controller
             'contract_end' => [
                 'required',
                 'date',
-                'after:contract_start',
+                'after_or_equal:contract_start',
+                'after_or_equal:today',
             ],
 
             'billing_type' => [
@@ -392,6 +393,7 @@ class ClientController extends Controller
             'contract_end.required' => 'Contract End date is required.',
             'contract_end.date' => 'Please enter a valid Contract End date.',
             'contract_end.after' => 'Contract End date must be after Contract Start date.',
+            'contract_end.after_or_equal' => 'Contract End date must be today or later and cannot be before Contract Start date.',
         ]);
 
         $client = Client::create($validated);
@@ -406,7 +408,6 @@ class ClientController extends Controller
             ->route('clients.index')
             ->with('success', 'Client Added Successfully!');
     }
-
     /*
     |--------------------------------------------------------------------------
     | Show Client
@@ -432,6 +433,7 @@ class ClientController extends Controller
 
         return view('clients.edit', compact('client'));
     }
+
     /*
     |--------------------------------------------------------------------------
     | Update Client
@@ -494,7 +496,7 @@ class ClientController extends Controller
                 'email:rfc,dns',
                 'max:255',
                 Rule::unique('clients', 'email')->ignore($client->id),
-                new ValidClientEmail(),
+                new RejectMisspelledEmailDomain(),
             ],
 
             'address' => [
@@ -543,7 +545,8 @@ class ClientController extends Controller
             'contract_end' => [
                 'required',
                 'date',
-                'after:contract_start',
+                'after_or_equal:contract_start',
+                'after_or_equal:today',
             ],
 
             'billing_type' => [
@@ -646,6 +649,7 @@ class ClientController extends Controller
             'contract_end.required' => 'Contract End date is required.',
             'contract_end.date' => 'Please enter a valid Contract End date.',
             'contract_end.after' => 'Contract End date must be after Contract Start date.',
+            'contract_end.after_or_equal' => 'Contract End date must be today or later and cannot be before Contract Start date.',
         ]);
 
         $oldValues = $client->getAttributes();

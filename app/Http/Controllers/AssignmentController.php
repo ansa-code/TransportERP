@@ -206,11 +206,12 @@ class AssignmentController extends Controller
 
             'start_date' => ['required', 'date'],
             'end_date' => [
-    'required',
-    'date',
-    'after_or_equal:start_date',
-    'after_or_equal:today',
-],
+                'required',
+                'date',
+                'after_or_equal:start_date',
+                'after_or_equal:today',
+            ],
+
             'rate' => [
                 'required',
                 'numeric',
@@ -289,7 +290,7 @@ class AssignmentController extends Controller
             'start_date.date' => 'Please enter a valid start date.',
             'end_date.required' => 'Please select the assignment end date.',
             'end_date.date' => 'Please enter a valid end date.',
-           'end_date.after_or_equal' => 'Assignment End Date must be today or later and cannot be before the Start Date.',
+            'end_date.after_or_equal' => 'Assignment End Date must be today or later and cannot be before the Start Date.',
 
             'rate.required' => 'Please enter the assignment rate.',
             'rate.numeric' => 'The rate must be a valid number.',
@@ -313,6 +314,7 @@ class AssignmentController extends Controller
             'freight_amount.regex' => 'Freight amount can have up to 8 digits before the decimal and 2 decimal places.',
         ];
     }
+
     /**
      * Validate Leave conflicts against assignment dates.
      */
@@ -420,7 +422,6 @@ class AssignmentController extends Controller
 
         return $pendingLeaves;
     }
-
     private function validateAssignmentConflicts(
         array $data,
         ?int $ignoreId = null
@@ -517,6 +518,14 @@ class AssignmentController extends Controller
     {
         $assignment = Assignment::findOrFail($id);
 
+        // Jira ASFE-21: Delivered and Closed assignments cannot be edited.
+        if (in_array($assignment->status, ['Delivered', 'Closed'], true)) {
+            return redirect('/assignments')->with(
+                'error',
+                'Delivered and Closed assignments cannot be edited.'
+            );
+        }
+
         $clients = Client::where('status', 'Active')
             ->orderBy('client_name')
             ->get();
@@ -543,6 +552,14 @@ class AssignmentController extends Controller
     public function update(Request $request, string $id)
     {
         $assignment = Assignment::findOrFail($id);
+
+        // Jira ASFE-21: Also protect direct update requests.
+        if (in_array($assignment->status, ['Delivered', 'Closed'], true)) {
+            return redirect('/assignments')->with(
+                'error',
+                'Delivered and Closed assignments cannot be updated.'
+            );
+        }
 
         $validated = $request->validate(
             $this->assignmentValidationRules(true),
@@ -594,89 +611,25 @@ class AssignmentController extends Controller
         );
     }
 
-    /**
-     * Mark a Closed assignment as Done.
-     */
-    public function markDone(string $id)
-    {
-        $assignment = Assignment::findOrFail($id);
-
-        if ($assignment->status !== 'Closed') {
-            return redirect('/assignments')->with(
-                'error',
-                'Only Closed assignments can be marked Done.'
-            );
-        }
-
-        if ($assignment->done_at !== null) {
-            return redirect('/assignments')->with(
-                'info',
-                'This assignment is already marked Done.'
-            );
-        }
-
-        $oldValues = $assignment->getAttributes();
-
-        $assignment->done_at = now();
-        $assignment->save();
-
-        $this->activityLogService->updated(
-            module: 'Assignments',
-            subject: $assignment,
-            oldValues: $oldValues,
-            newValues: $assignment->getAttributes(),
-            description: "Marked assignment {$assignment->assignment_no} as Done."
-        );
-
-        return redirect('/assignments')->with(
-            'success',
-            'Assignment marked Done successfully!'
-        );
-    }
-
-    /**
-     * Undo the Done mark on a Closed assignment.
-     */
-    public function undoDone(string $id)
-    {
-        $assignment = Assignment::findOrFail($id);
-
-        if ($assignment->status !== 'Closed') {
-            return redirect('/assignments')->with(
-                'error',
-                'Only Closed assignments can have their Done mark removed.'
-            );
-        }
-
-        if ($assignment->done_at === null) {
-            return redirect('/assignments')->with(
-                'info',
-                'This assignment is not marked Done.'
-            );
-        }
-
-        $oldValues = $assignment->getAttributes();
-
-        $assignment->done_at = null;
-        $assignment->save();
-
-        $this->activityLogService->updated(
-            module: 'Assignments',
-            subject: $assignment,
-            oldValues: $oldValues,
-            newValues: $assignment->getAttributes(),
-            description: "Removed Done mark from assignment {$assignment->assignment_no}."
-        );
-
-        return redirect('/assignments')->with(
-            'success',
-            'Done mark removed successfully!'
-        );
-    }
-
     public function destroy(string $id)
     {
         $assignment = Assignment::findOrFail($id);
+
+        // Jira ASFE-21: These statuses cannot be deleted.
+        $restrictedDeleteStatuses = [
+            'In Transit',
+            'Delivered',
+            'Closed',
+            'Cancelled',
+            'Suspended',
+        ];
+
+        if (in_array($assignment->status, $restrictedDeleteStatuses, true)) {
+            return redirect('/assignments')->with(
+                'error',
+                "Assignments with status {$assignment->status} cannot be deleted."
+            );
+        }
 
         $oldValues = $assignment->getAttributes();
         $assignmentNo = $assignment->assignment_no;

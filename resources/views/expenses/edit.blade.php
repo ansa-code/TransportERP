@@ -698,235 +698,16 @@
                                     Trip #{{ $trip->id }}
                                 </option>
                             @endforeach
-                            </select>
+                            /select>
 
-<div class="help-text">
-Optional trip reference for operational reporting.
-</div>
-</div>
-
-</div>
-</div>
-<div class="form-section">
-                <h2 class="section-title">Cost Breakdown</h2>
-                <p class="section-subtitle">
-                    Enter individual costs. Total Amount is calculated automatically.
-                </p>
-
-                <div class="cost-grid">
-
-                    <div class="cost-box">
-                        <label class="cost-label" for="parts_cost">Parts Cost</label>
-                        <input
-                            type="number"
-                            name="parts_cost"
-                            id="parts_cost"
-                            class="cost-input"
-                            min="0"
-                            max="99999999.99"
-                            step="0.01"
-                            value="{{ old('parts_cost', $expense->parts_cost ?? 0) }}"
-                        >
-                    </div>
-
-                    <div class="cost-box">
-                        <label class="cost-label" for="labour_cost">Labour Cost</label>
-                        <input
-                            type="number"
-                            name="labour_cost"
-                            id="labour_cost"
-                            class="cost-input"
-                            min="0"
-                            max="99999999.99"
-                            step="0.01"
-                            value="{{ old('labour_cost', $expense->labour_cost ?? 0) }}"
-                        >
-                    </div>
-
-                    <div class="cost-box">
-                        <label class="cost-label" for="other_cost">Other Cost</label>
-                        <input
-                            type="number"
-                            name="other_cost"
-                            id="other_cost"
-                            class="cost-input"
-                            min="0"
-                            max="99999999.99"
-                            step="0.01"
-                            value="{{ old('other_cost', $expense->other_cost ?? 0) }}"
-                        >
-                    </div>
-
-                    <div class="cost-box total-box">
-                        <label class="cost-label" for="amount">Total Amount</label>
-                        <input
-                            type="number"
-                            name="amount"
-                            id="amount"
-                            class="cost-input"
-                            value="{{ old('amount', $expense->amount ?? 0) }}"
-                            readonly
-                        >
-                        <div class="help-text">Automatically calculated.</div>
+                        <div class="help-text">
+                            Optional trip reference for operational reporting.
+                        </div>
                     </div>
 
                 </div>
             </div>
-
-            <div class="form-section">
-                <h2 class="section-title">Payment Information</h2>
-                <p class="section-subtitle">
-                    Update payment status and reimbursement information.
-                </p>
-
-                <div class="form-grid">
-
-                    <div class="form-group">
-                        <label class="form-label" for="payment_status">
-                            Payment Status <span class="required">*</span>
-                        </label>
-
-                        <select
-                            name="payment_status"
-                            id="payment_status"
-                            class="form-control"
-                            required
-                        >
-                            <option
-                                value="Pending"
-                                {{ old('payment_status', $expense->payment_status) === 'Pending' ? 'selected' : '' }}
-                            >
-                                Pending
-                            </option>
-
-                            <option
-                                value="Paid"
-                                {{ old('payment_status', $expense->payment_status) === 'Paid' ? 'selected' : '' }}
-                            >
-                                Paid
-                            </option>
-
-                            <option
-                                value="Cancelled"
-                                {{ old('payment_status', $expense->payment_status) === 'Cancelled' ? 'selected' : '' }}
-                            >
-                                Cancelled
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="payment_method_reference">
-                            Payment Method / Reference
-                            <span
-                                class="required"
-                                id="paymentReferenceRequired"
-                                style="display: none;"
-                            >*</span>
-                        </label>
-
-                        <input
-                            type="text"
-                            name="payment_method_reference"
-                            id="payment_method_reference"
-                            class="form-control"
-                            value="{{ old('payment_method_reference', $expense->payment_method_reference) }}"
-                            placeholder="e.g. Cash / Bank / Reference No."
-                        >
-
-                        <div class="help-text">
-                            Required when Payment Status is Paid.
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="reimbursable">
-                            Reimbursable <span class="required">*</span>
-                        </label>
-
-                        @php
-                            $reimbursableValue = (string) old(
-                                'reimbursable',
-                                $expense->reimbursable ? '1' : '0'
-                            );
-                        @endphp
-
-                        <select
-                            name="reimbursable"
-                            id="reimbursable"
-                            class="form-control"
-                            required
-                        >
-                            <option
-                                value="0"
-                                {{ $reimbursableValue === '0' ? 'selected' : '' }}
-                            >
-                                No
-                            </option>
-
-                            <option
-                                value="1"
-                                {{ $reimbursableValue === '1' ? 'selected' : '' }}
-                            >
-                                Yes
-                            </option>
-                        </select>
-
-                        <div class="help-text">
-                            Mark Yes if the expense can be recovered from the client.
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="receipt">Replace Receipt</label>
-
-                        <input
-                            type="file"
-                            name="receipt"
-                            id="receipt"
-                            class="form-control"
-                            accept=".jpg,.jpeg,.png,.pdf"
-                        >
-
-                        @if($expense->receipt)
-                            <div class="help-text">
-                                Existing receipt is already attached. Upload a new file only if you want to replace it.
-                            </div>
-                        @else
-                            <div class="help-text">
-                                Optional: JPG, JPEG, PNG or PDF.
-                            </div>
-                        @endif
-                    </div>
-
-                    <div class="form-group full-width">
-                        <label class="form-label" for="remarks">Remarks</label>
-
-                        <textarea
-                            name="remarks"
-                            id="remarks"
-                            class="form-control"
-                            placeholder="Enter any additional remarks or audit notes..."
-                        >{{ old('remarks', $expense->remarks) }}</textarea>
-                    </div>
-
-                </div>
-            </div>
-
-            <div class="action-row">
-                <a href="{{ route('expenses.index') }}" class="cancel-btn">
-                    Cancel
-                </a>
-
-                <button type="submit" class="save-btn">
-                    Update Expense
-                </button>
-            </div>
-
-        </form>
-    </div>
-</div>
-   <script>
+            <script>
 document.addEventListener('DOMContentLoaded', function () {
 
     const expenseTypes = @json($expenseTypes);
@@ -960,6 +741,24 @@ document.addEventListener('DOMContentLoaded', function () {
     const paymentReferenceRequired = document.getElementById('paymentReferenceRequired');
 
     const expenseEditForm = document.getElementById('expenseEditForm');
+
+    // Jira requirement: Maximum 8 whole-number digits for individual costs.
+    const costLimit = 99999999.99;
+    const costErrorMessage = 'Please enter a cost figure of up to 8 digits.';
+
+    const costFields = [partsCost, labourCost, otherCost];
+
+    costFields.forEach(function (field) {
+        field.addEventListener('input', function () {
+            const value = parseFloat(field.value);
+
+            if (field.value !== '' && value > costLimit) {
+                field.setCustomValidity(costErrorMessage);
+            } else {
+                field.setCustomValidity('');
+            }
+        });
+    });
 
     let selectedTypesOnLoad = initialExpenseTypes.slice();
 
@@ -1222,6 +1021,21 @@ document.addEventListener('DOMContentLoaded', function () {
      * Controller validation remains the final authority.
      */
     expenseEditForm.addEventListener('submit', function (event) {
+
+        // Jira validation for all three individual cost fields.
+        for (const field of costFields) {
+            const value = parseFloat(field.value);
+
+            if (field.value !== '' && value > costLimit) {
+                event.preventDefault();
+                field.setCustomValidity(costErrorMessage);
+                field.reportValidity();
+                field.focus();
+                return;
+            }
+
+            field.setCustomValidity('');
+        }
 
         const category = categorySelect.value;
         const insuranceFor = insuranceForSelect.value;

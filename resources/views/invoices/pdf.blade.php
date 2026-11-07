@@ -424,19 +424,19 @@
                 </td>
 
                 <td class="record-list">
-                    @forelse($displayAssignments as $assignment)
-                        {{ $assignment->id }}@if(!$loop->last),<br>@endif
-                    @empty
-                        —
-                    @endforelse
+             @forelse($displayAssignments as $assignment)
+    {{ $assignment->assignment_no ?? ('Assignment #' . $assignment->id) }}@if(!$loop->last),<br>@endif
+@empty
+    —
+@endforelse
                 </td>
 
                 <td class="record-list">
                     @forelse($invoice->trips as $trip)
-                        {{ $trip->id }}@if(!$loop->last),<br>@endif
-                    @empty
-                        —
-                    @endforelse
+    {{ $trip->trip_no ?? ('Trip #' . $trip->id) }}@if(!$loop->last),<br>@endif
+@empty
+    —
+@endforelse
                 </td>
 
                 <td class="text-right">
