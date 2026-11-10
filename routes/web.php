@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 
-
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\VehicleController;
@@ -155,6 +154,7 @@ Route::get('/reports', [ReportController::class, 'index'])
 
 Route::get('/reports/data', [ReportController::class, 'data'])
     ->name('reports.data');
+
 /*
 |--------------------------------------------------------------------------
 | Alerts
@@ -185,6 +185,12 @@ Route::patch(
 
 Route::resource('users', UserController::class);
 
+/*
+|--------------------------------------------------------------------------
+| Documents
+|--------------------------------------------------------------------------
+*/
+
 Route::get(
     'documents/{document}/file',
     [DocumentController::class, 'file']
@@ -196,6 +202,12 @@ Route::post(
     'documents/{document}/replace',
     [DocumentController::class, 'replace']
 )->name('documents.replace');
+
+/*
+|--------------------------------------------------------------------------
+| Activity Logs
+|--------------------------------------------------------------------------
+*/
 
 Route::get('/activity-logs', [ActivityLogController::class, 'index'])
     ->name('activity-logs.index');
@@ -221,7 +233,13 @@ Route::patch('error-logs/{id}/resolve', [ErrorLogController::class, 'resolve'])
 Route::patch('error-logs/{id}/reopen', [ErrorLogController::class, 'reopen'])
     ->name('error-logs.reopen');
 
-Route::middleware('settings')->group(function () {
+/*
+|--------------------------------------------------------------------------
+| Settings
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'settings'])->group(function () {
 
     Route::get('/settings', [SettingController::class, 'index'])
         ->name('settings.index');

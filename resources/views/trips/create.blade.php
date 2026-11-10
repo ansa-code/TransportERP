@@ -1,8 +1,9 @@
 @extends('layouts.app')
 @section('content')
 
-<style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
+<style>
 .trip-form-page {
     width: 100%;
     max-width: 1100px;
@@ -166,8 +167,56 @@
     padding-left: 18px;
 }
 
-@media (max-width: 700px) {
+/* Flatpickr calendar styling */
 
+.flatpickr-calendar {
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(15,23,42,.15);
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+    background: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.flatpickr-day.today {
+    border-color: #0d6efd;
+}
+
+/* Small calendar icon */
+
+.trip-datetime:not(.flatpickr-input) {
+    padding-right: 38px !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='16' rx='2'/%3E%3Cpath d='M16 3v4M8 3v4M3 10h18'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 17px 17px;
+    cursor: pointer;
+}
+
+/* Done button inside calendar */
+
+.flatpickr-done-btn {
+    display: block;
+    width: calc(100% - 16px);
+    margin: 8px;
+    padding: 8px 12px;
+    background: #0d6efd;
+    color: #ffffff;
+    border: none;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.flatpickr-done-btn:hover {
+    background: #0b5ed7;
+}
+
+@media (max-width: 700px) {
     .trip-form-grid {
         grid-template-columns: 1fr;
     }
@@ -189,52 +238,28 @@
     .trip-save-btn {
         width: 100%;
     }
-
 }
-
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <div class="trip-form-page">
 
-
     <div class="trip-form-header">
-
-        <h1>
-            Create Trip
-        </h1>
-
-        <p>
-            Create a movement-level trip under an assignment or directly for a client.
-        </p>
-
+        <h1>Create Trip</h1>
+        <p>Create a movement-level trip under an assignment or directly for a client.</p>
     </div>
 
-
     @if($errors->any())
-
         <div class="trip-error-box">
-
-            <strong>
-                Please fix the following:
-            </strong>
-
+            <strong>Please fix the following:</strong>
             <ul>
-
                 @foreach($errors->all() as $error)
-
-                    <li>
-                        {{ $error }}
-                    </li>
-
+                    <li>{{ $error }}</li>
                 @endforeach
-
             </ul>
-
         </div>
-
     @endif
-
 
     <div class="trip-form-card">
 
@@ -246,10 +271,7 @@
 
             @csrf
 
-
-            {{-- =================================================
-                 ASSIGNMENT & RESOURCES
-            ================================================== --}}
+            {{-- ASSIGNMENT & RESOURCES --}}
 
             <div class="trip-form-section">
 
@@ -257,30 +279,20 @@
                     Assignment & Resources
                 </div>
 
-
                 <div class="trip-form-grid">
-
-
-                    {{-- Assignment --}}
 
                     <div class="trip-form-group full-width">
 
-                        <label class="trip-form-label">
-                            Assignment
-                        </label>
+                        <label class="trip-form-label">Assignment</label>
 
                         <select
                             name="assignment_id"
                             id="assignment_id"
                             class="trip-form-select"
                         >
-
-                            <option value="">
-                                Direct Trip — No Assignment
-                            </option>
+                            <option value="">Direct Trip — No Assignment</option>
 
                             @foreach($assignments as $assignment)
-
                                 <option
                                     value="{{ $assignment->id }}"
                                     data-client="{{ $assignment->client_id }}"
@@ -289,19 +301,10 @@
                                     data-rate="{{ $assignment->rate ?? '' }}"
                                     {{ old('assignment_id') == $assignment->id ? 'selected' : '' }}
                                 >
-
                                     {{ $assignment->assignment_no }}
-
-                                    —
-                                    {{ $assignment->client?->client_name ?? 'Client' }}
-
-                                    —
-                                    {{ $assignment->vehicle?->plate_number
-                                        ?? $assignment->vehicle?->vehicle_number
-                                        ?? 'Vehicle' }}
-
+                                    — {{ $assignment->client?->client_name ?? 'Client' }}
+                                    — {{ $assignment->vehicle?->plate_number ?? $assignment->vehicle?->vehicle_number ?? 'Vehicle' }}
                                 </option>
-
                             @endforeach
 
                         </select>
@@ -312,14 +315,9 @@
 
                     </div>
 
-
-                    {{-- Client --}}
-
                     <div class="trip-form-group">
 
-                        <label class="trip-form-label">
-                            Client *
-                        </label>
+                        <label class="trip-form-label">Client *</label>
 
                         <select
                             name="client_id"
@@ -327,36 +325,24 @@
                             class="trip-form-select"
                             required
                         >
-
-                            <option value="">
-                                Select Client
-                            </option>
+                            <option value="">Select Client</option>
 
                             @foreach($clients as $client)
-
                                 <option
                                     value="{{ $client->id }}"
                                     {{ old('client_id') == $client->id ? 'selected' : '' }}
                                 >
-
                                     {{ $client->client_name }}
-
                                 </option>
-
                             @endforeach
 
                         </select>
 
                     </div>
 
-
-                    {{-- Vehicle --}}
-
                     <div class="trip-form-group">
 
-                        <label class="trip-form-label">
-                            Vehicle / Number Plate *
-                        </label>
+                        <label class="trip-form-label">Vehicle / Number Plate *</label>
 
                         <select
                             name="vehicle_id"
@@ -364,38 +350,30 @@
                             class="trip-form-select"
                             required
                         >
-
-                            <option value="">
-                                Select Vehicle
-                            </option>
+                            <option value="">Select Vehicle</option>
 
                             @foreach($vehicles as $vehicle)
-
                                 <option
                                     value="{{ $vehicle->id }}"
                                     {{ old('vehicle_id') == $vehicle->id ? 'selected' : '' }}
                                 >
-
-                                    {{ $vehicle->plate_number
-                                        ?? $vehicle->vehicle_number
-                                        ?? 'Vehicle #' . $vehicle->id }}
-
+                                    {{ $vehicle->plate_number ?? $vehicle->vehicle_number ?? 'Vehicle #' . $vehicle->id }}
                                 </option>
-
                             @endforeach
 
                         </select>
 
+                        @error('vehicle_id')
+                            <div style="color:#dc3545; font-size:12px; margin-top:5px;">
+                                {{ $message }}
+                            </div>
+                        @enderror
+
                     </div>
-
-
-                    {{-- Driver --}}
 
                     <div class="trip-form-group">
 
-                        <label class="trip-form-label">
-                            Driver *
-                        </label>
+                        <label class="trip-form-label">Driver *</label>
 
                         <select
                             name="driver_id"
@@ -403,70 +381,54 @@
                             class="trip-form-select"
                             required
                         >
-
-                            <option value="">
-                                Select Driver
-                            </option>
+                            <option value="">Select Driver</option>
 
                             @foreach($drivers as $driver)
-
                                 <option
                                     value="{{ $driver->id }}"
                                     {{ old('driver_id') == $driver->id ? 'selected' : '' }}
                                 >
-
                                     {{ $driver->driver_name }}
-
                                 </option>
-
                             @endforeach
 
                         </select>
 
+                        @error('driver_id')
+                            <div style="color:#dc3545; font-size:12px; margin-top:5px;">
+                                {{ $message }}
+                            </div>
+                        @enderror
+
                     </div>
-
-
-                    {{-- Status --}}
 
                     <div class="trip-form-group">
 
-                        <label class="trip-form-label">
-                            Status *
-                        </label>
+                        <label class="trip-form-label">Status *</label>
 
-                        <select
-                            name="status"
-                            class="trip-form-select"
-                            required
-                        >
+                        <select name="status" class="trip-form-select" required>
 
-                            <option value="Planned"
-                                {{ old('status', 'Planned') === 'Planned' ? 'selected' : '' }}>
+                            <option value="Planned" {{ old('status', 'Planned') === 'Planned' ? 'selected' : '' }}>
                                 Planned
                             </option>
 
-                            <option value="Assigned"
-                                {{ old('status') === 'Assigned' ? 'selected' : '' }}>
+                            <option value="Assigned" {{ old('status') === 'Assigned' ? 'selected' : '' }}>
                                 Assigned
                             </option>
 
-                            <option value="In Transit"
-                                {{ old('status') === 'In Transit' ? 'selected' : '' }}>
+                            <option value="In Transit" {{ old('status') === 'In Transit' ? 'selected' : '' }}>
                                 In Transit
                             </option>
 
-                            <option value="Delivered"
-                                {{ old('status') === 'Delivered' ? 'selected' : '' }}>
+                            <option value="Delivered" {{ old('status') === 'Delivered' ? 'selected' : '' }}>
                                 Delivered
                             </option>
 
-                            <option value="Closed"
-                                {{ old('status') === 'Closed' ? 'selected' : '' }}>
+                            <option value="Closed" {{ old('status') === 'Closed' ? 'selected' : '' }}>
                                 Closed
                             </option>
 
-                            <option value="Cancelled"
-                                {{ old('status') === 'Cancelled' ? 'selected' : '' }}>
+                            <option value="Cancelled" {{ old('status') === 'Cancelled' ? 'selected' : '' }}>
                                 Cancelled
                             </option>
 
@@ -478,10 +440,7 @@
 
             </div>
 
-
-            {{-- =================================================
-                 DATE & ROUTE
-            ================================================== --}}
+            {{-- TRIP DATE & ROUTE --}}
 
             <div class="trip-form-section">
 
@@ -489,84 +448,75 @@
                     Trip Date & Route
                 </div>
 
-
                 <div class="trip-form-grid">
-
 
                     <div class="trip-form-group">
 
-                        <label class="trip-form-label">
-                            Trip Start *
-                        </label>
+                        <label class="trip-form-label">Trip Start *</label>
 
                         <input
-                            type="datetime-local"
+                            type="text"
                             name="trip_start"
+                            id="trip_start"
                             value="{{ old('trip_start') }}"
-                            class="trip-form-input"
+                            class="trip-form-input trip-datetime"
+                            placeholder="Select trip start date & time"
+                            autocomplete="off"
                             required
                         >
 
                     </div>
 
-
                     <div class="trip-form-group">
 
-                        <label class="trip-form-label">
-                            Trip End
-                        </label>
+                        <label class="trip-form-label">Trip End</label>
 
                         <input
-                            type="datetime-local"
+                            type="text"
                             name="trip_end"
+                            id="trip_end"
                             value="{{ old('trip_end') }}"
-                            class="trip-form-input"
+                            class="trip-form-input trip-datetime"
+                            placeholder="Select trip end date & time"
+                            autocomplete="off"
                         >
 
                     </div>
 
-
-                 
                     <div class="trip-form-group">
 
-    <label class="trip-form-label">
-        Loading Point
-    </label>
+                        <label class="trip-form-label">Loading Point</label>
 
-    <input
-        type="text"
-        name="loading_point"
-        value="{{ old('loading_point') }}"
-        class="trip-form-input"
-        placeholder="Enter loading location"
-        maxlength="255"
-    >
+                        <input
+                            type="text"
+                            name="loading_point"
+                            value="{{ old('loading_point') }}"
+                            class="trip-form-input"
+                            placeholder="Enter loading location"
+                            maxlength="255"
+                        >
 
-</div>
+                    </div>
 
-<div class="trip-form-group">
+                    <div class="trip-form-group">
 
-    <label class="trip-form-label">
-        Unloading Point
-    </label>
+                        <label class="trip-form-label">Unloading Point</label>
 
-    <input
-        type="text"
-        name="unloading_point"
-        value="{{ old('unloading_point') }}"
-        class="trip-form-input"
-        placeholder="Enter unloading location"
-        maxlength="255"
-    >
+                        <input
+                            type="text"
+                            name="unloading_point"
+                            value="{{ old('unloading_point') }}"
+                            class="trip-form-input"
+                            placeholder="Enter unloading location"
+                            maxlength="255"
+                        >
 
-</div>
+                    </div>
 
                 </div>
 
             </div>
-            {{-- =================================================
-                 BILLING
-            ================================================== --}}
+            {{-- BILLING --}}
 
             <div class="trip-form-section">
 
@@ -574,64 +524,49 @@
                     Billing
                 </div>
 
-
                 <div class="trip-form-grid">
 
-
-                    {{-- Rate --}}
-
                     <div class="trip-form-group">
 
-                        <label class="trip-form-label">
-                            Rate *
-                        </label>
+                        <label class="trip-form-label">Rate *</label>
 
-                      <input
-    type="number"
-    name="rate"
-    id="rate"
-    value="{{ old('rate') }}"
-    class="trip-form-input"
-    min="0"
-    max="99999999.99"
-    step="0.01"
-    placeholder="0.00"
-    required
->
+                        <input
+                            type="number"
+                            name="rate"
+                            id="rate"
+                            value="{{ old('rate') }}"
+                            class="trip-form-input"
+                            min="0"
+                            max="99999999.99"
+                            step="0.01"
+                            placeholder="0.00"
+                            required
+                        >
 
                     </div>
 
-
-                    {{-- Freight Amount --}}
-
                     <div class="trip-form-group">
 
-                        <label class="trip-form-label">
-                            Freight Amount *
-                        </label>
+                        <label class="trip-form-label">Freight Amount *</label>
 
-                      <input
-    type="number"
-    name="freight_amount"
-    id="freight_amount"
-    value="{{ old('freight_amount') }}"
-    class="trip-form-input"
-    min="0"
-    max="99999999.99"
-    step="0.01"
-    placeholder="0.00"
-    required
->
+                        <input
+                            type="number"
+                            name="freight_amount"
+                            id="freight_amount"
+                            value="{{ old('freight_amount') }}"
+                            class="trip-form-input"
+                            min="0"
+                            max="99999999.99"
+                            step="0.01"
+                            placeholder="0.00"
+                            required
+                        >
+
                     </div>
-
-
-                    {{-- POD --}}
 
                     <div class="trip-form-group full-width">
 
-                        <label class="trip-form-label">
-                            POD File
-                        </label>
+                        <label class="trip-form-label">POD File</label>
 
                         <input
                             type="file"
@@ -646,14 +581,9 @@
 
                     </div>
 
-
-                    {{-- Remarks --}}
-
                     <div class="trip-form-group full-width">
 
-                        <label class="trip-form-label">
-                            Remarks
-                        </label>
+                        <label class="trip-form-label">Remarks</label>
 
                         <textarea
                             name="remarks"
@@ -667,10 +597,7 @@
 
             </div>
 
-
-            {{-- =================================================
-                 FORM ACTIONS
-            ================================================== --}}
+            {{-- FORM ACTIONS --}}
 
             <div class="trip-form-actions">
 
@@ -681,16 +608,11 @@
                     Cancel
                 </a>
 
-
-                <button
-                    type="submit"
-                    class="trip-save-btn"
-                >
+                <button type="submit" class="trip-save-btn">
                     Create Trip
                 </button>
 
             </div>
-
 
         </form>
 
@@ -698,14 +620,61 @@
 
 </div>
 
-
-{{-- =========================================================
-     ASSIGNMENT AUTO-FILL
-========================================================= --}}
+{{-- ASSIGNMENT AUTO-FILL AND CALENDAR --}}
 
 <script>
 
 document.addEventListener('DOMContentLoaded', function () {
+
+    /*
+    |--------------------------------------------------------------------------
+    | FLATPICKR DATE & TIME PICKER
+    |--------------------------------------------------------------------------
+    */
+
+    if (typeof flatpickr !== 'undefined') {
+
+        flatpickr(".trip-datetime", {
+
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            altInput: true,
+            altFormat: "d-m-Y h:i K",
+            time_24hr: false,
+            minuteIncrement: 5,
+            allowInput: true,
+            disableMobile: true,
+            clickOpens: true,
+
+            onReady: function (selectedDates, dateStr, instance) {
+
+                const doneButton = document.createElement('button');
+
+                doneButton.type = 'button';
+                doneButton.className = 'flatpickr-done-btn';
+                doneButton.textContent = 'Done';
+
+                doneButton.addEventListener('click', function () {
+                    instance.close();
+                });
+
+                instance.calendarContainer.appendChild(doneButton);
+
+            }
+
+        });
+
+    } else {
+
+        console.error('Flatpickr library failed to load.');
+
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ASSIGNMENT AUTO-FILL
+    |--------------------------------------------------------------------------
+    */
 
     const assignmentSelect =
         document.getElementById('assignment_id');
@@ -725,24 +694,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const freightInput =
         document.getElementById('freight_amount');
 
-
     if (!assignmentSelect) {
         return;
     }
-
 
     assignmentSelect.addEventListener('change', function () {
 
         const selectedOption =
             this.options[this.selectedIndex];
 
-
         if (!this.value) {
-
             return;
-
         }
-
 
         const clientId =
             selectedOption.dataset.client;
@@ -756,85 +719,31 @@ document.addEventListener('DOMContentLoaded', function () {
         const rate =
             selectedOption.dataset.rate;
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Auto Select Client
-        |--------------------------------------------------------------------------
-        */
-
         if (clientId && clientSelect) {
-
             clientSelect.value = clientId;
-
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Auto Select Vehicle
-        |--------------------------------------------------------------------------
-        */
 
         if (vehicleId && vehicleSelect) {
-
             vehicleSelect.value = vehicleId;
-
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Auto Select Driver
-        |--------------------------------------------------------------------------
-        */
 
         if (driverId && driverSelect) {
-
             driverSelect.value = driverId;
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Auto Fill Rate
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            rate &&
-            rateInput &&
-            !rateInput.value
-        ) {
-
+        if (rate && rateInput && !rateInput.value) {
             rateInput.value = rate;
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Auto Fill Freight
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            rate &&
-            freightInput &&
-            !freightInput.value
-        ) {
-
+        if (rate && freightInput && !freightInput.value) {
             freightInput.value = rate;
-
         }
 
     });
 
-
     /*
     |--------------------------------------------------------------------------
-    | Trigger Auto Fill For Old Value
+    | TRIGGER AUTO-FILL FOR OLD VALUE
     |--------------------------------------------------------------------------
     */
 

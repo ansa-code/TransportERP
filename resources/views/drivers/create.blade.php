@@ -412,6 +412,7 @@
                         type="date"
                         name="license_expiry"
                         value="{{ old('license_expiry') }}"
+                        min="{{ today()->toDateString() }}"
                         class="form-control @error('license_expiry') is-invalid @enderror"
                     >
 

@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Assignment;
+use App\Models\DriverAdvance;
+use App\Models\TrafficFine;
 
 class Driver extends Model
 {
@@ -47,5 +49,21 @@ class Driver extends Model
     public function assignments()
     {
         return $this->hasMany(Assignment::class);
+    }
+
+    /**
+     * Driver salary advances.
+     */
+    public function advances()
+    {
+        return $this->hasMany(DriverAdvance::class);
+    }
+
+    /**
+     * Driver traffic fines.
+     */
+    public function trafficFines()
+    {
+        return $this->hasMany(TrafficFine::class);
     }
 }

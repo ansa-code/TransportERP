@@ -42,4 +42,15 @@ class TrafficFine extends Model
     {
         return $this->belongsTo(Driver::class);
     }
+
+    /**
+     * Salary deductions allocated against this fine.
+     */
+    public function deductionAllocations()
+    {
+        return $this->hasMany(
+            PayrollDeductionAllocation::class,
+            'deductible_record_id'
+        )->where('deduction_type', 'fine');
+    }
 }

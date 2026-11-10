@@ -2,6 +2,8 @@
 
 @section('content')
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
 <style>
 
 .trip-form-page {
@@ -187,6 +189,55 @@
     font-size: 12px;
 }
 
+/* Flatpickr calendar styling */
+
+.flatpickr-calendar {
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(15,23,42,.15);
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+    background: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.flatpickr-day.today {
+    border-color: #0d6efd;
+}
+
+/* Small calendar icon */
+
+.trip-datetime:not(.flatpickr-input) {
+    padding-right: 38px !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='16' rx='2'/%3E%3Cpath d='M16 3v4M8 3v4M3 10h18'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 17px 17px;
+    cursor: pointer;
+}
+
+/* Done button */
+
+.flatpickr-done-btn {
+    display: block;
+    width: calc(100% - 16px);
+    margin: 8px;
+    padding: 8px 12px;
+    background: #0d6efd;
+    color: #ffffff;
+    border: none;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.flatpickr-done-btn:hover {
+    background: #0b5ed7;
+}
+
 @media (max-width: 700px) {
 
     .trip-form-grid {
@@ -215,9 +266,9 @@
 
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <div class="trip-form-page">
-
 
     <div class="trip-form-header">
 
@@ -230,7 +281,6 @@
         </p>
 
     </div>
-
 
     @if($errors->any())
 
@@ -256,7 +306,6 @@
 
     @endif
 
-
     @if($trip->status === 'Closed')
 
         <div class="trip-closed-box">
@@ -267,7 +316,6 @@
         </div>
 
     @endif
-
 
     <div class="trip-form-card">
 
@@ -281,10 +329,7 @@
 
             @method('PUT')
 
-
-            {{-- =================================================
-                 TRIP INFORMATION
-            ================================================== --}}
+            {{-- TRIP INFORMATION --}}
 
             <div class="trip-form-section">
 
@@ -292,9 +337,7 @@
                     Trip Information
                 </div>
 
-
                 <div class="trip-form-grid">
-
 
                     {{-- Trip Number --}}
 
@@ -316,7 +359,6 @@
                         </div>
 
                     </div>
-
 
                     {{-- Assignment --}}
 
@@ -365,7 +407,6 @@
 
                     </div>
 
-
                     {{-- Client --}}
 
                     <div class="trip-form-group">
@@ -401,7 +442,6 @@
                         </select>
 
                     </div>
-
 
                     {{-- Vehicle --}}
 
@@ -439,8 +479,13 @@
 
                         </select>
 
-                    </div>
+                        @error('vehicle_id')
+                            <div style="color:#dc3545; font-size:12px; margin-top:5px;">
+                                {{ $message }}
+                            </div>
+                        @enderror
 
+                    </div>
 
                     {{-- Driver --}}
 
@@ -476,8 +521,13 @@
 
                         </select>
 
-                    </div>
+                        @error('driver_id')
+                            <div style="color:#dc3545; font-size:12px; margin-top:5px;">
+                                {{ $message }}
+                            </div>
+                        @enderror
 
+                    </div>
 
                     {{-- Status --}}
 
@@ -519,10 +569,7 @@
 
             </div>
 
-
-            {{-- =================================================
-                 DATE & ROUTE
-            ================================================== --}}
+            {{-- DATE & ROUTE --}}
 
             <div class="trip-form-section">
 
@@ -530,9 +577,7 @@
                     Trip Date & Route
                 </div>
 
-
                 <div class="trip-form-grid">
-
 
                     <div class="trip-form-group">
 
@@ -541,20 +586,22 @@
                         </label>
 
                         <input
-                            type="datetime-local"
+                            type="text"
                             name="trip_start"
+                            id="trip_start"
                             value="{{ old(
                                 'trip_start',
                                 $trip->trip_start
-                                    ? \Carbon\Carbon::parse($trip->trip_start)->format('Y-m-d\TH:i')
+                                    ? \Carbon\Carbon::parse($trip->trip_start)->format('Y-m-d H:i')
                                     : ''
                             ) }}"
-                            class="trip-form-input"
+                            class="trip-form-input trip-datetime"
+                            placeholder="Select trip start date & time"
+                            autocomplete="off"
                             required
                         >
 
                     </div>
-
 
                     <div class="trip-form-group">
 
@@ -563,60 +610,60 @@
                         </label>
 
                         <input
-                            type="datetime-local"
+                            type="text"
                             name="trip_end"
+                            id="trip_end"
                             value="{{ old(
                                 'trip_end',
                                 $trip->trip_end
-                                    ? \Carbon\Carbon::parse($trip->trip_end)->format('Y-m-d\TH:i')
+                                    ? \Carbon\Carbon::parse($trip->trip_end)->format('Y-m-d H:i')
                                     : ''
                             ) }}"
-                            class="trip-form-input"
+                            class="trip-form-input trip-datetime"
+                            placeholder="Select trip end date & time"
+                            autocomplete="off"
                         >
 
                     </div>
 
+                    <div class="trip-form-group">
+
+                        <label class="trip-form-label">
+                            Loading Point
+                        </label>
+
+                        <input
+                            type="text"
+                            name="loading_point"
+                            value="{{ old('loading_point', $trip->loading_point) }}"
+                            class="trip-form-input"
+                            placeholder="Enter loading location"
+                            maxlength="255"
+                        >
+
+                    </div>
 
                     <div class="trip-form-group">
 
-    <label class="trip-form-label">
-        Loading Point
-    </label>
+                        <label class="trip-form-label">
+                            Unloading Point
+                        </label>
 
-    <input
-        type="text"
-        name="loading_point"
-        value="{{ old('loading_point', $trip->loading_point) }}"
-        class="trip-form-input"
-        placeholder="Enter loading location"
-        maxlength="255"
-    >
+                        <input
+                            type="text"
+                            name="unloading_point"
+                            value="{{ old('unloading_point', $trip->unloading_point) }}"
+                            class="trip-form-input"
+                            placeholder="Enter unloading location"
+                            maxlength="255"
+                        >
 
-</div>
-
-<div class="trip-form-group">
-
-    <label class="trip-form-label">
-        Unloading Point
-    </label>
-
-    <input
-        type="text"
-        name="unloading_point"
-        value="{{ old('unloading_point', $trip->unloading_point) }}"
-        class="trip-form-input"
-        placeholder="Enter unloading location"
-        maxlength="255"
-    >
-
-</div>
+                    </div>
 
                 </div>
 
             </div>
-            {{-- =================================================
-                 BILLING
-            ================================================== --}}
+            {{-- BILLING --}}
 
             <div class="trip-form-section">
 
@@ -635,19 +682,18 @@
                         </label>
 
                         <input
-    type="number"
-    name="rate"
-    id="rate"
-    value="{{ old('rate', $trip->rate) }}"
-    class="trip-form-input"
-    min="0"
-    max="99999999.99"
-    step="0.01"
-    required
->
+                            type="number"
+                            name="rate"
+                            id="rate"
+                            value="{{ old('rate', $trip->rate) }}"
+                            class="trip-form-input"
+                            min="0"
+                            max="99999999.99"
+                            step="0.01"
+                            required
+                        >
 
                     </div>
-
 
                     {{-- Freight Amount --}}
 
@@ -657,20 +703,19 @@
                             Freight Amount *
                         </label>
 
-                       <input
-    type="number"
-    name="freight_amount"
-    id="freight_amount"
-    value="{{ old('freight_amount', $trip->freight_amount) }}"
-    class="trip-form-input"
-    min="0"
-    max="99999999.99"
-    step="0.01"
-    required
-> 
+                        <input
+                            type="number"
+                            name="freight_amount"
+                            id="freight_amount"
+                            value="{{ old('freight_amount', $trip->freight_amount) }}"
+                            class="trip-form-input"
+                            min="0"
+                            max="99999999.99"
+                            step="0.01"
+                            required
+                        >
 
                     </div>
-
 
                     {{-- POD File --}}
 
@@ -711,7 +756,6 @@
 
                     </div>
 
-
                     {{-- Remarks --}}
 
                     <div class="trip-form-group full-width">
@@ -732,10 +776,7 @@
 
             </div>
 
-
-            {{-- =================================================
-                 REOPEN CLOSED TRIP
-            ================================================== --}}
+            {{-- REOPEN CLOSED TRIP --}}
 
             @if($trip->status === 'Closed')
 
@@ -776,10 +817,7 @@
 
             @endif
 
-
-            {{-- =================================================
-                 ACTIONS
-            ================================================== --}}
+            {{-- ACTIONS --}}
 
             <div class="trip-form-actions">
 
@@ -799,21 +837,67 @@
 
             </div>
 
-
         </form>
 
     </div>
 
 </div>
 
-
-{{-- =========================================================
-     ASSIGNMENT AUTO-FILL
-========================================================= --}}
+{{-- ASSIGNMENT AUTO-FILL AND CALENDAR --}}
 
 <script>
 
 document.addEventListener('DOMContentLoaded', function () {
+
+    /*
+    |--------------------------------------------------------------------------
+    | FLATPICKR DATE & TIME PICKER
+    |--------------------------------------------------------------------------
+    */
+
+    if (typeof flatpickr !== 'undefined') {
+
+        flatpickr(".trip-datetime", {
+
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            altInput: true,
+            altFormat: "d-m-Y h:i K",
+            time_24hr: false,
+            minuteIncrement: 5,
+            allowInput: true,
+            disableMobile: true,
+            clickOpens: true,
+
+            onReady: function (selectedDates, dateStr, instance) {
+
+                const doneButton = document.createElement('button');
+
+                doneButton.type = 'button';
+                doneButton.className = 'flatpickr-done-btn';
+                doneButton.textContent = 'Done';
+
+                doneButton.addEventListener('click', function () {
+                    instance.close();
+                });
+
+                instance.calendarContainer.appendChild(doneButton);
+
+            }
+
+        });
+
+    } else {
+
+        console.error('Flatpickr library failed to load.');
+
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ASSIGNMENT AUTO-FILL
+    |--------------------------------------------------------------------------
+    */
 
     const assignmentSelect =
         document.getElementById('assignment_id');
@@ -833,22 +917,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const freightInput =
         document.getElementById('freight_amount');
 
-
     if (!assignmentSelect) {
         return;
     }
-
 
     assignmentSelect.addEventListener('change', function () {
 
         const selectedOption =
             this.options[this.selectedIndex];
 
-
         if (!this.value) {
             return;
         }
-
 
         const clientId =
             selectedOption.dataset.client;
@@ -862,26 +942,21 @@ document.addEventListener('DOMContentLoaded', function () {
         const rate =
             selectedOption.dataset.rate;
 
-
         if (clientId && clientSelect) {
             clientSelect.value = clientId;
         }
-
 
         if (vehicleId && vehicleSelect) {
             vehicleSelect.value = vehicleId;
         }
 
-
         if (driverId && driverSelect) {
             driverSelect.value = driverId;
         }
 
-
         if (rate && rateInput) {
             rateInput.value = rate;
         }
-
 
         if (rate && freightInput) {
             freightInput.value = rate;

@@ -2,14 +2,53 @@
 
 @section('content')
 
-<style>
+@php
+    /*
+    |--------------------------------------------------------------------------
+    | Jira: Driver Financial Liabilities
+    |--------------------------------------------------------------------------
+    */
 
+    $pendingAdvances = $driver->advances
+        ->filter(function ($advance) {
+            return (float) ($advance->remaining_amount ?? 0) > 0
+                && !in_array($advance->status, [
+                    'Rejected',
+                    'Fully Deducted',
+                ], true);
+        });
+
+    $unpaidFines = $driver->trafficFines
+        ->where('payment_status', 'Unpaid');
+
+    $deductibleFines = $driver->trafficFines
+        ->filter(function ($fine) {
+            return $fine->payment_status === 'Paid'
+                && (bool) $fine->deduct_from_driver;
+        });
+
+    $pendingAdvanceBalance = (float) $pendingAdvances->sum(
+        fn ($advance) => (float) ($advance->remaining_amount ?? 0)
+    );
+
+    $unpaidFineBalance = (float) $unpaidFines->sum(
+        fn ($fine) => (float) $fine->amount
+    );
+
+    $deductibleFineBalance = (float) $deductibleFines->sum(
+        fn ($fine) => (float) $fine->amount
+    );
+
+    $outstandingBalance = $pendingAdvanceBalance
+        + $unpaidFineBalance
+        + $deductibleFineBalance;
+@endphp
+
+<style>
     .driver-profile-page {
         max-width: 1400px;
         margin: 0 auto;
     }
-
-    /* ================= HEADER ================= */
 
     .profile-header {
         display: flex;
@@ -73,15 +112,8 @@
         color: white;
     }
 
-
-    /* ================= HERO ================= */
-
     .driver-hero {
-        background: linear-gradient(
-            135deg,
-            #101d42 0%,
-            #193b8f 100%
-        );
+        background: linear-gradient(135deg, #101d42 0%, #193b8f 100%);
         border-radius: 14px;
         padding: 24px;
         margin-bottom: 20px;
@@ -103,11 +135,6 @@
         pointer-events: none;
     }
 
-    /*
-     * Top identity row:
-     * Driver information on left
-     * Status on right
-     */
     .hero-top {
         position: relative;
         z-index: 1;
@@ -128,11 +155,7 @@
         width: 66px;
         height: 66px;
         border-radius: 15px;
-        background: linear-gradient(
-            135deg,
-            #087cff,
-            #18b6a4
-        );
+        background: linear-gradient(135deg, #087cff, #18b6a4);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -157,10 +180,6 @@
         font-weight: 600;
     }
 
-    /*
-     * Status is now positioned on the right side
-     * of the hero, like the Leave Details page.
-     */
     .driver-status-wrapper {
         display: flex;
         align-items: center;
@@ -196,13 +215,6 @@
         color: #41464b;
     }
 
-
-    /* ================= HERO MINI CARDS ================= */
-
-    /*
-     * Cards are now BELOW the identity/status row,
-     * matching the Leave Details hero layout.
-     */
     .hero-cards {
         position: relative;
         z-index: 1;
@@ -236,9 +248,6 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
-
-
-    /* ================= MAIN GRID ================= */
 
     .profile-grid {
         display: grid;
@@ -276,9 +285,6 @@
         padding: 20px;
     }
 
-
-    /* ================= DRIVER DETAILS ================= */
-
     .details-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -305,9 +311,6 @@
         font-weight: 700;
         overflow-wrap: anywhere;
     }
-
-
-    /* ================= SALARY ================= */
 
     .salary-row {
         display: flex;
@@ -351,9 +354,6 @@
         font-size: 15px;
         font-weight: 800;
     }
-
-
-    /* ================= LEAVE ================= */
 
     .leave-circle-wrapper {
         display: flex;
@@ -400,11 +400,115 @@
         line-height: 1.5;
     }
 
+    /* Jira financial summary */
 
-    /* ================= RESPONSIVE ================= */
+    .financial-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .financial-summary-card {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.05);
+        min-width: 0;
+    }
+
+    .financial-summary-label {
+        color: #6c757d;
+        font-size: 11px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .financial-summary-value {
+        color: #1d3557;
+        font-size: 19px;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+    }
+
+    .financial-summary-card.outstanding {
+        background: #fff8e8;
+        border-color: #f2dfb3;
+    }
+
+    .financial-summary-card.outstanding .financial-summary-value {
+        color: #9a6700;
+    }
+
+    .financial-table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .financial-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 560px;
+    }
+
+    .financial-table th,
+    .financial-table td {
+        padding: 11px 12px;
+        border-bottom: 1px solid #edf0f2;
+        text-align: left;
+        font-size: 12px;
+        vertical-align: middle;
+    }
+
+    .financial-table th {
+        color: #6c757d;
+        background: #f8fafc;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .financial-table td {
+        color: #27364a;
+        font-weight: 600;
+    }
+
+    .financial-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .financial-status {
+        display: inline-block;
+        padding: 5px 9px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .financial-status.pending {
+        background: #fff3cd;
+        color: #664d03;
+    }
+
+    .financial-status.unpaid {
+        background: #f8d7da;
+        color: #842029;
+    }
+
+    .financial-status.deductible {
+        background: #cfe2ff;
+        color: #084298;
+    }
+
+    .financial-empty {
+        text-align: center;
+        color: #7a8794;
+        font-size: 13px;
+        padding: 20px 10px;
+    }
 
     @media (max-width: 1050px) {
-
         .hero-top {
             align-items: flex-start;
         }
@@ -413,11 +517,12 @@
             grid-template-columns: 1fr;
         }
 
+        .financial-summary-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
     }
 
-
     @media (max-width: 700px) {
-
         .profile-header {
             flex-direction: column;
         }
@@ -447,78 +552,46 @@
             grid-template-columns: 1fr;
         }
 
+        .financial-summary-grid {
+            grid-template-columns: 1fr 1fr;
+        }
     }
-
 </style>
-
 
 <div class="driver-profile-page">
 
-
-    {{-- ================= PAGE HEADER ================= --}}
+    {{-- PAGE HEADER --}}
 
     <div class="profile-header">
-
         <div class="profile-title">
-
-            <h1>
-                Driver Profile
-            </h1>
-
-            <p>
-                Visa, passport custody, salary, leave and assigned truck details
-            </p>
-
+            <h1>Driver Profile</h1>
+            <p>Visa, passport custody, salary, leave and assigned truck details</p>
         </div>
 
-
         <div class="profile-header-actions">
-
-            <a
-                href="{{ route('drivers.index') }}"
-                class="back-btn"
-            >
+            <a href="{{ route('drivers.index') }}" class="back-btn">
                 ← Back to Drivers
             </a>
 
-            <a
-                href="{{ route('drivers.edit', $driver->id) }}"
-                class="edit-profile-btn"
-            >
+            <a href="{{ route('drivers.edit', $driver->id) }}" class="edit-profile-btn">
                 Update Driver
             </a>
-
         </div>
-
     </div>
 
-
-    {{-- ================= DRIVER HERO ================= --}}
+    {{-- DRIVER HERO --}}
 
     <div class="driver-hero">
-
-        {{-- ================= IDENTITY + STATUS ROW ================= --}}
-
         <div class="hero-top">
-
-
-            {{-- Driver Identity --}}
-
             <div class="driver-identity">
-
                 <div class="driver-avatar">
                     {{ strtoupper(substr($driver->driver_name ?? 'D', 0, 1)) }}
                 </div>
 
-
                 <div class="driver-identity-text">
-
-                    <h2>
-                        {{ $driver->driver_name ?? 'Driver' }}
-                    </h2>
+                    <h2>{{ $driver->driver_name ?? 'Driver' }}</h2>
 
                     <div class="driver-meta">
-
                         {{ $driver->driver_code ?? '-' }}
 
                         @if($driver->nationality)
@@ -528,385 +601,423 @@
                         @if($driver->assigned_vehicle_id)
                             · Assigned Vehicle #{{ $driver->assigned_vehicle_id }}
                         @endif
-
                     </div>
-
                 </div>
-
             </div>
 
-
-            {{-- Driver Status --}}
-
             <div class="driver-status-wrapper">
-
                 @php
                     $driverStatus = $driver->employment_status ?? 'Unknown';
                 @endphp
 
-
                 @if($driverStatus === 'Active')
-
-                    <span class="driver-status">
-                        Active
-                    </span>
-
+                    <span class="driver-status">Active</span>
                 @elseif($driverStatus === 'On Leave')
-
-                    <span class="driver-status leave">
-                        On Leave
-                    </span>
-
+                    <span class="driver-status leave">On Leave</span>
                 @elseif($driverStatus === 'Inactive')
-
-                    <span class="driver-status inactive">
-                        Inactive
-                    </span>
-
+                    <span class="driver-status inactive">Inactive</span>
                 @else
-
-                    <span class="driver-status archived">
-                        {{ $driverStatus }}
-                    </span>
-
+                    <span class="driver-status archived">{{ $driverStatus }}</span>
                 @endif
-
             </div>
-
         </div>
 
-
-        {{-- ================= HERO CARDS ================= --}}
-
         <div class="hero-cards">
-
-
             <div class="hero-card">
-
-                <div class="hero-card-label">
-                    Visa
-                </div>
-
-                <div class="hero-card-value">
-                    {{ $driver->visa_type ?? '-' }}
-                </div>
-
+                <div class="hero-card-label">Visa</div>
+                <div class="hero-card-value">{{ $driver->visa_type ?? '-' }}</div>
             </div>
 
-
             <div class="hero-card">
-
-                <div class="hero-card-label">
-                    Passport
-                </div>
-
+                <div class="hero-card-label">Passport</div>
                 <div class="hero-card-value">
-
-                    @if($driver->passport_held_by_company)
-                        Held
-                    @else
-                        Driver
-                    @endif
-
+                    {{ $driver->passport_held_by_company ? 'Held' : 'Driver' }}
                 </div>
-
             </div>
 
-
             <div class="hero-card">
-
-                <div class="hero-card-label">
-                    Salary
-                </div>
-
+                <div class="hero-card-label">Salary</div>
                 <div class="hero-card-value">
                     AED {{ number_format($driver->basic_salary ?? 0, 0) }}
                 </div>
-
             </div>
+        </div>
+    </div>
 
+    {{-- JIRA FINANCIAL SUMMARY --}}
 
+    <div class="financial-summary-grid">
+
+        <div class="financial-summary-card">
+            <div class="financial-summary-label">Pending Salary Advances</div>
+            <div class="financial-summary-value">
+                AED {{ number_format($pendingAdvanceBalance, 2) }}
+            </div>
+        </div>
+
+        <div class="financial-summary-card">
+            <div class="financial-summary-label">Unpaid Fines</div>
+            <div class="financial-summary-value">
+                AED {{ number_format($unpaidFineBalance, 2) }}
+            </div>
+        </div>
+
+        <div class="financial-summary-card">
+            <div class="financial-summary-label">Deductible Fines</div>
+            <div class="financial-summary-value">
+                AED {{ number_format($deductibleFineBalance, 2) }}
+            </div>
+        </div>
+
+        <div class="financial-summary-card outstanding">
+            <div class="financial-summary-label">Outstanding Balance</div>
+            <div class="financial-summary-value">
+                AED {{ number_format($outstandingBalance, 2) }}
+            </div>
         </div>
 
     </div>
 
+    {{-- PENDING SALARY ADVANCES --}}
 
-    {{-- ================= PROFILE CONTENT ================= --}}
+    <div class="profile-card">
+        <div class="card-header">
+            <h3>Pending Salary Advances</h3>
+        </div>
+
+        <div class="card-body">
+            @if($pendingAdvances->isNotEmpty())
+                <div class="financial-table-wrapper">
+                    <table class="financial-table">
+                        <thead>
+                            <tr>
+                                <th>Advance No.</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Deducted</th>
+                                <th>Remaining</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach($pendingAdvances as $advance)
+                                <tr>
+                                    <td>{{ $advance->advance_no }}</td>
+
+                                    <td>
+                                        {{ $advance->advance_date?->format('d M Y') ?? '-' }}
+                                    </td>
+
+                                    <td>
+                                        AED {{ number_format((float) $advance->amount, 2) }}
+                                    </td>
+
+                                    <td>
+                                        AED {{ number_format((float) $advance->deducted_amount, 2) }}
+                                    </td>
+
+                                    <td>
+                                        AED {{ number_format((float) $advance->remaining_amount, 2) }}
+                                    </td>
+
+                                    <td>
+                                        <span class="financial-status pending">
+                                            {{ $advance->status }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="financial-empty">
+                    No pending salary advances found for this driver.
+                </div>
+            @endif
+        </div>
+    </div>
+
+    {{-- UNPAID FINES --}}
+
+    <div class="profile-card">
+        <div class="card-header">
+            <h3>Unpaid Fines</h3>
+        </div>
+
+        <div class="card-body">
+            @if($unpaidFines->isNotEmpty())
+                <div class="financial-table-wrapper">
+                    <table class="financial-table">
+                        <thead>
+                            <tr>
+                                <th>Fine No.</th>
+                                <th>Date</th>
+                                <th>Reason / Location</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach($unpaidFines as $fine)
+                                <tr>
+                                    <td>{{ $fine->fine_number }}</td>
+
+                                    <td>
+                                        {{ $fine->fine_date?->format('d M Y') ?? '-' }}
+                                    </td>
+
+                                    <td>
+                                        {{ $fine->reason_location ?? '-' }}
+                                    </td>
+
+                                    <td>
+                                        AED {{ number_format((float) $fine->amount, 2) }}
+                                    </td>
+
+                                    <td>
+                                        <span class="financial-status unpaid">
+                                            Unpaid
+                                        </span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="financial-empty">
+                    No unpaid fines found for this driver.
+                </div>
+            @endif
+        </div>
+    </div>
+
+    {{-- DEDUCTIBLE FINES --}}
+
+    <div class="profile-card">
+        <div class="card-header">
+            <h3>Deductible Fines</h3>
+        </div>
+
+        <div class="card-body">
+            @if($deductibleFines->isNotEmpty())
+                <div class="financial-table-wrapper">
+                    <table class="financial-table">
+                        <thead>
+                            <tr>
+                                <th>Fine No.</th>
+                                <th>Date</th>
+                                <th>Reason / Location</th>
+                                <th>Amount</th>
+                                <th>Deduction Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach($deductibleFines as $fine)
+                                <tr>
+                                    <td>{{ $fine->fine_number }}</td>
+
+                                    <td>
+                                        {{ $fine->fine_date?->format('d M Y') ?? '-' }}
+                                    </td>
+
+                                    <td>
+                                        {{ $fine->reason_location ?? '-' }}
+                                    </td>
+
+                                    <td>
+                                        AED {{ number_format((float) $fine->amount, 2) }}
+                                    </td>
+
+                                    <td>
+                                        <span class="financial-status deductible">
+                                            Awaiting Salary Deduction
+                                        </span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="financial-empty">
+                    No deductible fines found for this driver.
+                </div>
+            @endif
+        </div>
+    </div>
+
+    {{-- PROFILE CONTENT --}}
 
     <div class="profile-grid">
 
-
-        {{-- ================= LEFT COLUMN ================= --}}
+        {{-- LEFT COLUMN --}}
 
         <div>
 
-
-            {{-- Driver Details --}}
+            {{-- DRIVER DETAILS --}}
 
             <div class="profile-card">
-
                 <div class="card-header">
-
-                    <h3>
-                        Driver Details
-                    </h3>
-
+                    <h3>Driver Details</h3>
                 </div>
 
-
                 <div class="card-body">
-
                     <div class="details-grid">
-
 
                         <div class="detail-item">
                             <div class="detail-label">Driver ID</div>
-                            <div class="detail-value">
-                                #{{ $driver->id }}
-                            </div>
+                            <div class="detail-value">#{{ $driver->id }}</div>
                         </div>
-
 
                         <div class="detail-item">
                             <div class="detail-label">Driver Code</div>
-                            <div class="detail-value">
-                                {{ $driver->driver_code ?? '-' }}
-                            </div>
+                            <div class="detail-value">{{ $driver->driver_code ?? '-' }}</div>
                         </div>
-
 
                         <div class="detail-item">
                             <div class="detail-label">CNIC</div>
-                            <div class="detail-value">
-                                {{ $driver->cnic ?? '-' }}
-                            </div>
+                            <div class="detail-value">{{ $driver->cnic ?? '-' }}</div>
                         </div>
-
 
                         <div class="detail-item">
                             <div class="detail-label">Phone</div>
-                            <div class="detail-value">
-                                {{ $driver->phone ?? '-' }}
-                            </div>
+                            <div class="detail-value">{{ $driver->phone ?? '-' }}</div>
                         </div>
-
 
                         <div class="detail-item">
                             <div class="detail-label">Nationality</div>
-                            <div class="detail-value">
-                                {{ $driver->nationality ?? '-' }}
-                            </div>
+                            <div class="detail-value">{{ $driver->nationality ?? '-' }}</div>
                         </div>
-
 
                         <div class="detail-item">
                             <div class="detail-label">Date of Birth</div>
-                            <div class="detail-value">
-                                {{ $driver->date_of_birth ?? '-' }}
-                            </div>
+                            <div class="detail-value">{{ $driver->date_of_birth ?? '-' }}</div>
                         </div>
 
-
-        <div class="detail-item">
+                        <div class="detail-item">
                             <div class="detail-label">Joining Date</div>
-                            <div class="detail-value">
-                                {{ $driver->joining_date ?? '-' }}
-                            </div>
+                            <div class="detail-value">{{ $driver->joining_date ?? '-' }}</div>
                         </div>
-
 
                         <div class="detail-item">
                             <div class="detail-label">Employment Status</div>
-                            <div class="detail-value">
-                                {{ $driver->employment_status ?? '-' }}
-                            </div>
+                            <div class="detail-value">{{ $driver->employment_status ?? '-' }}</div>
                         </div>
-
 
                         <div class="detail-item">
                             <div class="detail-label">License Number</div>
-                            <div class="detail-value">
-                                {{ $driver->license_number ?? '-' }}
-                            </div>
+                            <div class="detail-value">{{ $driver->license_number ?? '-' }}</div>
                         </div>
-
 
                         <div class="detail-item">
                             <div class="detail-label">License Expiry</div>
-                            <div class="detail-value">
-                                {{ $driver->license_expiry ?? '-' }}
-                            </div>
+                            <div class="detail-value">{{ $driver->license_expiry ?? '-' }}</div>
                         </div>
-
 
                         <div class="detail-item">
                             <div class="detail-label">Passport Number</div>
-                            <div class="detail-value">
-                                {{ $driver->passport_number ?? '-' }}
-                            </div>
+                            <div class="detail-value">{{ $driver->passport_number ?? '-' }}</div>
                         </div>
 
-
-        <div class="detail-item">
+                        <div class="detail-item">
                             <div class="detail-label">Passport Custody</div>
                             <div class="detail-value">
-
-                                @if($driver->passport_held_by_company)
-                                    Company
-                                @else
-                                    Driver
-                                @endif
-
+                                {{ $driver->passport_held_by_company ? 'Company' : 'Driver' }}
                             </div>
                         </div>
-
 
                         <div class="detail-item">
                             <div class="detail-label">Visa Type</div>
-                            <div class="detail-value">
-                                {{ $driver->visa_type ?? '-' }}
-                            </div>
+                            <div class="detail-value">{{ $driver->visa_type ?? '-' }}</div>
                         </div>
-
 
                         <div class="detail-item">
                             <div class="detail-label">Visa Provided By</div>
-                            <div class="detail-value">
-                                {{ $driver->visa_provided_by ?? '-' }}
-                            </div>
+                            <div class="detail-value">{{ $driver->visa_provided_by ?? '-' }}</div>
                         </div>
-
 
                         <div class="detail-item">
                             <div class="detail-label">Visa Expiry</div>
-                            <div class="detail-value">
-                                {{ $driver->visa_expiry ?? '-' }}
-                            </div>
+                            <div class="detail-value">{{ $driver->visa_expiry ?? '-' }}</div>
                         </div>
-
 
                         <div class="detail-item">
                             <div class="detail-label">Emirates ID</div>
-                            <div class="detail-value">
-                                {{ $driver->emirates_id ?? '-' }}
-                            </div>
+                            <div class="detail-value">{{ $driver->emirates_id ?? '-' }}</div>
                         </div>
-
 
                         <div class="detail-item">
                             <div class="detail-label">Address</div>
-                            <div class="detail-value">
-                                {{ $driver->address ?? '-' }}
-                            </div>
+                            <div class="detail-value">{{ $driver->address ?? '-' }}</div>
                         </div>
-
 
                         <div class="detail-item">
                             <div class="detail-label">Remarks</div>
-                            <div class="detail-value">
-                                {{ $driver->remarks ?? '-' }}
-                            </div>
+                            <div class="detail-value">{{ $driver->remarks ?? '-' }}</div>
                         </div>
 
-
                     </div>
-
                 </div>
-
             </div>
 
-
         </div>
-        {{-- ================= RIGHT COLUMN ================= --}}
+
+        {{-- RIGHT COLUMN --}}
 
         <div>
 
-
-            {{-- Salary Structure --}}
+            {{-- SALARY STRUCTURE --}}
 
             <div class="profile-card">
-
                 <div class="card-header">
-
-                    <h3>
-                        Salary Structure
-                    </h3>
-
+                    <h3>Salary Structure</h3>
                 </div>
-
 
                 <div class="card-body">
 
-
                     <div class="salary-row">
-
-                        <span class="salary-label">
-                            Basic Salary
-                        </span>
-
+                        <span class="salary-label">Basic Salary</span>
                         <span class="salary-value">
                             AED {{ number_format($driver->basic_salary ?? 0, 2) }}
                         </span>
-
                     </div>
 
-
                     <div class="salary-row">
-
-                        <span class="salary-label">
-                            Monthly Salary
-                        </span>
-
+                        <span class="salary-label">Monthly Salary</span>
                         <span class="salary-value">
                             AED {{ number_format($driver->basic_salary ?? 0, 2) }}
                         </span>
-
                     </div>
-
 
                     <div class="salary-row salary-total">
-
-                        <span class="salary-label">
-                            Total Basic
-                        </span>
-
+                        <span class="salary-label">Total Basic</span>
                         <span class="salary-value">
                             AED {{ number_format($driver->basic_salary ?? 0, 2) }}
                         </span>
-
                     </div>
 
-
                 </div>
-
             </div>
 
-
-
-            {{-- Leave Summary --}}
+            {{-- LEAVE SUMMARY --}}
 
             <div class="profile-card">
-
                 <div class="card-header">
-
-                    <h3>
-                        Leave Summary
-                    </h3>
-
+                    <h3>Leave Summary</h3>
                 </div>
-
 
                 <div class="card-body">
 
-
                     @php
-
                         $leaveUsed = 0;
                         $leaveTotal = 0;
                         $leaveRemaining = 0;
-
                     @endphp
-
 
                     <div class="leave-stats"
                          style="
@@ -916,121 +1027,86 @@
                             margin-top:2px;
                          ">
 
-
-                        <div
-                            style="
-                                background:#f8fafc;
-                                border-radius:8px;
-                                padding:16px 8px;
-                                text-align:center;
-                            "
-                        >
-
-                            <div
-                                style="
-                                    color:#1d3557;
-                                    font-size:20px;
-                                    font-weight:800;
-                                "
-                            >
+                        <div style="
+                            background:#f8fafc;
+                            border-radius:8px;
+                            padding:16px 8px;
+                            text-align:center;
+                        ">
+                            <div style="
+                                color:#1d3557;
+                                font-size:20px;
+                                font-weight:800;
+                            ">
                                 {{ $leaveUsed }}
                             </div>
 
-                            <div
-                                style="
-                                    color:#6c757d;
-                                    font-size:11px;
-                                    font-weight:600;
-                                    margin-top:4px;
-                                "
-                            >
+                            <div style="
+                                color:#6c757d;
+                                font-size:11px;
+                                font-weight:600;
+                                margin-top:4px;
+                            ">
                                 Used
                             </div>
-
                         </div>
 
-
-                        <div
-                            style="
-                                background:#f8fafc;
-                                border-radius:8px;
-                                padding:16px 8px;
-                                text-align:center;
-                            "
-                        >
-
-                            <div
-                                style="
-                                    color:#1d3557;
-                                    font-size:20px;
-                                    font-weight:800;
-                                "
-                            >
+                        <div style="
+                            background:#f8fafc;
+                            border-radius:8px;
+                            padding:16px 8px;
+                            text-align:center;
+                        ">
+                            <div style="
+                                color:#1d3557;
+                                font-size:20px;
+                                font-weight:800;
+                            ">
                                 {{ $leaveRemaining }}
                             </div>
 
-                            <div
-                                style="
-                                    color:#6c757d;
-                                    font-size:11px;
-                                    font-weight:600;
-                                    margin-top:4px;
-                                "
-                            >
+                            <div style="
+                                color:#6c757d;
+                                font-size:11px;
+                                font-weight:600;
+                                margin-top:4px;
+                            ">
                                 Remaining
                             </div>
-
                         </div>
 
-
-                        <div
-                            style="
-                                background:#f8fafc;
-                                border-radius:8px;
-                                padding:16px 8px;
-                                text-align:center;
-                            "
-                        >
-
-                            <div
-                                style="
-                                    color:#1d3557;
-                                    font-size:20px;
-                                    font-weight:800;
-                                "
-                            >
+                        <div style="
+                            background:#f8fafc;
+                            border-radius:8px;
+                            padding:16px 8px;
+                            text-align:center;
+                        ">
+                            <div style="
+                                color:#1d3557;
+                                font-size:20px;
+                                font-weight:800;
+                            ">
                                 {{ $leaveTotal }}
                             </div>
 
-                            <div
-                                style="
-                                    color:#6c757d;
-                                    font-size:11px;
-                                    font-weight:600;
-                                    margin-top:4px;
-                                "
-                            >
+                            <div style="
+                                color:#6c757d;
+                                font-size:11px;
+                                font-weight:600;
+                                margin-top:4px;
+                            ">
                                 Total
                             </div>
-
                         </div>
 
-
                     </div>
-
-
                 </div>
-
             </div>
-
 
         </div>
 
-
     </div>
 
-
 </div>
-
 
 @endsection

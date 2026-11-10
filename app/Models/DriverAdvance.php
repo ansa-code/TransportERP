@@ -37,4 +37,12 @@ class DriverAdvance extends Model
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
+
+    public function deductionAllocations()
+    {
+        return $this->hasMany(
+            PayrollDeductionAllocation::class,
+            'deductible_record_id'
+        )->where('deduction_type', 'advance');
+    }
 }

@@ -467,6 +467,7 @@
                         type="date"
                         name="license_expiry"
                         value="{{ old('license_expiry', $driver->license_expiry?->format('Y-m-d')) }}"
+                         min="{{ today()->toDateString() }}"
                         class="form-control @error('license_expiry') is-invalid @enderror"
                     >
 

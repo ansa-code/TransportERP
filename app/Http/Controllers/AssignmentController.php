@@ -8,6 +8,7 @@ use App\Models\Vehicle;
 use App\Models\Driver;
 use App\Models\Leave;
 use App\Services\ActivityLogService;
+use App\Services\DriverLicenseValidationService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -159,6 +160,18 @@ class AssignmentController extends Controller
 
         $validated['status'] = $validated['status'] ?? 'Planned';
 
+        // Resolve approved leave and designated replacement driver first.
+        $replacementNotice = $this->resolveApprovedLeaveReplacement($validated);
+
+        // Check the licence of the actual driver being allocated,
+        // including the replacement driver if one was assigned.
+       $licenseWarning = app(DriverLicenseValidationService::class)
+    ->check(
+        $validated['driver_id'],
+        $validated['start_date']
+    );
+
+        // Preserve the existing Pending Leave confirmation workflow.
         $pendingLeaves = $this->checkLeaveConflicts(
             $validated,
             $request,
@@ -169,6 +182,7 @@ class AssignmentController extends Controller
             return $pendingLeaves;
         }
 
+        // Existing driver and vehicle assignment conflict validation.
         $this->validateAssignmentConflicts($validated);
 
         $validated['assignment_no'] = $this->generateAssignmentNumber();
@@ -178,6 +192,10 @@ class AssignmentController extends Controller
         session()->forget('pending_sick_leave_confirmation');
 
         $description = "Created assignment {$assignment->assignment_no}.";
+
+        if ($replacementNotice !== null) {
+            $description .= ' ' . $replacementNotice;
+        }
 
         if ($pendingLeaves->isNotEmpty()) {
             $leaveTypes = $pendingLeaves->pluck('leave_type')
@@ -193,8 +211,134 @@ class AssignmentController extends Controller
             description: $description
         );
 
-        return redirect('/assignments')
-            ->with('success', 'Assignment Added Successfully!');
+        $successMessage = $replacementNotice
+            ? $replacementNotice
+            : 'Assignment Added Successfully!';
+
+        $redirect = redirect('/assignments')
+            ->with('success', $successMessage);
+
+        if ($licenseWarning) {
+            $redirect->with('warning', $licenseWarning);
+        }
+
+        return $redirect;
+    }
+
+    /**
+     * Resolve an approved leave and automatically transfer the assignment
+     * to its designated replacement driver when available.
+     *
+     * Returns the transfer notification message, or null when no
+     * approved leave overlaps the selected assignment dates.
+     */
+    private function resolveApprovedLeaveReplacement(array &$data): ?string
+    {
+        $status = $data['status'] ?? 'Planned';
+
+        if (in_array($status, ['Closed', 'Cancelled'], true)) {
+            return null;
+        }
+
+        $originalDriverId = (int) $data['driver_id'];
+
+        $approvedLeaves = Leave::with('replacementDriver')
+            ->where('driver_id', $originalDriverId)
+            ->where('approval_status', 'Approved')
+            ->whereDate('start_date', '<=', $data['end_date'])
+            ->whereDate('end_date', '>=', $data['start_date'])
+            ->orderBy('start_date')
+            ->get();
+
+        if ($approvedLeaves->isEmpty()) {
+            return null;
+        }
+
+        // Every overlapping approved leave must have the same designated replacement.
+        $replacementIds = $approvedLeaves
+            ->pluck('replacement_driver_id')
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        if (
+            $approvedLeaves->contains(fn ($leave) => empty($leave->replacement_driver_id))
+            || $replacementIds->count() !== 1
+        ) {
+            throw ValidationException::withMessages([
+                'driver_id' =>
+                    'The selected driver is on approved leave during the selected period, but a single designated replacement driver is not available. Please select another driver.',
+            ]);
+        }
+
+        $replacementDriverId = (int) $replacementIds->first();
+
+        if ($replacementDriverId === $originalDriverId) {
+            throw ValidationException::withMessages([
+                'driver_id' =>
+                    'The selected driver is on approved leave and cannot be used as their own replacement. Please select another driver.',
+            ]);
+        }
+
+        $replacementDriver = Driver::where('status', 'Active')
+            ->find($replacementDriverId);
+
+        if (!$replacementDriver) {
+            throw ValidationException::withMessages([
+                'driver_id' =>
+                    'The designated replacement driver is not active. Please select another available driver.',
+            ]);
+        }
+
+        // Check whether the replacement driver also has approved leave.
+        $replacementOnLeave = Leave::query()
+            ->where('driver_id', $replacementDriverId)
+            ->where('approval_status', 'Approved')
+            ->whereDate('start_date', '<=', $data['end_date'])
+            ->whereDate('end_date', '>=', $data['start_date'])
+            ->exists();
+
+        if ($replacementOnLeave) {
+            throw ValidationException::withMessages([
+                'driver_id' =>
+                    'The replacement driver is also on leave during the selected period. Please select another driver.',
+            ]);
+        }
+
+        // Check whether the replacement driver already has an overlapping assignment.
+        $replacementAssignmentConflict = Assignment::query()
+            ->where('driver_id', $replacementDriverId)
+            ->where(function ($query) {
+                $query->whereNull('status')
+                    ->orWhereIn('status', [
+                        'Planned',
+                        'Assigned',
+                        'In Transit',
+                        'Delivered',
+                        'Suspended',
+                    ]);
+            })
+            ->whereDate('start_date', '<=', $data['end_date'])
+            ->whereDate('end_date', '>=', $data['start_date'])
+            ->exists();
+
+        if ($replacementAssignmentConflict) {
+            throw ValidationException::withMessages([
+                'driver_id' =>
+                    'The replacement driver already has an assignment during the selected date/time. Please select another driver.',
+            ]);
+        }
+
+        $originalDriver = Driver::find($originalDriverId);
+
+        $originalDriverName = $originalDriver?->driver_name ?? 'Selected Driver';
+        $replacementDriverName = $replacementDriver->driver_name;
+
+        // Transfer the assignment to the replacement driver before saving.
+        $data['driver_id'] = $replacementDriverId;
+
+        return "The selected driver is on leave during this period. This assignment will be transferred to the designated replacement driver: {$replacementDriverName}.";
     }
 
     private function assignmentValidationRules(bool $isUpdate): array
@@ -314,7 +458,6 @@ class AssignmentController extends Controller
             'freight_amount.regex' => 'Freight amount can have up to 8 digits before the decimal and 2 decimal places.',
         ];
     }
-
     /**
      * Validate Leave conflicts against assignment dates.
      */
@@ -422,6 +565,7 @@ class AssignmentController extends Controller
 
         return $pendingLeaves;
     }
+
     private function validateAssignmentConflicts(
         array $data,
         ?int $ignoreId = null
@@ -566,6 +710,13 @@ class AssignmentController extends Controller
             $this->assignmentValidationMessages()
         );
 
+        // Validate the selected driver's licence before updating.
+       $licenseWarning = app(DriverLicenseValidationService::class)
+    ->check(
+        $validated['driver_id'],
+        $validated['start_date']
+    );
+
         $pendingLeaves = $this->checkLeaveConflicts(
             $validated,
             $request,
@@ -605,10 +756,14 @@ class AssignmentController extends Controller
             description: $description
         );
 
-        return redirect('/assignments')->with(
-            'success',
-            'Assignment Updated Successfully!'
-        );
+        $redirect = redirect('/assignments')
+            ->with('success', 'Assignment Updated Successfully!');
+
+        if ($licenseWarning) {
+            $redirect->with('warning', $licenseWarning);
+        }
+
+        return $redirect;
     }
 
     public function destroy(string $id)

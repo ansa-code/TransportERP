@@ -8,8 +8,11 @@ use App\Models\Client;
 use App\Models\Vehicle;
 use App\Models\Driver;
 use App\Services\ActivityLogService;
+use App\Services\DriverLicenseValidationService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Carbon\Carbon;
 
 class TripController extends Controller
 {
@@ -121,7 +124,103 @@ class TripController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $validated = $request->validate(
+            $this->tripValidationRules(),
+            $this->tripValidationMessages()
+        );
+
+        // Check the selected driver's licence against the trip start date.
+        $licenseWarning = app(DriverLicenseValidationService::class)
+            ->check(
+                $validated['driver_id'],
+                Carbon::parse($validated['trip_start'])->toDateString()
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Driver & Vehicle Conflict Validation
+        |--------------------------------------------------------------------------
+        */
+
+        $this->validateTripResourceConflicts($validated);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Trip Number
+        |--------------------------------------------------------------------------
+        */
+
+        $validated['trip_no'] = $this->generateTripNumber();
+
+        /*
+        |--------------------------------------------------------------------------
+        | POD Upload
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->hasFile('pod_file')) {
+            $validated['pod_file'] = $request->file('pod_file')
+                ->store('trips/pod', 'public');
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Create Trip
+        |--------------------------------------------------------------------------
+        */
+
+        $trip = Trip::create($validated);
+
+        $this->activityLogService->created(
+            module: 'Trips',
+            subject: $trip,
+            description: "Created trip {$trip->trip_no}."
+        );
+
+        $redirect = redirect('/trips')
+            ->with('success', 'Trip Added Successfully!');
+
+        if ($licenseWarning) {
+            $redirect->with('warning', $licenseWarning);
+        }
+
+        return $redirect;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Generate Trip Number
+    |--------------------------------------------------------------------------
+    */
+
+    private function generateTripNumber()
+    {
+        $year = now()->format('Y');
+        $prefix = "AST-TRP-{$year}-";
+
+        $lastTrip = Trip::where('trip_no', 'like', "{$prefix}%")
+            ->orderByDesc('id')
+            ->first();
+
+        if ($lastTrip) {
+            $lastNumber = (int) substr($lastTrip->trip_no, -5);
+            $nextNumber = $lastNumber + 1;
+        } else {
+            $nextNumber = 1;
+        }
+
+        return $prefix . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Shared Trip Validation Rules
+    |--------------------------------------------------------------------------
+    */
+
+    private function tripValidationRules(): array
+    {
+        return [
             'assignment_id' => [
                 'nullable',
                 'exists:assignments,id',
@@ -151,30 +250,31 @@ class TripController extends Controller
                 'nullable',
                 'date',
                 'after_or_equal:trip_start',
-               function ($attribute, $value, $fail) {
-    if (!$value) {
-        return;
-    }
 
-    $end = \Carbon\Carbon::parse($value);
+                function ($attribute, $value, $fail) {
+                    if (!$value) {
+                        return;
+                    }
 
-    if ($end->lt(today())) {
-        $fail('Trip end date must be today or a future date.');
-    }
-},
+                    $end = Carbon::parse($value);
+
+                    if ($end->lt(today())) {
+                        $fail(
+                            'Trip end date must be today or a future date.'
+                        );
+                    }
+                },
             ],
 
             'loading_point' => [
-                'nullable',
-                'required_with:unloading_point',
+                'required',
                 'string',
                 'max:255',
                 'regex:/\S/',
             ],
 
             'unloading_point' => [
-                'nullable',
-                'required_with:loading_point',
+                'required',
                 'string',
                 'max:255',
                 'regex:/\S/',
@@ -219,92 +319,249 @@ class TripController extends Controller
                 'nullable',
                 'string',
             ],
-        ], [
-            'trip_start.required' => 'Trip start date and time is required.',
-            'trip_start.date' => 'Please enter a valid trip start date and time.',
-            'trip_end.date' => 'Please enter a valid trip end date and time.',
-            'trip_end.after_or_equal' => 'Trip end date and time cannot be earlier than the trip start.',
-            'loading_point.required_with' => 'Please enter both loading and unloading points, or leave both empty.',
-            'unloading_point.required_with' => 'Please enter both loading and unloading points, or leave both empty.',
-            'loading_point.regex' => 'Please enter a valid loading point.',
-            'unloading_point.regex' => 'Please enter a valid unloading point.',
-            'loading_point.max' => 'Loading point cannot exceed 255 characters.',
-            'unloading_point.max' => 'Unloading point cannot exceed 255 characters.',
-            'rate.required' => 'Rate is required.',
-            'rate.numeric' => 'Rate must be a valid number.',
-            'rate.min' => 'Rate must be zero or greater.',
-            'rate.max' => 'Rate exceeds the maximum allowed business limit.',
-            'rate.regex' => 'Rate can have up to 8 digits before the decimal and 2 decimal places.',
-            'freight_amount.required' => 'Freight amount is required.',
-            'freight_amount.numeric' => 'Freight amount must be a valid number.',
-            'freight_amount.min' => 'Freight amount must be zero or greater.',
-            'freight_amount.max' => 'Freight amount exceeds the maximum allowed business limit.',
-            'freight_amount.regex' => 'Freight amount can have up to 8 digits before the decimal and 2 decimal places.',
-            'pod_file.mimes' => 'POD file must be a PDF, JPG, JPEG or PNG file.',
-            'pod_file.max' => 'POD file size cannot exceed 5 MB.',
-        ]);
-
-        /*
-        |--------------------------------------------------------------------------
-        | Trip Number
-        |--------------------------------------------------------------------------
-        */
-
-        $validated['trip_no'] = $this->generateTripNumber();
-
-        /*
-        |--------------------------------------------------------------------------
-        | POD Upload
-        |--------------------------------------------------------------------------
-        */
-
-        if ($request->hasFile('pod_file')) {
-            $validated['pod_file'] = $request->file('pod_file')
-                ->store('trips/pod', 'public');
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Create Trip
-        |--------------------------------------------------------------------------
-        */
-
-        $trip = Trip::create($validated);
-
-        $this->activityLogService->created(
-            module: 'Trips',
-            subject: $trip,
-            description: "Created trip {$trip->trip_no}."
-        );
-
-        return redirect('/trips')
-            ->with('success', 'Trip Added Successfully!');
+        ];
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Generate Trip Number
+    | Validation Messages
     |--------------------------------------------------------------------------
     */
-    private function generateTripNumber()
+
+    private function tripValidationMessages(): array
     {
-        $year = now()->format('Y');
-        $prefix = "AST-TRP-{$year}-";
+        return [
+            'assignment_id.exists' =>
+                'The selected assignment is invalid or no longer exists.',
 
-        $lastTrip = Trip::where('trip_no', 'like', "{$prefix}%")
-            ->orderByDesc('id')
-            ->first();
+            'client_id.required' =>
+                'Please select a client.',
 
-        if ($lastTrip) {
-            $lastNumber = (int) substr($lastTrip->trip_no, -5);
-            $nextNumber = $lastNumber + 1;
-        } else {
-            $nextNumber = 1;
-        }
+            'client_id.exists' =>
+                'The selected client is invalid or no longer exists.',
 
-        return $prefix . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+            'vehicle_id.required' =>
+                'Please select a vehicle.',
+
+            'vehicle_id.exists' =>
+                'The selected vehicle is invalid or no longer exists.',
+
+            'driver_id.required' =>
+                'Please select a driver.',
+
+            'driver_id.exists' =>
+                'The selected driver is invalid or no longer exists.',
+
+            'trip_start.required' =>
+                'Trip start date and time is required.',
+
+            'trip_start.date' =>
+                'Please enter a valid trip start date and time.',
+
+            'trip_end.date' =>
+                'Please enter a valid trip end date and time.',
+
+            'trip_end.after_or_equal' =>
+                'Trip end date and time cannot be earlier than the trip start date and time. Please select the same date or a later date.',
+
+            'loading_point.required' =>
+                'Loading point is required.',
+
+            'unloading_point.required' =>
+                'Unloading point is required.',
+
+            'loading_point.regex' =>
+                'Please enter a valid loading point.',
+
+            'unloading_point.regex' =>
+                'Please enter a valid unloading point.',
+
+            'loading_point.max' =>
+                'Loading point cannot exceed 255 characters.',
+
+            'unloading_point.max' =>
+                'Unloading point cannot exceed 255 characters.',
+
+            'rate.required' =>
+                'Rate is required.',
+
+            'rate.numeric' =>
+                'Rate must be a valid number.',
+
+            'rate.min' =>
+                'Rate must be zero or greater.',
+
+            'rate.max' =>
+                'Rate exceeds the maximum allowed business limit.',
+
+            'rate.regex' =>
+                'Rate can have up to 8 digits before the decimal and 2 decimal places.',
+
+            'freight_amount.required' =>
+                'Freight amount is required.',
+
+            'freight_amount.numeric' =>
+                'Freight amount must be a valid number.',
+
+            'freight_amount.min' =>
+                'Freight amount must be zero or greater.',
+
+            'freight_amount.max' =>
+                'Freight amount exceeds the maximum allowed business limit.',
+
+            'freight_amount.regex' =>
+                'Freight amount can have up to 8 digits before the decimal and 2 decimal places.',
+
+            'pod_file.mimes' =>
+                'POD file must be a PDF, JPG, JPEG or PNG file.',
+
+            'pod_file.max' =>
+                'POD file size cannot exceed 5 MB.',
+        ];
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Driver & Vehicle Conflict Validation
+    |--------------------------------------------------------------------------
+    */
+
+    private function validateTripResourceConflicts(
+        array $data,
+        ?int $ignoreTripId = null
+    ): void {
+
+        $tripStartDate = Carbon::parse(
+            $data['trip_start']
+        )->toDateString();
+
+        $tripEndDate = !empty($data['trip_end'])
+            ? Carbon::parse($data['trip_end'])->toDateString()
+            : $tripStartDate;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Assignment Conflict Query
+        |--------------------------------------------------------------------------
+        */
+
+        $assignmentQuery = Assignment::query()
+            ->where(function ($query) {
+                $query->whereNull('status')
+                    ->orWhereIn('status', [
+                        'Planned',
+                        'Assigned',
+                        'Active',
+                        'In Transit',
+                        'Delivered',
+                        'Suspended',
+                    ]);
+            })
+            ->whereDate('start_date', '<=', $tripEndDate)
+            ->whereDate('end_date', '>=', $tripStartDate);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Existing Trip Conflict Query
+        |--------------------------------------------------------------------------
+        */
+
+        $existingTripQuery = Trip::query()
+            ->where(function ($query) {
+                $query->whereNull('status')
+                    ->orWhereIn('status', [
+                        'Planned',
+                        'Assigned',
+                        'In Transit',
+                        'Delivered',
+                    ]);
+            })
+            ->whereDate('trip_start', '<=', $tripEndDate)
+            ->where(function ($query) use ($tripStartDate) {
+                $query->whereDate(
+                    'trip_end',
+                    '>=',
+                    $tripStartDate
+                )->orWhere(function ($query) use ($tripStartDate) {
+                    $query->whereNull('trip_end')
+                        ->whereDate(
+                            'trip_start',
+                            '>=',
+                            $tripStartDate
+                        );
+                });
+            });
+
+        /*
+        |--------------------------------------------------------------------------
+        | Ignore Current Trip During Edit
+        |--------------------------------------------------------------------------
+        */
+
+        if ($ignoreTripId !== null) {
+            $existingTripQuery->where(
+                'id',
+                '!=',
+                $ignoreTripId
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Driver Conflict
+        |--------------------------------------------------------------------------
+        */
+
+        $driverAssignmentConflict = (clone $assignmentQuery)
+            ->where('driver_id', $data['driver_id'])
+            ->exists();
+
+        $driverTripConflict = (clone $existingTripQuery)
+            ->where('driver_id', $data['driver_id'])
+            ->exists();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Vehicle Conflict
+        |--------------------------------------------------------------------------
+        */
+
+        $vehicleAssignmentConflict = (clone $assignmentQuery)
+            ->where('vehicle_id', $data['vehicle_id'])
+            ->exists();
+
+        $vehicleTripConflict = (clone $existingTripQuery)
+            ->where('vehicle_id', $data['vehicle_id'])
+            ->exists();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Collect All Errors Independently
+        |--------------------------------------------------------------------------
+        */
+
+        $errors = [];
+
+        if (
+            $driverAssignmentConflict ||
+            $driverTripConflict
+        ) {
+            $errors['driver_id'] =
+                'This driver is already assigned to another trip/assignment on the selected date. Please select another driver or change the date.';
+        }
+
+        if (
+            $vehicleAssignmentConflict ||
+            $vehicleTripConflict
+        ) {
+            $errors['vehicle_id'] =
+                'This vehicle is already allocated to another trip/assignment on the selected date. Please select another vehicle or change the date.';
+        }
+
+        if (!empty($errors)) {
+            throw ValidationException::withMessages($errors);
+        }
+    }
     /*
     |--------------------------------------------------------------------------
     | Show Trip
@@ -396,128 +653,28 @@ class TripController extends Controller
             );
         }
 
-        $validated = $request->validate([
-            'assignment_id' => [
-                'nullable',
-                'exists:assignments,id',
-            ],
+        $validated = $request->validate(
+            $this->tripValidationRules(),
+            $this->tripValidationMessages()
+        );
 
-            'client_id' => [
-                'required',
-                'exists:clients,id',
-            ],
+        // Check the selected driver's licence against the trip start date.
+        $licenseWarning = app(DriverLicenseValidationService::class)
+            ->check(
+                $validated['driver_id'],
+                Carbon::parse($validated['trip_start'])->toDateString()
+            );
 
-            'vehicle_id' => [
-                'required',
-                'exists:vehicles,id',
-            ],
+        /*
+        |--------------------------------------------------------------------------
+        | Driver & Vehicle Conflict Validation
+        |--------------------------------------------------------------------------
+        */
 
-            'driver_id' => [
-                'required',
-                'exists:drivers,id',
-            ],
-
-            'trip_start' => [
-                'required',
-                'date',
-            ],
-
-            'trip_end' => [
-                'nullable',
-                'date',
-                'after_or_equal:trip_start',
-                function ($attribute, $value, $fail) {
-    if (!$value) {
-        return;
-    }
-
-    $end = \Carbon\Carbon::parse($value);
-
-    if ($end->lt(today())) {
-        $fail('Trip end date must be today or a future date.');
-    }
-},
-            ],
-
-            'loading_point' => [
-                'nullable',
-                'required_with:unloading_point',
-                'string',
-                'max:255',
-                'regex:/\S/',
-            ],
-
-            'unloading_point' => [
-                'nullable',
-                'required_with:loading_point',
-                'string',
-                'max:255',
-                'regex:/\S/',
-            ],
-
-            'rate' => [
-                'required',
-                'numeric',
-                'min:0',
-                'max:99999999.99',
-                'regex:/^\d{1,8}(\.\d{1,2})?$/',
-            ],
-
-            'freight_amount' => [
-                'required',
-                'numeric',
-                'min:0',
-                'max:99999999.99',
-                'regex:/^\d{1,8}(\.\d{1,2})?$/',
-            ],
-
-            'pod_file' => [
-                'nullable',
-                'file',
-                'mimes:pdf,jpg,jpeg,png',
-                'max:5120',
-            ],
-
-            'status' => [
-                'required',
-                Rule::in([
-                    'Planned',
-                    'Assigned',
-                    'In Transit',
-                    'Delivered',
-                    'Closed',
-                    'Cancelled',
-                ]),
-            ],
-
-            'remarks' => [
-                'nullable',
-                'string',
-            ],
-        ], [
-            'trip_start.required' => 'Trip start date and time is required.',
-            'trip_start.date' => 'Please enter a valid trip start date and time.',
-            'trip_end.date' => 'Please enter a valid trip end date and time.',
-            'trip_end.after_or_equal' => 'Trip end date and time cannot be earlier than the trip start.',
-            'loading_point.required_with' => 'Please enter both loading and unloading points, or leave both empty.',
-            'unloading_point.required_with' => 'Please enter both loading and unloading points, or leave both empty.',
-            'loading_point.regex' => 'Please enter a valid loading point.',
-            'unloading_point.regex' => 'Please enter a valid unloading point.',
-            'loading_point.max' => 'Loading point cannot exceed 255 characters.',
-            'unloading_point.max' => 'Unloading point cannot exceed 255 characters.',
-            'rate.required' => 'Rate is required.',
-            'rate.numeric' => 'Rate must be a valid number.',
-            'rate.min' => 'Rate must be zero or greater.',
-            'rate.max' => 'Rate exceeds the maximum allowed business limit.',
-            'rate.regex' => 'Rate can have up to 8 digits before the decimal and 2 decimal places.',
-            'freight_amount.required' => 'Freight amount is required.',
-            'freight_amount.numeric' => 'Freight amount must be a valid number.',
-            'freight_amount.min' => 'Freight amount must be zero or greater.',
-            'freight_amount.max' => 'Freight amount exceeds the maximum allowed business limit.',
-            'freight_amount.regex' => 'Freight amount can have up to 8 digits before the decimal and 2 decimal places.',
-            'pod_file.mimes' => 'POD file must be a PDF, JPG, JPEG or PNG file.',
-            'pod_file.max' => 'POD file size cannot exceed 5 MB.',
-        ]);
+        $this->validateTripResourceConflicts(
+            $validated,
+            (int) $trip->id
+        );
 
         /*
         |--------------------------------------------------------------------------
@@ -548,8 +705,14 @@ class TripController extends Controller
             description: "Updated trip {$trip->trip_no}."
         );
 
-        return redirect('/trips')
+        $redirect = redirect('/trips')
             ->with('success', 'Trip Updated Successfully!');
+
+        if ($licenseWarning) {
+            $redirect->with('warning', $licenseWarning);
+        }
+
+        return $redirect;
     }
 
     /*

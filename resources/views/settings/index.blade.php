@@ -160,6 +160,48 @@
         font-weight: 600;
     }
 
+    /* Driver Licence Settings */
+    .license-option {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 15px 16px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 9px;
+        margin-bottom: 14px;
+    }
+
+    .license-option:last-child {
+        margin-bottom: 0;
+    }
+
+    .license-option input {
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        flex-shrink: 0;
+        cursor: pointer;
+        accent-color: #2563eb;
+    }
+
+    .license-option label {
+        display: block;
+        margin: 0;
+        color: #334155;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .license-option small {
+        display: block;
+        margin-top: 5px;
+        color: #64748b;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
     .save-section {
         display: flex;
         justify-content: flex-end;
@@ -182,10 +224,6 @@
         background: #102d72;
         transform: translateY(-1px);
     }
-
-    
-
-   
 
     @media (max-width: 768px) {
         .settings-page {
@@ -271,24 +309,18 @@
                             class="form-select"
                             required
                         >
-                            <option
-                                value="AED"
-                                {{ old('base_currency', $settings['base_currency']) === 'AED' ? 'selected' : '' }}
-                            >
+                            <option value="AED"
+                                {{ old('base_currency', $settings['base_currency']) === 'AED' ? 'selected' : '' }}>
                                 AED — UAE Dirham
                             </option>
 
-                            <option
-                                value="PKR"
-                                {{ old('base_currency', $settings['base_currency']) === 'PKR' ? 'selected' : '' }}
-                            >
+                            <option value="PKR"
+                                {{ old('base_currency', $settings['base_currency']) === 'PKR' ? 'selected' : '' }}>
                                 PKR — Pakistani Rupee
                             </option>
 
-                            <option
-                                value="USD"
-                                {{ old('base_currency', $settings['base_currency']) === 'USD' ? 'selected' : '' }}
-                            >
+                            <option value="USD"
+                                {{ old('base_currency', $settings['base_currency']) === 'USD' ? 'selected' : '' }}>
                                 USD — US Dollar
                             </option>
                         </select>
@@ -330,11 +362,7 @@
                     </label>
 
                     <div class="vat-status">
-                        <input
-                            type="hidden"
-                            name="vat_enabled"
-                            value="0"
-                        >
+                        <input type="hidden" name="vat_enabled" value="0">
 
                         <input
                             type="checkbox"
@@ -352,6 +380,77 @@
                     <span class="form-help">
                         When enabled, the configured VAT rate is used as the default.
                     </span>
+                </div>
+
+            </div>
+        </div>
+
+        {{-- DRIVER LICENCE VALIDATION SETTINGS --}}
+        <div class="settings-card">
+
+            <div class="settings-card-header">
+                <h3>Driver Licence Validation</h3>
+                <p>
+                    Configure how the system handles drivers with expired driving licences.
+                </p>
+            </div>
+
+            <div class="settings-card-body">
+
+                {{-- RESTRICTION --}}
+                <div class="license-option">
+                    <input
+                        type="hidden"
+                        name="driver_license_restriction"
+                        value="0"
+                    >
+
+                    <input
+                        type="checkbox"
+                        name="driver_license_restriction"
+                        id="driver_license_restriction"
+                        value="1"
+                        {{ old('driver_license_restriction', $settings['driver_license_restriction'] ?? '1') == '1' ? 'checked' : '' }}
+                    >
+
+                    <div>
+                        <label for="driver_license_restriction">
+                            Block allocation when driving licence is expired
+                        </label>
+
+                        <small>
+                            When enabled, the system will prevent assignments and trips
+                            from being allocated to a driver with an expired licence.
+                        </small>
+                    </div>
+                </div>
+
+                {{-- WARNING --}}
+                <div class="license-option">
+                    <input
+                        type="hidden"
+                        name="driver_license_warning"
+                        value="0"
+                    >
+
+                    <input
+                        type="checkbox"
+                        name="driver_license_warning"
+                        id="driver_license_warning"
+                        value="1"
+                        {{ old('driver_license_warning', $settings['driver_license_warning'] ?? '1') == '1' ? 'checked' : '' }}
+                    >
+
+                    <div>
+                        <label for="driver_license_warning">
+                            Show warning when driving licence is expired
+                        </label>
+
+                        <small>
+                            When restriction is disabled, users can continue with the
+                            allocation but will see an expiry warning if this option is enabled.
+                        </small>
+                    </div>
                 </div>
 
             </div>

@@ -20,7 +20,6 @@
     @if ($errors->any())
         <div class="alert-error">
             <strong>Please fix the following errors:</strong>
-
             <ul>
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -29,14 +28,24 @@
         </div>
     @endif
 
-    <form
-        action="{{ route('payrolls.update', $payroll->id) }}"
-        method="POST"
-        id="payrollForm"
-    >
+    @php
+        $existingAdvanceAllocations = $payroll->deductionAllocations
+            ->where('deduction_type', 'advance')
+            ->keyBy('deductible_record_id');
+
+        $existingFineAllocations = $payroll->deductionAllocations
+            ->where('deduction_type', 'fine')
+            ->keyBy('deductible_record_id');
+    @endphp
+
+    <form action="{{ route('payrolls.update', $payroll->id) }}"
+          method="POST"
+          id="payrollForm">
+
         @csrf
         @method('PUT')
 
+        {{-- PAYROLL INFORMATION --}}
         <div class="form-card">
 
             <div class="card-title">
@@ -51,18 +60,12 @@
                         Driver <span>*</span>
                     </label>
 
-                    <select
-                        name="driver_id"
-                        id="driver_id"
-                        required
-                    >
+                    <select name="driver_id" id="driver_id" required>
                         <option value="">Select Driver</option>
 
                         @foreach ($drivers as $driver)
-                            <option
-                                value="{{ $driver->id }}"
-                                {{ old('driver_id', $payroll->driver_id) == $driver->id ? 'selected' : '' }}
-                            >
+                            <option value="{{ $driver->id }}"
+                                {{ old('driver_id', $payroll->driver_id) == $driver->id ? 'selected' : '' }}>
                                 {{ $driver->driver_name }}
                             </option>
                         @endforeach
@@ -78,13 +81,11 @@
                         Payroll Month <span>*</span>
                     </label>
 
-                    <input
-                        type="month"
-                        name="salary_month"
-                        id="salary_month"
-                        value="{{ old('salary_month', $payroll->salary_month) }}"
-                        required
-                    >
+                    <input type="month"
+                           name="salary_month"
+                           id="salary_month"
+                           value="{{ old('salary_month', $payroll->salary_month) }}"
+                           required>
 
                     @error('salary_month')
                         <small class="error-text">{{ $message }}</small>
@@ -94,6 +95,7 @@
             </div>
         </div>
 
+        {{-- EARNINGS --}}
         <div class="form-card">
 
             <div class="card-title">
@@ -108,16 +110,13 @@
                         Basic Salary <span>*</span>
                     </label>
 
-                    <input
-                        type="number"
-                        name="basic_salary"
-                        id="basic_salary"
-                        value="{{ old('basic_salary', $payroll->basic_salary) }}"
-                        min="0"
-                        step="0.01"
-                        placeholder="0.00"
-                        required
-                    >
+                    <input type="number"
+                           name="basic_salary"
+                           id="basic_salary"
+                           value="{{ old('basic_salary', $payroll->basic_salary) }}"
+                           min="0"
+                           step="0.01"
+                           required>
 
                     @error('basic_salary')
                         <small class="error-text">{{ $message }}</small>
@@ -125,19 +124,14 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="allowance">
-                        Allowance
-                    </label>
+                    <label for="allowance">Allowance</label>
 
-                    <input
-                        type="number"
-                        name="allowance"
-                        id="allowance"
-                        value="{{ old('allowance', $payroll->allowance ?? 0) }}"
-                        min="0"
-                        step="0.01"
-                        placeholder="0.00"
-                    >
+                    <input type="number"
+                           name="allowance"
+                           id="allowance"
+                           value="{{ old('allowance', $payroll->allowance ?? 0) }}"
+                           min="0"
+                           step="0.01">
 
                     @error('allowance')
                         <small class="error-text">{{ $message }}</small>
@@ -145,19 +139,14 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="overtime">
-                        Overtime
-                    </label>
+                    <label for="overtime">Overtime</label>
 
-                    <input
-                        type="number"
-                        name="overtime"
-                        id="overtime"
-                        value="{{ old('overtime', $payroll->overtime ?? 0) }}"
-                        min="0"
-                        step="0.01"
-                        placeholder="0.00"
-                    >
+                    <input type="number"
+                           name="overtime"
+                           id="overtime"
+                           value="{{ old('overtime', $payroll->overtime ?? 0) }}"
+                           min="0"
+                           step="0.01">
 
                     @error('overtime')
                         <small class="error-text">{{ $message }}</small>
@@ -167,6 +156,7 @@
             </div>
         </div>
 
+        {{-- DEDUCTIONS --}}
         <div class="form-card">
 
             <div class="card-title">
@@ -177,19 +167,14 @@
             <div class="form-grid">
 
                 <div class="form-group">
-                    <label for="visa_deduction">
-                        Visa Deduction
-                    </label>
+                    <label for="visa_deduction">Visa Deduction</label>
 
-                    <input
-                        type="number"
-                        name="visa_deduction"
-                        id="visa_deduction"
-                        value="{{ old('visa_deduction', $payroll->visa_deduction ?? 0) }}"
-                        min="0"
-                        step="0.01"
-                        placeholder="0.00"
-                    >
+                    <input type="number"
+                           name="visa_deduction"
+                           id="visa_deduction"
+                           value="{{ old('visa_deduction', $payroll->visa_deduction ?? 0) }}"
+                           min="0"
+                           step="0.01">
 
                     @error('visa_deduction')
                         <small class="error-text">{{ $message }}</small>
@@ -197,19 +182,15 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="fine_deduction">
-                        Fine Deduction
-                    </label>
+                    <label for="fine_deduction">Fine Deduction</label>
 
-                    <input
-                        type="number"
-                        name="fine_deduction"
-                        id="fine_deduction"
-                        value="{{ old('fine_deduction', $payroll->fine_deduction ?? 0) }}"
-                        min="0"
-                        step="0.01"
-                        placeholder="0.00"
-                    >
+                    <input type="number"
+                           name="fine_deduction"
+                           id="fine_deduction"
+                           value="{{ old('fine_deduction', $payroll->fine_deduction ?? 0) }}"
+                           min="0"
+                           step="0.01"
+                           readonly>
 
                     @error('fine_deduction')
                         <small class="error-text">{{ $message }}</small>
@@ -217,38 +198,30 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="advance_deduction">
-                        Advance Deduction
-                    </label>
+                    <label for="advance_deduction">Advance Deduction</label>
 
-                    <input
-                        type="number"
-                        name="advance_deduction"
-                        id="advance_deduction"
-                        value="{{ old('advance_deduction', $payroll->advance_deduction ?? 0) }}"
-                        min="0"
-                        step="0.01"
-                        placeholder="0.00"
-                    >
+                    <input type="number"
+                           name="advance_deduction"
+                           id="advance_deduction"
+                           value="{{ old('advance_deduction', $payroll->advance_deduction ?? 0) }}"
+                           min="0"
+                           step="0.01"
+                           readonly>
 
                     @error('advance_deduction')
                         <small class="error-text">{{ $message }}</small>
                     @enderror
                 </div>
-                <div class="form-group">
-                    <label for="other_deduction">
-                        Other Deduction
-                    </label>
 
-                    <input
-                        type="number"
-                        name="other_deduction"
-                        id="other_deduction"
-                        value="{{ old('other_deduction', $payroll->other_deduction ?? 0) }}"
-                        min="0"
-                        step="0.01"
-                        placeholder="0.00"
-                    >
+                <div class="form-group">
+                    <label for="other_deduction">Other Deduction</label>
+
+                    <input type="number"
+                           name="other_deduction"
+                           id="other_deduction"
+                           value="{{ old('other_deduction', $payroll->other_deduction ?? 0) }}"
+                           min="0"
+                           step="0.01">
 
                     @error('other_deduction')
                         <small class="error-text">{{ $message }}</small>
@@ -260,13 +233,11 @@
                         Other Deduction Reason
                     </label>
 
-                    <input
-                        type="text"
-                        name="other_deduction_reason"
-                        id="other_deduction_reason"
-                        value="{{ old('other_deduction_reason', $payroll->other_deduction_reason ?? '') }}"
-                        placeholder="Enter reason if other deduction is added"
-                    >
+                    <input type="text"
+                           name="other_deduction_reason"
+                           id="other_deduction_reason"
+                           value="{{ old('other_deduction_reason', $payroll->other_deduction_reason ?? '') }}"
+                           placeholder="Enter reason if other deduction is added">
 
                     @error('other_deduction_reason')
                         <small class="error-text">{{ $message }}</small>
@@ -276,6 +247,209 @@
             </div>
         </div>
 
+        {{-- ADVANCE ALLOCATION --}}
+        <div class="form-card">
+
+            <div class="card-title">
+                <span>💵</span>
+                Individual Salary Advance Allocation
+            </div>
+
+            <p class="section-description">
+                Select individual advances and enter the amount to deduct.
+                Existing payroll allocations are shown as selected.
+            </p>
+
+            <div id="advanceAllocationMessage" class="allocation-message">
+                Loading advances...
+            </div>
+
+            <div class="allocation-table-wrapper">
+                <table class="allocation-table">
+
+                    <thead>
+                        <tr>
+                            <th>Select</th>
+                            <th>Advance No.</th>
+                            <th>Date</th>
+                            <th>Original Amount</th>
+                            <th>Remaining Amount</th>
+                            <th>Deduct Amount</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach ($advances as $advance)
+
+                            @php
+                                $existingAllocation = $existingAdvanceAllocations->get($advance->id);
+
+                                $isSelected = $existingAllocation !== null;
+
+                                $availableAmount = (float) $advance->remaining_amount
+                                    + (float) ($existingAllocation->amount ?? 0);
+                            @endphp
+
+                            <tr class="advance-row"
+                                data-driver="{{ $advance->driver_id }}">
+
+                                <td>
+                                    <input type="checkbox"
+                                           class="allocation-checkbox advance-checkbox"
+                                           data-id="{{ $advance->id }}"
+                                           {{ $isSelected ? 'checked' : '' }}>
+                                </td>
+
+                                <td>{{ $advance->advance_no }}</td>
+
+                                <td>
+                                    {{ $advance->advance_date
+                                        ? $advance->advance_date->format('d M Y')
+                                        : '-' }}
+                                </td>
+
+                                <td>
+                                    {{ number_format((float) $advance->amount, 2) }}
+                                </td>
+
+                                <td>
+                                    {{ number_format($availableAmount, 2) }}
+                                </td>
+
+                                <td>
+                                    <input type="number"
+                                           class="allocation-amount advance-amount"
+                                           data-id="{{ $advance->id }}"
+                                           data-remaining="{{ number_format($availableAmount, 2, '.', '') }}"
+                                           min="0.01"
+                                           max="{{ number_format($availableAmount, 2, '.', '') }}"
+                                           step="0.01"
+                                           value="{{ old('advance_allocations.' . $advance->id . '.amount', $existingAllocation->amount ?? '') }}"
+                                           placeholder="0.00"
+                                           {{ $isSelected ? '' : 'disabled' }}>
+                                </td>
+
+                            </tr>
+
+                        @endforeach
+                    </tbody>
+
+                </table>
+            </div>
+
+            <div class="allocation-total">
+                Selected Advance Deduction:
+                <strong id="advanceAllocationTotal">0.00</strong>
+            </div>
+
+        </div>
+
+        {{-- FINE ALLOCATION --}}
+        <div class="form-card">
+
+            <div class="card-title">
+                <span>🚧</span>
+                Individual Fine Allocation
+            </div>
+
+            <p class="section-description">
+                Select individual fines and enter the amount to recover.
+                Existing payroll allocations are shown as selected.
+            </p>
+
+            <div id="fineAllocationMessage" class="allocation-message">
+                Loading fines...
+            </div>
+
+            <div class="allocation-table-wrapper">
+                <table class="allocation-table">
+
+                    <thead>
+                        <tr>
+                            <th>Select</th>
+                            <th>Fine No.</th>
+                            <th>Date</th>
+                            <th>Fine Amount</th>
+                            <th>Remaining Amount</th>
+                            <th>Deduct Amount</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach ($fines as $fine)
+
+                            @php
+                                $existingAllocation = $existingFineAllocations->get($fine->id);
+
+                                $alreadyAllocated = (float) $fine
+                                    ->deductionAllocations()
+                                    ->sum('amount');
+
+                                $availableAmount = max(
+                                    0,
+                                    (float) $fine->amount
+                                    - $alreadyAllocated
+                                    + (float) ($existingAllocation->amount ?? 0)
+                                );
+
+                                $isSelected = $existingAllocation !== null;
+                            @endphp
+
+                            <tr class="fine-row"
+                                data-driver="{{ $fine->driver_id }}">
+
+                                <td>
+                                    <input type="checkbox"
+                                           class="allocation-checkbox fine-checkbox"
+                                           data-id="{{ $fine->id }}"
+                                           {{ $isSelected ? 'checked' : '' }}>
+                                </td>
+
+                                <td>{{ $fine->fine_number }}</td>
+
+                                <td>
+                                    {{ $fine->fine_date
+                                        ? $fine->fine_date->format('d M Y')
+                                        : '-' }}
+                                </td>
+
+                                <td>
+                                    {{ number_format((float) $fine->amount, 2) }}
+                                </td>
+
+                                <td>
+                                    {{ number_format($availableAmount, 2) }}
+                                </td>
+
+                                <td>
+                                    <input type="number"
+                                           class="allocation-amount fine-amount"
+                                           data-id="{{ $fine->id }}"
+                                           data-remaining="{{ number_format($availableAmount, 2, '.', '') }}"
+                                           min="0.01"
+                                           max="{{ number_format($availableAmount, 2, '.', '') }}"
+                                           step="0.01"
+                                           value="{{ old('fine_allocations.' . $fine->id . '.amount', $existingAllocation->amount ?? '') }}"
+                                           placeholder="0.00"
+                                           {{ $isSelected ? '' : 'disabled' }}>
+                                </td>
+
+                            </tr>
+
+                        @endforeach
+                    </tbody>
+
+                </table>
+            </div>
+
+            <div class="allocation-total">
+                Selected Fine Deduction:
+                <strong id="fineAllocationTotal">0.00</strong>
+            </div>
+
+        </div>
+
+        {{-- SALARY CALCULATION --}}
         <div class="form-card">
 
             <div class="card-title">
@@ -302,14 +476,13 @@
 
             </div>
 
-            <input
-                type="hidden"
-                name="net_salary"
-                id="net_salary"
-                value="{{ old('net_salary', $payroll->net_salary ?? 0) }}"
-            >
+            <input type="hidden"
+                   name="net_salary"
+                   id="net_salary"
+                   value="{{ old('net_salary', $payroll->net_salary ?? 0) }}">
         </div>
 
+        {{-- PAYMENT --}}
         <div class="form-card">
 
             <div class="card-title">
@@ -324,29 +497,22 @@
                         Payment Status <span>*</span>
                     </label>
 
-                    <select
-                        name="payment_status"
-                        id="payment_status"
-                        required
-                    >
-                        <option
-                            value="Pending"
-                            {{ old('payment_status', $payroll->payment_status ?? 'Pending') === 'Pending' ? 'selected' : '' }}
-                        >
+                    <select name="payment_status"
+                            id="payment_status"
+                            required>
+
+                        <option value="Pending"
+                            {{ old('payment_status', $payroll->payment_status ?? 'Pending') === 'Pending' ? 'selected' : '' }}>
                             Pending
                         </option>
 
-                        <option
-                            value="Paid"
-                            {{ old('payment_status', $payroll->payment_status ?? '') === 'Paid' ? 'selected' : '' }}
-                        >
+                        <option value="Paid"
+                            {{ old('payment_status', $payroll->payment_status ?? '') === 'Paid' ? 'selected' : '' }}>
                             Paid
                         </option>
 
-                        <option
-                            value="Cancelled"
-                            {{ old('payment_status', $payroll->payment_status ?? '') === 'Cancelled' ? 'selected' : '' }}
-                        >
+                        <option value="Cancelled"
+                            {{ old('payment_status', $payroll->payment_status ?? '') === 'Cancelled' ? 'selected' : '' }}>
                             Cancelled
                         </option>
                     </select>
@@ -357,16 +523,12 @@
                 </div>
 
                 <div class="form-group payment-field">
-                    <label for="paid_date">
-                        Paid Date
-                    </label>
+                    <label for="paid_date">Paid Date</label>
 
-                    <input
-                        type="date"
-                        name="paid_date"
-                        id="paid_date"
-                        value="{{ old('paid_date', $payroll->paid_date ?? '') }}"
-                    >
+                    <input type="date"
+                           name="paid_date"
+                           id="paid_date"
+                           value="{{ old('paid_date', $payroll->paid_date ?? '') }}">
 
                     @error('paid_date')
                         <small class="error-text">{{ $message }}</small>
@@ -374,17 +536,13 @@
                 </div>
 
                 <div class="form-group payment-field">
-                    <label for="paid_reference">
-                        Paid Reference
-                    </label>
+                    <label for="paid_reference">Paid Reference</label>
 
-                    <input
-                        type="text"
-                        name="paid_reference"
-                        id="paid_reference"
-                        value="{{ old('paid_reference', $payroll->paid_reference ?? '') }}"
-                        placeholder="Payment reference"
-                    >
+                    <input type="text"
+                           name="paid_reference"
+                           id="paid_reference"
+                           value="{{ old('paid_reference', $payroll->paid_reference ?? '') }}"
+                           placeholder="Payment reference">
 
                     @error('paid_reference')
                         <small class="error-text">{{ $message }}</small>
@@ -392,8 +550,14 @@
                 </div>
 
             </div>
+
+            <div class="payment-notice" id="paymentNotice">
+                Existing allocations are restored and recalculated when payroll is updated.
+            </div>
+
         </div>
 
+        {{-- NOTES --}}
         <div class="form-card">
 
             <div class="card-title">
@@ -402,16 +566,12 @@
             </div>
 
             <div class="form-group">
-                <label for="notes">
-                    Remarks
-                </label>
+                <label for="notes">Remarks</label>
 
-                <textarea
-                    name="notes"
-                    id="notes"
-                    rows="4"
-                    placeholder="Enter additional remarks..."
-                >{{ old('notes', $payroll->notes) }}</textarea>
+                <textarea name="notes"
+                          id="notes"
+                          rows="4"
+                          placeholder="Enter additional remarks...">{{ old('notes', $payroll->notes) }}</textarea>
 
                 @error('notes')
                     <small class="error-text">{{ $message }}</small>
@@ -419,19 +579,17 @@
             </div>
 
         </div>
+
+        {{-- FORM ACTIONS --}}
         <div class="form-actions">
 
-            <a
-                href="{{ route('payrolls.index') }}"
-                class="btn btn-secondary"
-            >
+            <a href="{{ route('payrolls.index') }}"
+               class="btn btn-secondary">
                 Cancel
             </a>
 
-            <button
-                type="submit"
-                class="btn btn-primary"
-            >
+            <button type="submit"
+                    class="btn btn-primary">
                 💾 Update Payroll
             </button>
 
@@ -626,6 +784,96 @@
         color: #1f4da8;
     }
 
+    .section-description {
+        color: #667085;
+        font-size: 13px;
+        margin: -10px 0 16px;
+        line-height: 1.6;
+    }
+
+    .allocation-table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .allocation-table {
+        width: 100%;
+        min-width: 750px;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+    .allocation-table th,
+    .allocation-table td {
+        padding: 12px 10px;
+        text-align: left;
+        border-bottom: 1px solid #e8ecf3;
+        white-space: nowrap;
+    }
+
+    .allocation-table th {
+        background: #f6f8fc;
+        color: #344054;
+        font-weight: 700;
+    }
+
+    .allocation-table td {
+        color: #344054;
+    }
+
+    .allocation-table input[type="checkbox"] {
+        width: 17px;
+        height: 17px;
+        cursor: pointer;
+    }
+
+    .allocation-table input[type="number"] {
+        width: 115px;
+        height: 35px;
+        padding: 0 8px;
+        border: 1px solid #d8deea;
+        border-radius: 7px;
+    }
+
+    .allocation-table input:disabled {
+        background: #f1f3f7;
+        cursor: not-allowed;
+    }
+
+    .allocation-message {
+        padding: 12px;
+        margin-bottom: 12px;
+        border-radius: 8px;
+        background: #f6f8fc;
+        color: #667085;
+        font-size: 13px;
+    }
+
+    .allocation-total {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 16px;
+        padding-top: 13px;
+        border-top: 1px solid #e8ecf3;
+        color: #344054;
+        font-size: 13px;
+    }
+
+    .allocation-total strong {
+        color: #173b8f;
+        font-size: 15px;
+    }
+
+    .payment-notice {
+        margin-top: 16px;
+        padding: 12px;
+        border-radius: 8px;
+        background: #eef4ff;
+        color: #3159a5;
+        font-size: 13px;
+    }
+
     .form-actions {
         display: flex;
         justify-content: flex-end;
@@ -672,10 +920,6 @@
     }
 
     @media (max-width: 600px) {
-        .payroll-page {
-            max-width: 100%;
-        }
-
         .page-header {
             align-items: flex-start;
             flex-direction: column;
@@ -710,7 +954,22 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    const fieldIds = [
+    const driverSelect = document.getElementById('driver_id');
+    const paymentStatus = document.getElementById('payment_status');
+
+    const advanceDeduction = document.getElementById('advance_deduction');
+    const fineDeduction = document.getElementById('fine_deduction');
+
+    const oldAdvanceAllocations = @json(old('advance_allocations', []));
+    const oldFineAllocations = @json(old('fine_allocations', []));
+
+    /*
+    |--------------------------------------------------------------------------
+    | SALARY CALCULATION
+    |--------------------------------------------------------------------------
+    */
+
+    const salaryFields = [
         'basic_salary',
         'allowance',
         'overtime',
@@ -721,134 +980,275 @@ document.addEventListener('DOMContentLoaded', function () {
     ];
 
     function getAmount(id) {
-        const element = document.getElementById(id);
-
-        if (!element) {
-            return 0;
-        }
-
-        return parseFloat(element.value) || 0;
+        return parseFloat(document.getElementById(id)?.value) || 0;
     }
 
     function calculateSalary() {
 
-        const basic = getAmount('basic_salary');
-        const allowance = getAmount('allowance');
-        const overtime = getAmount('overtime');
+        const gross =
+            getAmount('basic_salary') +
+            getAmount('allowance') +
+            getAmount('overtime');
 
-        const visa = getAmount('visa_deduction');
-        const fine = getAmount('fine_deduction');
-        const advance = getAmount('advance_deduction');
-        const other = getAmount('other_deduction');
+        const deductions =
+            getAmount('visa_deduction') +
+            getAmount('fine_deduction') +
+            getAmount('advance_deduction') +
+            getAmount('other_deduction');
 
-        const grossSalary =
-            basic + allowance + overtime;
-
-        const totalDeductions =
-            visa + fine + advance + other;
-
-        const netSalary =
-            grossSalary - totalDeductions;
+        const net = gross - deductions;
 
         document.getElementById('gross_salary').textContent =
-            grossSalary.toFixed(2);
+            gross.toFixed(2);
 
         document.getElementById('total_deductions').textContent =
-            totalDeductions.toFixed(2);
+            deductions.toFixed(2);
 
         document.getElementById('net_salary_display').textContent =
-            netSalary.toFixed(2);
+            net.toFixed(2);
 
         document.getElementById('net_salary').value =
-            netSalary.toFixed(2);
+            net.toFixed(2);
     }
 
-    fieldIds.forEach(function (id) {
-
-        const element = document.getElementById(id);
-
-        if (element) {
-            element.addEventListener(
-                'input',
-                calculateSalary
-            );
-        }
+    salaryFields.forEach(function (id) {
+        document.getElementById(id)?.addEventListener(
+            'input',
+            calculateSalary
+        );
     });
 
-    const paymentStatus =
-        document.getElementById('payment_status');
+    /*
+    |--------------------------------------------------------------------------
+    | ALLOCATION INPUT NAMES
+    |--------------------------------------------------------------------------
+    */
 
-    const paymentFields =
-        document.querySelectorAll('.payment-field');
+    function configureAllocation(type) {
 
-    const paidDate =
-        document.getElementById('paid_date');
+        const isAdvance = type === 'advance';
 
-    const paidReference =
-        document.getElementById('paid_reference');
+        const checkboxClass = isAdvance
+            ? '.advance-checkbox'
+            : '.fine-checkbox';
+
+        const amountClass = isAdvance
+            ? '.advance-amount'
+            : '.fine-amount';
+
+        const prefix = isAdvance
+            ? 'advance_allocations'
+            : 'fine_allocations';
+
+        document.querySelectorAll(checkboxClass).forEach(function (checkbox) {
+
+            const row = checkbox.closest('tr');
+            const amountInput = row.querySelector(amountClass);
+            const id = checkbox.dataset.id;
+
+            function updateInput() {
+
+                const selected =
+                    checkbox.checked &&
+                    paymentStatus.value === 'Paid';
+
+                amountInput.disabled = !selected;
+
+                if (selected) {
+                    checkbox.name = prefix + '[' + id + '][id]';
+                    checkbox.value = id;
+
+                    amountInput.name =
+                        prefix + '[' + id + '][amount]';
+                } else {
+                    checkbox.removeAttribute('name');
+                    amountInput.removeAttribute('name');
+                }
+            }
+
+            checkbox.addEventListener('change', function () {
+                updateInput();
+                updateAllocationTotals();
+            });
+
+            amountInput.addEventListener(
+                'input',
+                updateAllocationTotals
+            );
+
+            updateInput();
+        });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | DRIVER FILTER
+    |--------------------------------------------------------------------------
+    */
+
+    function filterDriverRecords() {
+
+        const selectedDriver = driverSelect.value;
+
+        document.querySelectorAll('.advance-row').forEach(function (row) {
+
+            const matches =
+                row.dataset.driver === selectedDriver;
+
+            row.style.display = matches ? '' : 'none';
+        });
+
+        document.querySelectorAll('.fine-row').forEach(function (row) {
+
+            const matches =
+                row.dataset.driver === selectedDriver;
+
+            row.style.display = matches ? '' : 'none';
+        });
+
+        document.getElementById('advanceAllocationMessage').textContent =
+            selectedDriver
+                ? 'Select the advances you want to deduct.'
+                : 'Please select a driver first.';
+
+        document.getElementById('fineAllocationMessage').textContent =
+            selectedDriver
+                ? 'Select the fines you want to deduct.'
+                : 'Please select a driver first.';
+
+        updateAllocationTotals();
+    }
+
+    driverSelect.addEventListener('change', filterDriverRecords);
+
+    /*
+    |--------------------------------------------------------------------------
+    | PAYMENT STATUS
+    |--------------------------------------------------------------------------
+    */
 
     function togglePaymentFields() {
 
-        if (!paymentStatus) {
-            return;
-        }
+        const isPaid = paymentStatus.value === 'Paid';
 
-        const isPaid =
-            paymentStatus.value === 'Paid';
-
-        paymentFields.forEach(function (field) {
+        document.querySelectorAll('.payment-field').forEach(function (field) {
             field.style.display = isPaid ? '' : 'none';
         });
 
-        if (paidDate) {
-            paidDate.required = isPaid;
+        document.getElementById('paid_date').required = isPaid;
+        document.getElementById('paid_reference').required = isPaid;
+
+        document.querySelectorAll('.allocation-checkbox').forEach(function (checkbox) {
+
+            const row = checkbox.closest('tr');
+
+            const amountInput = row.querySelector('.allocation-amount');
+
+            if (!isPaid) {
+                checkbox.disabled = true;
+                amountInput.disabled = true;
+                checkbox.removeAttribute('name');
+                amountInput.removeAttribute('name');
+            } else {
+                checkbox.disabled = false;
+            }
+        });
+
+        if (isPaid) {
+            configureAllocation('advance');
+            configureAllocation('fine');
         }
 
-        if (paidReference) {
-            paidReference.required = isPaid;
-        }
+        document.getElementById('paymentNotice').textContent =
+            isPaid
+                ? 'Selected allocations will be applied when payroll is updated.'
+                : 'Advance and fine allocations are applied only when payroll is Paid.';
+
+        updateAllocationTotals();
     }
 
-    if (paymentStatus) {
+    paymentStatus.addEventListener('change', togglePaymentFields);
 
-        paymentStatus.addEventListener(
-            'change',
-            togglePaymentFields
-        );
+    /*
+    |--------------------------------------------------------------------------
+    | ALLOCATION TOTALS
+    |--------------------------------------------------------------------------
+    */
 
-        togglePaymentFields();
+    function updateAllocationTotals() {
+
+        let advanceTotal = 0;
+        let fineTotal = 0;
+
+        document.querySelectorAll('.advance-checkbox:checked').forEach(function (checkbox) {
+
+            const input = checkbox.closest('tr').querySelector('.advance-amount');
+
+            if (!input.disabled) {
+                advanceTotal += parseFloat(input.value) || 0;
+            }
+        });
+
+        document.querySelectorAll('.fine-checkbox:checked').forEach(function (checkbox) {
+
+            const input = checkbox.closest('tr').querySelector('.fine-amount');
+
+            if (!input.disabled) {
+                fineTotal += parseFloat(input.value) || 0;
+            }
+        });
+
+        advanceDeduction.value = advanceTotal.toFixed(2);
+        fineDeduction.value = fineTotal.toFixed(2);
+
+        document.getElementById('advanceAllocationTotal').textContent =
+            advanceTotal.toFixed(2);
+
+        document.getElementById('fineAllocationTotal').textContent =
+            fineTotal.toFixed(2);
+
+        calculateSalary();
     }
 
-    const otherDeduction =
-        document.getElementById('other_deduction');
-
-    const otherReason =
-        document.getElementById('other_deduction_reason');
+    /*
+    |--------------------------------------------------------------------------
+    | OTHER DEDUCTION REASON
+    |--------------------------------------------------------------------------
+    */
 
     function toggleOtherReason() {
 
-        if (!otherDeduction || !otherReason) {
-            return;
-        }
+        const otherAmount = getAmount('other_deduction');
 
-        const amount =
-            parseFloat(otherDeduction.value) || 0;
-
-        otherReason.required = amount > 0;
+        document.getElementById('other_deduction_reason').required =
+            otherAmount > 0;
     }
 
-    if (otherDeduction) {
+    document.getElementById('other_deduction').addEventListener(
+        'input',
+        toggleOtherReason
+  );
 
-        otherDeduction.addEventListener(
-            'input',
-            toggleOtherReason
-        );
-    }
+  /*
 
-    toggleOtherReason();
-    calculateSalary();
+|------------------------------------------------
+
+  | INITIALIZE
+
+|------------------------------------------------
+
+  */
+
+  configureAllocation('advance');
+  configureAllocation('fine');
+
+  filterDriverRecords();
+  togglePaymentFields();
+  toggleOtherReason();
+  calculateSalary();
 
 });
+
 </script>
 
 @endsection

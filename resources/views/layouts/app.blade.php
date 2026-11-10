@@ -452,6 +452,16 @@
             border-radius: 6px;
             border: 1px solid #f5c6cb;
         }
+        .warning-message {
+    background: #fff7ed;
+    color: #9a3412;
+    border: 1px solid #fed7aa;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 18px;
+    font-size: 14px;
+    font-weight: 500;
+}
 
         /* =========================================================
            RESPONSIVE
@@ -1088,6 +1098,12 @@
                 </div>
 
             @endif
+
+            @if(session('warning'))
+    <div class="warning-message">
+        {{ session('warning') }}
+    </div>
+@endif
 
             @yield('content')
 

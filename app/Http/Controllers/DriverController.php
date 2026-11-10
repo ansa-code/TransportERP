@@ -141,27 +141,27 @@ class DriverController extends Controller
                 'license_expiry' => [
                     'required',
                     'date',
-                    'after:today',
+                    'after_or_equal:today',
                 ],
 
                 'phone' => [
-    'nullable',
-    'string',
-    'max:30',
-    'regex:/^\+?[0-9\s().-]+$/',
-    'unique:drivers,phone',
-    function ($attribute, $value, $fail) {
-        if ($value === null || trim($value) === '') {
-            return;
-        }
+                    'nullable',
+                    'string',
+                    'max:30',
+                    'regex:/^\+?[0-9\s().-]+$/',
+                    'unique:drivers,phone',
+                    function ($attribute, $value, $fail) {
+                        if ($value === null || trim($value) === '') {
+                            return;
+                        }
 
-        $digits = preg_replace('/\D/', '', $value);
+                        $digits = preg_replace('/\D/', '', $value);
 
-        if (strlen($digits) < 7 || strlen($digits) > 15) {
-            $fail('Mobile number must contain between 7 and 15 digits, including the country code.');
-        }
-    },
-],
+                        if (strlen($digits) < 7 || strlen($digits) > 15) {
+                            $fail('Mobile number must contain between 7 and 15 digits, including the country code.');
+                        }
+                    },
+                ],
 
                 'nationality' => [
                     'nullable',
@@ -278,7 +278,7 @@ class DriverController extends Controller
                 'license_number.max' => 'Licence Number may not be longer than 255 characters.',
                 'license_expiry.date' => 'Licence Expiry must be a valid date.',
                 'license_expiry.required' => 'Licence Expiry is required. Please select an expiry date.',
-                'license_expiry.after' => 'Licence expiry date must be in the future.',
+                'license_expiry.after_or_equal' => 'Licence expiry date must be today or a future date.',
 
                 'phone.string' => 'Mobile number must be a valid text value.',
                 'phone.max' => 'Mobile number is too long.',
@@ -342,10 +342,16 @@ class DriverController extends Controller
             ->with('success', 'Driver Added Successfully!');
     }
 
-    // PART 2 CONTINUES BELOW
     public function show(string $id)
     {
-        $driver = Driver::findOrFail($id);
+        $driver = Driver::with([
+            'advances' => function ($query) {
+                $query->latest('advance_date');
+            },
+            'trafficFines' => function ($query) {
+                $query->latest('fine_date');
+            },
+        ])->findOrFail($id);
 
         return view('drivers.show', compact('driver'));
     }
@@ -396,27 +402,27 @@ class DriverController extends Controller
                 'license_expiry' => [
                     'required',
                     'date',
-                    'after:today',
+                    'after_or_equal:today',
                 ],
 
                 'phone' => [
-    'nullable',
-    'string',
-    'max:30',
-    'regex:/^\+?[0-9\s().-]+$/',
-    Rule::unique('drivers', 'phone')->ignore($driver->id),
-    function ($attribute, $value, $fail) {
-        if ($value === null || trim($value) === '') {
-            return;
-        }
+                    'nullable',
+                    'string',
+                    'max:30',
+                    'regex:/^\+?[0-9\s().-]+$/',
+                    Rule::unique('drivers', 'phone')->ignore($driver->id),
+                    function ($attribute, $value, $fail) {
+                        if ($value === null || trim($value) === '') {
+                            return;
+                        }
 
-        $digits = preg_replace('/\D/', '', $value);
+                        $digits = preg_replace('/\D/', '', $value);
 
-        if (strlen($digits) < 7 || strlen($digits) > 15) {
-            $fail('Mobile number must contain between 7 and 15 digits, including the country code.');
-        }
-    },
-],
+                        if (strlen($digits) < 7 || strlen($digits) > 15) {
+                            $fail('Mobile number must contain between 7 and 15 digits, including the country code.');
+                        }
+                    },
+                ],
 
                 'nationality' => [
                     'nullable',
@@ -533,7 +539,7 @@ class DriverController extends Controller
                 'license_number.max' => 'Licence Number may not be longer than 255 characters.',
                 'license_expiry.date' => 'Licence Expiry must be a valid date.',
                 'license_expiry.required' => 'Licence Expiry is required. Please select an expiry date.',
-                'license_expiry.after' => 'Licence expiry date must be in the future.',
+                'license_expiry.after_or_equal' => 'Licence expiry date must be today or a future date.',
 
                 'phone.string' => 'Mobile number must be a valid text value.',
                 'phone.max' => 'Mobile number is too long.',
